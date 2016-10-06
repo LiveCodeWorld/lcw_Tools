@@ -64,6 +64,17 @@ on menu_StartProject indexView, someBoolean
    end if
 end menu_StartProject
 
+on _
+end _
+
+on menu_GitStatus indexView
+   put the selected_Index of indexView into projectName
+   put library_FetchProjectFolder (projectName) into projectFolder
+   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
+   
+   display_GitFolderStatus gitCheckoutFolder
+end menu_GitStatus
+
 on menu_InitialiseGit indexView
    put the selected_Index of indexView into projectName
    put library_FetchProjectFolder (projectName) into projectFolder
@@ -71,7 +82,7 @@ on menu_InitialiseGit indexView
    
    git_InitFolder projectFolder
    
-   display_GitStatus gitProjectName
+   display_GitFolderStatus gitCheckoutFolder
 end menu_InitialiseGit
 
 on menu_AddEverythingToGit indexView
@@ -79,11 +90,11 @@ on menu_AddEverythingToGit indexView
    put library_FetchProjectFolder (gitProjectName) into projectFolder
    put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
    
+   breakpoint
    git_AddEverything gitCheckoutFolder
    put the result into shellResult
-   put shellResult
    
-   display_GitStatus gitProjectName
+   display_GitFolderStatus gitCheckoutFolder
 end menu_AddEverythingToGit
 
 on _
@@ -96,6 +107,9 @@ on menu_EditStackScript indexView
    
    edit the script of stack homeStackPath
 end menu_EditStackScript
+
+on _
+end _
 
 on menu_RevealProjectFolder indexView
    put the selected_Index of indexView into projectName
@@ -171,13 +185,27 @@ getprop disabled_MoveUsed [indexView]
    end switch
 end disabled_MoveUsed
 
+getprop disabled_GitStatus [indexView]
+   put the selected_Index of indexView into projectName
+   put library_FetchProjectFolder (projectName) into projectFolder
+   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
+   if there is a folder gitCheckoutFolder then
+      return false
+   else
+      return "delete"
+   end if
+end disabled_GitStatus
+
 getprop disabled_InitialiseGit [indexView]
    -- put the git_WithinCheckoutFolder of stack stackPath into someBoolean
    put the selected_Index of indexView into projectName
    put project_GetHomeStackPath (projectName) into stackPath
-   put git_GetCheckoutFolder (stackPath) into checkoutFolder
-   -- put git_FindDotGitFolder (stackPath) into checkoutFolder
-   return checkoutFolder is not empty
+   put git_GetCheckoutFolder (stackPath) into gitCheckoutFolder
+   if there is a folder gitCheckoutFolder then
+      return "delete"
+   else
+      return false
+   end if
 end disabled_InitialiseGit
 
 getprop disabled_StartProject [indexView]

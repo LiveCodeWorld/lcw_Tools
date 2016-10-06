@@ -41,10 +41,6 @@ end refresh
 
 --> Global | GIT | Line | File | Menu
 -
--- on menu_Refresh
-   refresh
-end menu_Refresh
-
 on menu_StageThenCommit arrayView
    put lcw_Ask ("Comment on this change...") into someComment
    put LocalArray ["gitCheckoutFolder"] into gitCheckoutFolder
@@ -58,23 +54,27 @@ on menu_SwitchBranch arrayView
    refresh
 end menu_SwitchBranch
 
-on menu_AddUntracked arrayView
+on menu_AddUntrackedFile arrayView
    -- Untracked files:,files,controllers/Global_GIT_Menu.livecodescript,
    put the hilited_Element of arrayView into pathItems
-   put item -1 of pathItems into relativePath
-   put LocalArray ["gitCheckoutFolder"] into gitCheckoutFolder
+   get item 3 to -1 of pathItems
+   put word 1 of it into relativePath
    
    breakpoint
-   git_AddChanged relativePath, gitCheckoutFolder
+   put LocalArray ["gitCheckoutFolder"] into gitCheckoutFolder
+   --  git_AddChanged relativePath, gitCheckoutFolder
+   
+   put gitCheckoutFolder & relativePath into someFileOrFolder
+   git_AddFolder someFileOrFolder -- this will work "cd to folder" then issue "git add ."
+   
    refresh
-end menu_AddUntracked
+end menu_AddUntrackedFile
 
 on menu_AddAllUntracked arrayView
    put LocalArray ["gitCheckoutFolder"] into gitCheckoutFolder
-   
    set the cursor to watch
-   breakpoint
    
+   breakpoint
    git_AddEverything gitCheckoutFolder  
    put the result into shellResult
    
@@ -84,15 +84,12 @@ on menu_AddAllUntracked arrayView
    refresh
 end menu_AddAllUntracked
 
-on menu_RevertToLastCommit
-   breakpoint
-   git_CommitFile someFile, someComment, pAddIfNew, pViewDiff
-   put the result into shellResult
-   
-   if shellResult is not empty then
-      lcw_Notify shellResult
-   end if
-   refresh
+-- on menu_RevertToLastCommit
+breakpoint
+-- should be "  use "git checkout -- <file>..." to discard changes in working directory)"
+--  git_CommitFile someFile, someComment, pAddIfNew, pViewDiff
+put the result into shellResult
+refresh
 end menu_RevertToLastCommit
 
 on menu_ResetToLastCommit
@@ -158,22 +155,28 @@ end disabled_SwitchBranch
 
 getprop disabled_AddAllUntracked [arrayView]
    put the hilited_Element of arrayView into pathItems
-   if LocalArray ["topKey"] = "Untracked files:" and the number of items of pathItems < 3 then
+   put LocalArray ["topKey"] into topKey
+   put the number of items of pathItems into pathNum
+   -- if topKey = "Untracked files:" and the number of items of pathItems < 3 then
+   if topKey is among the items of "Untracked files:,Changes not staged for commit:" and pathNum <3 then
       return false
    else
       return "delete"
    end if
 end disabled_AddAllUntracked
 
-getprop disabled_AddUntracked [arrayView]
+getprop disabled_AddUntrackedFile [arrayView]
    put the hilited_Element of arrayView into pathItems
    
-   if LocalArray ["topKey"] = "Untracked files:" and the number of items of pathItems > 2 then
+   put LocalArray ["topKey"] into topKey
+   put the number of items of pathItems into pathNum
+   --  if topKey is among the items of "Untracked files:" and pathNum > 2 then
+   if topKey is among the items of "Untracked files:,Changes not staged for commit:" and pathNum > 2 then
       return false
    else
       return "delete"
    end if
-end disabled_AddUntracked
+end disabled_AddUntrackedFile
 
 getprop disabled_StashChanges
    if LocalArray ["topKey"] = "Changes to be committed:" then
@@ -204,11 +207,6 @@ end disabled_StageThenCommit
 
 --> Dev | Menu
 -
-on menu_Display arrayView
-   put the parent_Array of arrayView into parentArray
-   display_Array parentArray
-end menu_Display
-
 on menu_Edit arrayView
    put the behavior of arrayView into bObject
    edit the script of bObject

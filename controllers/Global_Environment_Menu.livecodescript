@@ -114,39 +114,6 @@ on menu_Display indexView, displayWhat
    end switch
 end menu_Display
 
-on menu_ShrinkStacks indexView, shrinkWhat
-   switch shrinkWhat
-      case "me"
-         stack_Shrink indexView
-         break
-      case "display"
-         put ide_VisibleStackNames ("display") into stackNames
-         repeat for each line stackName in stackNames
-            put the scaleFactor of stack stackName into someFactor
-            if someFactor = 1 then
-               put the name of stack stackName into stackObject
-               stack_Shrink stackObject
-            end if
-         end repeat
-         break
-      case "shrink all"
-         put ide_VisibleStackNames ()
-         break
-      case "-"
-      case "restore"
-         put ide_VisibleStackNames () into stackNames
-         repeat for each line stackName in stackNames
-            put the scaleFactor of stack stackName into someFactor
-            if someFactor is not 1 then
-               -- set the scaleFactor of stack stackName to 1
-               put the name of stack stackName into stackObject
-               stack_Shrink stackObject, 1
-            end if
-         end repeat
-         break
-   end switch
-end menu_ShrinkStacks
-
 on submenu_Create
    return "Global | ScriptEditor | Create | Menu"
 end submenu_Create
@@ -158,16 +125,9 @@ end submenu_Export
 on _
 end _
 
-on menu_GitProjects
-   
-end menu_GitProjects
-
-on menu_ProjectsWithoutGit
-   
-end menu_ProjectsWithoutGit
-
-on _
-end _
+on submenu_Git
+   return "Global | GIT | Menu"
+end submenu_Git
 
 on submenu_Dev
    return "Dev | Menu"
@@ -210,6 +170,55 @@ end from_Whichs
 
 --> Dev | Menu
 -
+on menu_ShrinkStacks indexView, shrinkWhat
+   switch shrinkWhat
+      case "me"
+         stack_Shrink indexView
+         break
+      case "display"
+         put ide_VisibleStackNames ("display") into stackNames
+         repeat for each line stackName in stackNames
+            put the scaleFactor of stack stackName into someFactor
+            if someFactor = 1 then
+               put the name of stack stackName into stackObject
+               stack_Shrink stackObject
+            end if
+         end repeat
+         break
+      case "shrink all"
+         put ide_VisibleStackNames ()
+         break
+      case "-"
+      case "restore"
+         put ide_VisibleStackNames () into stackNames
+         repeat for each line stackName in stackNames
+            put the scaleFactor of stack stackName into someFactor
+            if someFactor is not 1 then
+               -- set the scaleFactor of stack stackName to 1
+               put the name of stack stackName into stackObject
+               stack_Shrink stackObject, 1
+            end if
+         end repeat
+         break
+   end switch
+end menu_ShrinkStacks
+
+on menu_GitProjects
+   
+end menu_GitProjects
+
+on menu_ProjectsWithoutGit
+   
+end menu_ProjectsWithoutGit
+
+on menu_LibraryProjectData
+   put library_FetchProjectData() into libraryProjectData
+   display_Array libraryProjectData, "library_FetchProjectData()", "Global | Library | Project | Model | Menu", "Global | Library | Project | Model | Line | Menu"
+end menu_LibraryProjectData
+
+on _
+end _
+ 
 on menu_RecreateScriptOnlyStack
    put lcw_UserMetadataFolder() into textStackRoot
    put folder_ListShort (textStackRoot) into exportedScriptOnlyStacks
@@ -220,6 +229,43 @@ on menu_RecreateScriptOnlyStack
    display_Index exportedScriptOnlyStacks, someTitle, mTitle, mLineTitle, mUp, mDoubleUp
    -- put the exported_Script of stack "LCW"
 end menu_RecreateScriptOnlyStack
+
+on _
+end _
+
+on submenu_ProjectTools
+   return "Global | Project | Menu"
+end submenu_ProjectTools
+
+on submenu_Library
+   return "Global | Library | Menu"
+end submenu_Library
+
+on submenu_ManageLibrary
+   return "Global | Library | Manage | Menu"
+end submenu_ManageLibrary
+
+on submenu_Archive
+   return "Global | OPN | Save Count | Menu"
+end submenu_Archive
+
+on submenu_Mainstack
+   return "Global | Script | Mainstack | Menu"
+end submenu_Mainstack
+
+on _
+end _
+
+on submenu_Teamster
+   return "Global | Teamster | Menu"
+end submenu_Teamster
+
+on submenu_TextStack
+   return "Global | Object | Export | Test | Menu"
+end submenu_TextStack
+
+on _
+end _
 
 on submenu_Place
    return "Global | Place | Menu"
