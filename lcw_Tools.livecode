@@ -10,7 +10,7 @@ version: 0.5
 --> Project Deps
 -
 getprop project_Deps
-   return "lcw,lcw_Authoring"
+   return "lcw"
 end project_Deps
 
 

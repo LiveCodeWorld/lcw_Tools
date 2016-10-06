@@ -53,7 +53,6 @@ end drag_Hilite
 -
 on dragEnter   
    put the dragdata ["private"] into privateFlag
-   put privateFlag
    switch
       case privateFlag is empty
          break
@@ -63,7 +62,7 @@ on dragEnter
          put privateFlag into viewName
          put view_GetTemplateObject (viewName) into libraryObject
          if libraryObject is empty then
-            opn_Notify merge("Not a view being dropped, [[viewName]] has no library object!"), true
+            lcw_Notify merge("Not a view being dropped, [[viewName]] has no library object!"), true
             beep
          else
             set the drag_Hilite of me to true

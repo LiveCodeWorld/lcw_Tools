@@ -53,8 +53,39 @@ getprop menu_CheckTarget [mTarget]
 end menu_CheckTarget
 
 
+--> Global | Layout | Placeholder | Replace | Menu
+-
+on menu_ReplaceWithPlaceholder mTarget 
+   put the short name of mTarget into oName
+   set the control_Type [oName] of mTarget to "placeHolder"
+   put the result into newView
+end menu_ReplaceWithPlaceholder
+
+on _
+end _
+
+on menu_ReplaceWithWidget targetObject, widgetName 
+   set the header_Height of targetObject to 64
+   set footer_Height of targetObject to 49
+   set the control_Type of targetObject to widgetName
+end menu_ReplaceWithWidget
+
+on menu_ReplaceWithControl targetObject, revControlName 
+   set the control_Type of targetObject to revControlName
+end menu_ReplaceWithControl
+
+on menu_ReplaceWithView mTarget, viewPathFragment 
+   -- set the view_Swap [true] of mTarget to viewPathFragment
+   set the control_Type of mTarget to viewPathFragment
+end menu_ReplaceWithView
+
+
 --> Global | Layout | Placeholder | Menu
 -
+on submenu_Replace
+   return "Global | Layout | Placeholder | Replace | Menu"
+end submenu_Replace
+
 on menu_UpdatePlaceholder mTarget
    view_Update mTarget, true
 end menu_UpdatePlaceholder
@@ -80,32 +111,25 @@ end menu_Owner
 on _
 end _
 
-on menu_ReplaceWithPlaceholder mTarget 
-   put the short name of mTarget into oName
-   set the control_Type [oName] of mTarget to "placeHolder"
-   put the result into newView
-end menu_ReplaceWithPlaceholder
+on menu_DisplayDragWidgets
+   put "Global | Layout | Placeholder | Replace | Menu" into mTitle
+   put "Controls,Drag and Drop" into someTitle
+   put empty into mLineTitle
+   put empty into mUp
+   put empty into mDoubleUp
+   put "drag_Delete" into dCommand
+   put "headerBar,navBar,segmented,browser,tree" into someIndex
+   display_Index someIndex, someTitle, mTitle, mLineTitle, mUp, mDoubleUp, dCommand
+end menu_DisplayDragWidgets
 
-on _
-end _
-
-on menu_ReplaceWithWidget targetObject, widgetName 
-   set the header_Height of targetObject to 64
-   set footer_Height of targetObject to 49
-   set the control_Type of targetObject to widgetName
-end menu_ReplaceWithWidget
-
-on menu_ReplaceWithControl targetObject, revControlName 
-   set the control_Type of targetObject to revControlName
-end menu_ReplaceWithControl
-
-on menu_ReplaceWithView mTarget, viewPathFragment 
-   -- set the view_Swap [true] of mTarget to viewPathFragment
-   set the control_Type of mTarget to viewPathFragment
-end menu_ReplaceWithView
-
-on _
-end _
+command drag_Delete placeholderView, someThing
+   switch someThing
+      default
+         put someThing
+         breakpoint
+   end switch
+   return "View|SivaSiva|Navigation|Bottom"
+end drag_Delete
 
 on menu_DeleteMe mTarget
    send "delete mTarget" to mTarget in 0 ticks
@@ -156,21 +180,12 @@ end submenu_Dev
 -
 getprop rev_ControlNames
    return "field,button,field,image,scrollbar,graphic,player"
-   -- scrolling field,scrolling list field,datagrid"
 end rev_ControlNames
 
 getprop is_Transparent [mTarget]
    put the view_IsOpaque of mTarget into isOpaque
    return not isOpaque
 end is_Transparent
-
--- getprop public_Props
-put menu_GetTargetObject() into targetObject
-put the view_Object of targetObject into someView
-delete word 1 to 4 of someView
-if exists(someView) is false then return empty
-return the view_PropertyMenu of someView
-end public_Props
 
 getprop some_Views
    if LocalArray ["objectNames"] is empty then
@@ -234,7 +249,7 @@ on menu_TestTarget mTarget
 end menu_TestTarget
 
 on menu_ChangeWidth mTarget
-   put opn_Ask ("Change the width of placeholder to...", the width of mTarget) into newWidth
+   put lcw_Ask ("Change the width of placeholder to...", the width of mTarget) into newWidth
    set the width of mTarget to newWidth
    dispatch "LayoutControl" to the owner of mTarget
 end menu_ChangeWidth

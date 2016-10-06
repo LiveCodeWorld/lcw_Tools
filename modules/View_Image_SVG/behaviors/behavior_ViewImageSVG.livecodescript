@@ -21,6 +21,8 @@ local LocalArray
 --> Events
 -
 on browserNavigateBegin clickedURL
+   pass browserNavigateBegin
+   
    -- "http://libbrowser_dummy_url/list_ImageFileIDs%2Cc%2Cstack+%22behavior_ServerScriptContainer%22%2C1"
    set the itemdelimiter to slash
    put item -1 of clickedURL into urlEncodedHKey
@@ -34,8 +36,16 @@ end browserNavigateBegin
 end browserFrameDocumentLoadBegin
 
 
---> Work in Progress
+--> Objects
 -
+getprop svg_View
+   return the long id of me
+end svg_View
+
+getprop view_Object
+   return the long id of me
+end view_Object
+
 getprop displayed_Object
    put the displayed_Hkey of me into hKey
    put item 3 of hKey into hObject
@@ -55,6 +65,9 @@ setprop displayed_Hkey hKey
    put hKey into LocalArray ["hKey"]
 end displayed_Hkey
 
+
+--> Work in Progress
+-
 getprop svg_Scale
    put the htmltext of me into someHTML
    
@@ -292,17 +305,6 @@ setprop svg_Dimensions svgDimensions
    
    put the svg_XML of me into svgXML
    svg_SetDimensions svgXML, svgWidth, svgHeight
-   
-   /*
-   put svg_CreateXmlTree() into treeID
-   revXMLSetAttribute treeID, "/svg","width", svgWidth
-   revXMLSetAttribute treeID, "/svg","height", svgHeight
-   put revXMLText (treeID, empty, true) into newSvgXML
-   svg_DeleteXmlTree
-   delete line 1 of newSvgXML -- the xml header
-   put word 1 to -1 of newSvgXML into svgXML
-   */
-   
    set the svg_XML of me to svgXML
    return svgXML
 end svg_Dimensions
@@ -320,18 +322,20 @@ setprop svg_XML svgXML
 end svg_XML
 
 
-getprop view_Object
-   return the long id of me
-end view_Object
-
-
 --> SVG
 -
 function svg_Get someHTML
-   local startChar, endChar
-   text_SetOffsets "<svg ", "</svg>", someHTML, startChar, endChar
-   put the result into svgXML
+   put revXMLCreateTree (someHTML, false, true, false) into treeID
+   put revXMLRootNode (treeID) into rootNode
+   put rootNode & "/body/svg" into svgNode
+   put revXMLText (treeID, svgNode, true) into svgXML
+   revDeleteXMLTree treeID
    return svgXML
+   
+   local startChar, endChar
+   -- text_SetOffsets "<svg ", "</svg>", someHTML, startChar, endChar
+   -- put the result into svgXML
+   -- return svgXML
    
    -- brain dead but brittle way
    set the wholematches to false
