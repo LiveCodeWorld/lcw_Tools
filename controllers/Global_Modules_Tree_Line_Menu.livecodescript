@@ -7,21 +7,40 @@ type: controllers
 version: 0.1
 
 
+--> Variables
+-
+local LocalArray
+
+
 --> Menu | Props
 -
+on menu_Init tObject
+   put the index_View of tObject into indexView
+   put the selected_Index of indexView into moduleName
+   put the displayed_HomeStackName of indexView into projectHomeStackName
+   put the displayed_ProjectFolder of indexView into projectFolder
+   
+   put module_GetFolder (moduleFolderName, projectFolder) into moduleFolder
+   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   
+   --  if exists (stack moduleHomeStackPath) is false then return empty
+   --  put view_GetTemplateObject (moduleName) into viewObject
+   put moduleFolder into LocalArray ["moduleFolder"]
+   put moduleHomeStackPath into LocalArray ["moduleHomeStackPath"]
+   put projectFolder into LocalArray ["projectFolder"]
+end menu_Init
+
 getprop menu_Target
    put menu_GetTargetObject() into tObject
-   put the index_View of tObject into indexView
-   put the selected_Index of tObject into viewName
-   put view_GetTemplateObject (viewName) into viewObject
-   return viewObject
+   put the selected_Index of tObject into moduleName
+   return moduleName
 end menu_Target
 
 
 --> Global | Modules | Tree | Line | Menu
 -
-on menu_RevealModuleFolder viewObject
-   put the module_Folder of viewObject into moduleFolder
+on menu_RevealModuleFolder moduleName
+   put LocalArray ["moduleFolder"] into moduleFolder
    if moduleFolder is empty then
       put the name of viewObject & CR & viewObject
       answer warning "Module folder is empty!"
@@ -35,15 +54,25 @@ end menu_RevealModuleFolder
 on _
 end _
 
-on menu_AddModuleProject viewObject
-   put the module_Folder of viewObject into moduleFolder
-   put project_GetName (moduleFolder) into moduleName
+on menu_AddModuleProject moduleName
+   put LocalArray ["moduleFolder"] into moduleFolder
    
    library_StoreProjectFolder moduleName, moduleFolder
    env_SetProjectFolder moduleName, moduleFolder
 end menu_AddModuleProject
 
-getprop disabled_AddModuleProject [viewObject]
+on menu_DisplayModule moduleName
+   put LocalArray ["moduleFolder"] into moduleFolder
+   display_Module moduleFolder
+end menu_DisplayModule
+
+
+--> Global | Modules | Tree | Line | Menu | Props
+-
+
+--> Global | Modules | Tree | Line | Menu | Disabled
+-
+getprop disabled_AddModuleProject [moduleName]
    put the module_Folder of viewObject into moduleFolder
    put project_GetName (moduleFolder) into moduleName
    put library_FetchProjectFolder (moduleName) into moduleFolder
@@ -51,8 +80,3 @@ getprop disabled_AddModuleProject [viewObject]
    
    return false
 end disabled_AddModuleProject
-
-on menu_DisplayModule viewObject
-   put the module_Folder of viewObject into moduleFolder
-   display_Module moduleFolder
-end menu_DisplayModule

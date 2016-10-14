@@ -61,6 +61,13 @@ getprop stack_BehaviorArray
    put objectArray into behaviorArray ["behaviors in mainstack"]
    
    repeat for each key behaviorObject in objectArray
+      if exists (behaviorObject) is false then
+         put objectArray [behaviorObject] into objectsWithMissingBehavior
+         repeat for each line someObject in objectsWithMissingBehavior
+            put behaviorObject into behaviorArray ["object with missing behaviors"][someObject]
+         end repeat
+         next repeat
+      end if 
       put the long id of behaviorObject into longBehavior
       
       if longBehavior ends with longMainStack then

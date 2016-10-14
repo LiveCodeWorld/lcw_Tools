@@ -21,22 +21,47 @@ end menu_CheckTarget
 
 --> Global | Project | Create | Menu
 -
-on menu_TestProjectName homeStackName
-   put homeStackName
-end menu_TestProjectName
+on menu_CreateNewProject
+   project_AskCreate
+end menu_CreateNewProject
 
 on _
 end _
 
-on menu_ExportAndIndexProject projectName
-   put merge ("Do you want to export and index project '[[projectName]]'?") into someComment
-   lcw_Answer someComment
-   project_ExportAndIndex projectName, true
-end menu_ExportAndIndexProject
+on menu_CreateProjectMenu projectName
+   put _askMenuTitle (projectName) into controllerStackName
+   project_CreateMenu controllerStackName, projectName
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateProjectMenu
 
-on menu_CreateNewProject
-   project_AskCreate
-end menu_CreateNewProject
+on menu_CreateProjectLibrary projectName
+   put "Choose a name for your script-only library stack...." into someQuestion
+   set the itemdelimiter to "_"
+   put "lib_" &  item -1 of projectName into suggestedAnswer 
+   put lcw_Ask (someQuestion, suggestedAnswer) into stackName
+   
+   put project_GetFolder (projectName) into projectFolder
+   project_CreateStack projectFolder, stackName, "libraries", "library"
+   put the result into homeStackPath
+   
+   start using stack stackName
+   lcw_Notify ("Stack" && kwote (stackName) && "is now known and used!")
+   edit the script of stack stackName
+   finder_Reveal projectFolder
+end menu_CreateProjectLibrary
+
+on menu_CreateProjectModel projectName
+   put "Choose a name for your script only model stack...." into someQuestion
+   put "model_XXX" into suggestedAnswer
+   project_CreateScriptOnlyStack "models", someQuestion, suggestedAnswer, projectName
+end menu_CreateProjectModel
+
+on menu_CreateProjectBehavior projectName
+   put "Choose a name for your script-only behavior stack...." into someQuestion
+   put "behavior_XXX" into suggestedAnswer
+   project_CreateScriptOnlyStack "behaviors", someQuestion, suggestedAnswer, projectName
+end menu_CreateProjectBehavior
 
 on _
 end _
@@ -62,53 +87,30 @@ on menu_CreateModule homeStackName
    project_CreateModule moduleStackName, rootModuleFolder
 end menu_CreateModule
 
-on menu_CreateProjectMenu projectName
-   put _askMenuTitle (projectName) into controllerStackName
-   project_CreateMenu controllerStackName, projectName
-   put the result into controllerStackObject
-   edit the script of controllerStackObject
-end menu_CreateProjectMenu
-
-on menu_CreateProjectLibrary projectName
-   put "Choose a name for your script-only library stack...." into someQuestion
-   set the itemdelimiter to "_"
-   put "lib_" &  item -1 of projectName into suggestedAnswer 
-   put lcw_Ask (someQuestion, suggestedAnswer) into stackName
-   
-   put project_GetFolder (projectName) into projectFolder
-   project_CreateStack projectFolder, stackName, "libraries", "library"
-   put the result into homeStackPath
-   
-   start using stack stackName
-   lcw_Notify ("Stack" && kwote (stackName) && "is now known and used!")
-   edit the script of stack stackName
-   finder_Reveal projectFolder
-end menu_CreateProjectLibrary
-
 on menu_CreateView projectName
    breakpoint
    template_ConstructStackFromObject scriptObject
 end menu_CreateView
 
-on menu_CreateModel projectName
-   put "Choose a name for your script only model stack...." into someQuestion
-   put "model_XXX" into suggestedAnswer
-   breakpoint
-   project_CreateScriptOnlyStack "models", someQuestion, suggestedAnswer, projectName
-end menu_CreateModel
+on _
+end _
 
-on menu_CreateBehavior projectName
-   put "Choose a name for your script-only behavior stack...." into someQuestion
-   put "behavior_XXX" into suggestedAnswer
-   breakpoint
-   project_CreateScriptOnlyStack "behaviors", someQuestion, suggestedAnswer, projectName
-end menu_CreateBehavior
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
 
 
 --> Global | Project | Create | Menu | Props
 -
 --> Global | Project | Create | Menu | Disabled
 -
+
+--> Dev | Menu
+-
+on menu_TestProjectName homeStackName
+   put homeStackName
+end menu_TestProjectName
+
 
 --> Private
 -

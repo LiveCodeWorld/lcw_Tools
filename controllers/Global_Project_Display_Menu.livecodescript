@@ -17,50 +17,50 @@ on menu_DisplayLibraries homeStackName
 end menu_DisplayLibraries
 
 on menu_DisplayUsed homeStackName
+   breakpoint
    display_Project homeStackName, false
    return empty
 end menu_DisplayUsed
 
-on menu_DisplayViews homeStackName
-   display_ProjectViews homeStackName
-   return empty
-end menu_DisplayViews
-
 on menu_DisplayMenus homeStackName
-   display_ProjectControllers homeStackName
+   display_Controllers homeStackName
 end menu_DisplayMenus
 
 on _
 end _
 
-on menu_DisplayModules homeStackName
+on menu_ProjectModules homeStackName
    display_ProjectModules homeStackName
    return empty
-end menu_DisplayModules
+end menu_ProjectModules
 
-on menu_DisplayBehaviors homeStackName
+on menu_ProjectMenus homeStackName
+   display_ProjectControllers homeStackName
+end menu_ProjectMenus
+
+on menu_ProjectBehaviors homeStackName
    display_ProjectBehaviors homeStackName
-end menu_DisplayBehaviors
+end menu_ProjectBehaviors
 
-on menu_DisplayStacks homeStackName
-   display_ProjectStacks homeStackName
-end menu_DisplayStacks
+on menu_ProjectViews homeStackName
+   display_ProjectViews homeStackName
+   return empty
+end menu_ProjectViews
 
 on _
 end _
 
-on menu_DisplayProjectFolder homeStackName
-   put the project_Folder of stack homeStackName into projectFolder
-   if there is not a folder projectFolder then
-      answer warning "Cannot find project folder!"
-      put projectFolder
-      exit to top
-   end if
-   
-   finder_Reveal projectFolder
-end menu_DisplayProjectFolder
+on menu_ProjectStacks homeStackName
+   display_ProjectStacks homeStackName
+end menu_ProjectStacks
 
+on menu_ProjectFrontScripts homeStackName
+   display_ProjectFrontScripts homeStackName
+end menu_ProjectFrontScripts
 
+on menu_ProjectBackScripts homeStackName
+   display_ProjectBackScripts homeStackName
+end menu_ProjectBackScripts
 
 
 --> Global | Project | Display | Menu | Props

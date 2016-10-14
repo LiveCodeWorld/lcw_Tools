@@ -31,18 +31,17 @@ on _
 end _
 
 on menu_DownloadAssets svgView
-   put the project_Name of svgView into projectName
+   put the project_Folder of svgView into projectFolder
    
    -- put "http://livecode.world/graphs/graph.html" into someUrl
-   
-   asset_DownloadHtml "http://livecode.world/graphs/graph.html", projectName
-   asset_DownloadHtml "https://livecode.world/graphs/graphviz.html", projectName
-   asset_DownloadHtml "http://js.cytoscape.org/demos/aedff159b0df05ccfaa5/", projectName, "cats.html"
+   asset_DownloadHtml "http://livecode.world/graphs/graph.html", projectFolder
+   asset_DownloadHtml "https://livecode.world/graphs/graphviz.html", projectFolder
+   asset_DownloadHtml "http://js.cytoscape.org/demos/aedff159b0df05ccfaa5/", projectFolder, "cats.html"
 end menu_DownloadAssets
 
 on menu_DisplayAsset svgView, shortAssetFile
-   put the project_Name of svgView into projectName
-   put asset_GetFile (projectName, shortAssetFile) into htmlFile
+   put the project_Folder of svgView into projectFolder
+   put asset_GetFile (projectFolder, shortAssetFile) into htmlFile
    put ("file:" & htmlFile) into someURL
    
    put the long id of control 1 of cd 1 of stack "View|Image|SVG" into svgView
@@ -130,8 +129,8 @@ end submenu_Dev
 --> Global | Index | Simple | Menu | Props
 -
 getprop short_AssetFiles [svgView]
-   put the project_Name of svgView into projectName
-   put asset_ListFiles (projectName, empty, true) into shortAssetFiles
+   put the project_Folder of svgView into projectFolder
+   put asset_ListFiles (projectFolder, empty, true) into shortAssetFiles
    return shortAssetFiles
 end short_AssetFiles
 

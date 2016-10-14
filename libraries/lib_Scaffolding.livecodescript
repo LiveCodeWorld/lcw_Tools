@@ -35,13 +35,15 @@ function scaffold_ListShortFiles
 end scaffold_GetUrl
 
 function scaffold_GetFile shortFileBit
-   put asset_GetFolder ("lcw_User", "templates") into templateFile
+   put project_GetFolder ("lcw_User") into projectFolder
+   put asset_GetFolder (projectFolder, "templates") into templateFile
    put shortFileBit after templateFile
    return templateFile
 end scaffold_GetFile
 
 function scaffold_GetFolder
-   put asset_GetFolder ("lcw_User", "templates") into templateFolder
+   put project_GetFolder ("lcw_User") into projectFolder
+   put asset_GetFolder (projectFolder, "templates") into templateFolder
    return templateFolder
 end scaffold_GetFolder
 

@@ -14,6 +14,72 @@ version: 0.2
 
 --> Global | Project | Tree | Menu
 -
+on menu_GitStatus projectName
+   display_GitProjectStatus projectName
+end menu_GitStatus
+
+on _
+end _
+
+on menu_GoToHomeStack homeStackName
+   put library_FetchProjectHomeStackPath (homeStackName) into homeStackPath
+   if exists (stack homeStackPath) is false then breakpoint
+   
+   go to stack homeStackPath
+end menu_GoToHomeStack
+
+on menu_EditHomeStackScript homeStackName
+   put library_FetchProjectHomeStackPath (homeStackName) into homeStackPath
+   if exists (stack homeStackPath) is false then breakpoint
+   
+   edit the script of stack homeStackPath
+end menu_EditHomeStackScript
+
+on menu_HomeIsScriptOnly projectName, someBoolean
+   if someBoolean is false then
+      put project_GetHomeStackPath (projectName) into homeStackPath
+      stack_ConvertScriptOnly homeStackPath
+      put the result into tempStackFileName
+      
+      answer warning "Saved old script only home stack to temporary file, and created new livecode stack in it's place. Check everything is saved you need before continuing!"
+      put tempStackFileName
+      put tempStackFileName into tempFolder
+      set the itemdelimiter to slash
+      put empty into item -1 of tempFolder
+      finder_Reveal tempFolder
+   else
+      -- don't automatically change to scriptonly stack. Do manually ?
+      breakpoint
+   end if
+end menu_HomeIsScriptOnly
+
+on menu_InspectHomeStack homeStackName
+   put library_FetchProjectHomeStackPath (homeStackName) into homeStackPath
+   if exists (stack homeStackPath) is false then breakpoint
+   
+   put the name of stack homeStackPath into stackObject
+   object_Inspect stackObject
+end menu_InspectHomeStack
+
+on _
+end _
+
+on menu_SetHomeStackfiles homeStackName
+   put the stack_Folder of stack homeStackName into projectFolder
+   project_SetFoundStackFiles projectFolder
+   
+   menu_DisplayHomeStackFiles homeStackName
+end menu_SetHomeStackfiles
+
+on menu_DisplayHomeStackFiles homeStackName
+   put the stackFile_Array of stack homeStackName into stackFileArray
+   put the name of stack homeStackName into stackObject
+   display_Array stackFileArray, merge ("[[stackObject]],stackFile_Array")
+end menu_DisplayHomeStackFiles
+
+on _
+end _
+
 on menu_StartProject projectName, someBoolean
    if someBoolean is true then
       project_Start projectName
@@ -37,9 +103,35 @@ on menu_ChangeProject projectName, projectChoice
    unlock screen
 end menu_ChangeProject
 
+on _
+end _
+
+on menu_DisplayProjectFolder homeStackName
+   put the project_Folder of stack homeStackName into projectFolder
+   if there is not a folder projectFolder then
+      answer warning "Cannot find project folder!"
+      put projectFolder
+      exit to top
+   end if
+   
+   finder_Reveal projectFolder
+end menu_DisplayProjectFolder
+
+on menu_ExportAndIndexProject projectName
+   put merge ("Do you want to export and index project '[[projectName]]'?") into someComment
+   lcw_Answer someComment
+   project_ExportAndIndex projectName, true
+end menu_ExportAndIndexProject
+
 
 --> Global | Project | Tree | Menu | Props
 -
+getprop home_IsScriptOnly [projectName]
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   put the scriptonly of stack homeStackPath into someBoolean
+   return someBoolean
+end home_IsScriptOnly
+
 getprop start_Project [projectName]
    return project_IsActive (projectName) is true
 end start_Project

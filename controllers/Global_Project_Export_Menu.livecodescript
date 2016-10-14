@@ -12,8 +12,6 @@ version: 0.1
 on menu_ExportScriptObject treeView
    put the displayed_Object of treeView into stackObject
    script_ExportHandlersAndCalls stackObject, true
-   
-   -- menu_Do "menu_ShortHkeyArray", stackObject
 end menu_ExportScriptObject
 
 on menu_ExportAndIndexProject treeView

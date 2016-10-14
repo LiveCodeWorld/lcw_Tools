@@ -3,8 +3,8 @@
 -
 license: GPLv3
 name: lib_DisplayView
-type: libraries
-version: 0.2
+type: library
+version: 0.3
 
 
 --> Working on
@@ -80,16 +80,64 @@ command display_BrokenBehaviors pCardObject, pDisplayArray
 end display_BrokenBehaviors
 
 
---> Display | Project | Modules
+--> Display | Project | Controllers
 -
 command display_ProjectControllers homeStackName, pIndexView
    put project_ListControllerPaths (homeStackName) into controllerPaths
    put stack_PathsToNames (controllerPaths) into stackNames
    
+   put empty into mUp
+   put "mDouble_DisplayStack" into mDoubleUp
    put merge ("[[homeStackName]],Project Controllers") into someTitle
-   display_Index stackNames, someTitle, "Global | View | Tree | Menu", mLineTitle, mUp, "mDouble_DisplayStack"
+   
+   put "Global | Controllers | Tree | Menu" into mTitle
+   put "Global | Controllers | Tree | Line | Menu" into mLineTitle
+   
+   if exists (pIndexView) is false then
+      display_Index stackNames, someTitle, mTitle, mLineTitle, mUp, mDoubleUp
+      put the result into displayView
+      return displayView
+   else
+      lock screen
+      set the view_Index of pIndexView to stackNames
+      set the stack_Title of pIndexView to someTitle
+      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
+      set the title_Menu of pIndexView to mTitle
+      set the line_Menu of pIndexView to mLineTitle
+      unlock screen
+      return pIndexView
+   end if
 end display_ProjectControllers
 
+command display_Controllers pIndexView
+   put env_ListControllerStackNames() into activeControllerStackNames
+   
+   put empty into mUp
+   put "mDouble_DisplayStack" into mDoubleUp
+   put "Active Controllers,Environment" into stackTitle
+   
+   put "Global | Environment | Menu" into mTitle
+   put "Global | Project | Tree | Line | Menu" into mLineTitle
+   
+   if exists (pIndexView) is false then
+      display_Index activeControllerStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp
+      put the result into displayView
+      return displayView
+   else
+      lock screen
+      set the view_Index of pIndexView to activeControllerStackNames
+      set the stack_Title of pIndexView to stackTitle
+      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
+      set the title_Menu of pIndexView to mTitle
+      set the line_Menu of pIndexView to mLineTitle
+      unlock screen
+      return pIndexView
+   end if
+end display_Controllers
+
+
+--> Display | Project | Standard
+-
 command display_ProjectBehaviors homeStackName, pIndexView
    put project_ListBehaviorPaths (homeStackName) into behaviorPaths
    put stack_PathsToNames (behaviorPaths) into stackNames
@@ -103,9 +151,40 @@ command display_ProjectStacks homeStackName, pIndexView
    put stack_PathsToNames (stackPaths) into stackNames
    
    put merge ("[[homeStackName]],Project Stacks") into someTitle
-   display_Index stackNames, someTitle, "Global | View | Tree | Menu", mLineTitle, mUp, "mDouble_DisplayStack"
+   put "Global | Project | Stacks | Tree | Menu" into mTitle
+   put "Global | Project | Stacks | Tree | Line | Menu" into mLineTitle
+   display_Index stackNames, someTitle, mTitle, mLineTitle, mUp, "mDouble_DisplayStack"
+   put the result into indexView
+   return indexView
 end display_ProjectStacks
 
+command display_ProjectFrontScripts homeStackName, pIndexView
+   put project_ListFrontScriptPaths (homeStackName) into stackPaths
+   put stack_PathsToNames (stackPaths) into stackNames
+   
+   put merge ("[[homeStackName]],Project FrontScripts") into someTitle
+   put "Global | Project | FrontScripts | Tree | Menu" into mTitle
+   put "Global | Project | FrontScripts | Tree | Line | Menu" into mLineTitle
+   display_Index stackNames, someTitle, mTitle, mLineTitle, mUp, "mDouble_DisplayStack"
+   put the result into indexView
+   return indexView
+end display_ProjectFrontScripts
+
+command display_ProjectBackScripts homeStackName, pIndexView
+   put project_ListBackScriptPaths (homeStackName) into stackPaths
+   put stack_PathsToNames (stackPaths) into stackNames
+   
+   put merge ("[[homeStackName]],Project BackScripts") into someTitle
+   put "Global | Project | BackScripts | Tree | Menu" into mTitle
+   put "Global | Project | BackScripts | Tree | Line | Menu" into mLineTitle
+   display_Index stackNames, someTitle, mTitle, mLineTitle, mUp, "mDouble_DisplayStack"
+   put the result into indexView
+   return indexView
+end display_ProjectBackScripts
+
+
+--> Display | Project | Modules
+-
 command display_ProjectModules homeNameOrPath, pIndexView
    put the short name of stack homeNameOrPath into projectHomeStackName
    
@@ -121,9 +200,8 @@ command display_ProjectModules homeNameOrPath, pIndexView
    
    if exists (pIndexView) is false then
       display_Index moduleStackNames, someTitle,mTitle, mLineTitle, mUp, mDoubleUp
-      put the result into indexView
-      set the multiple_Hilites of indexView to false
-      return indexView
+      put the result into pIndexView
+      set the multiple_Hilites of pIndexView to false
    else
       lock screen
       set the view_Index of pIndexView to moduleStackNames
@@ -132,8 +210,12 @@ command display_ProjectModules homeNameOrPath, pIndexView
       set the title_Menu of pIndexView to mTitle
       set the line_Menu of pIndexView to mLineTitle
       unlock screen
-      return pIndexView
    end if
+   
+   put library_FetchProjectFolder (projectHomeStackName) into projectFolder
+   set the displayed_ProjectFolder of pIndexView to projectFolder
+   set the displayed_HomeStackName of pIndexView to projectHomeStackName
+   return pIndexView
 end display_ProjectModules
 
 command display_ModuleFromName moduleName, projectName
@@ -161,25 +243,36 @@ command display_Module moduleFolder
    go to stack moduleHomeStackPath
    
    if exists (control 1 of cd 1 of stack moduleHomeStackPath) is true then
-      put the long id of control 1 of cd 1 of stack moduleHomeStackPath into viewObject
-      put the view_Props of viewObject into viewProps
-      put the view_MenuTitle [true] of viewObject into mTitle
-      put CR & "-" after mTitle
+      put the long id of control 1 of cd 1 of stack moduleHomeStackPath into displayedObject
+      if the view_Name of displayedObject is empty then
+         put false into isaView
+      else
+         put true into isaView
+         put the view_Props of displayedObject into viewProps
+         put the view_MenuTitle [true] of displayedObject into mTitle
+         put CR & "-" after mTitle
+      end if
    else
-      -- the stack exists but ther is no viewObject
-      put the long id of cd 1 of stack moduleHomeStackPath into viewObject
+      -- the stack exists but there is no viewObject
+      put false into isaView
+      put the long id of cd 1 of stack moduleHomeStackPath into displayedObject
       put empty into viewProps
       put the short name of stack moduleHomeStackPath into viewTitle
    end if
    
    put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-   put CR & "-" after mTitle
-   put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
-   put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
-   put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
-   put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
-   -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
-   put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+   if isaView is true then
+      put CR & "-" after mTitle
+      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
+      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+   else
+      put "Not a view" into viewProps
+      put the name of stack moduleHomeStackPath into viewObject
+   end if
    
    put empty into mLineTitle
    put empty into mUp
@@ -187,7 +280,10 @@ command display_Module moduleFolder
    display_Index viewProps, someTitle, mTitle, "Global | Module | Tree | Line | Menu", mUp, "mDouble_EditProp"
    put the result into indexView
    set the multiple_Hilites of indexView to false
-   set the displayed_Object of indexView to viewObject
+   
+   set the displayed_Object of indexView to displayedObject
+   set the displayed_ModuleFolder of indexView to moduleFolder
+   set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
    
    put the script of cd 1 of stack moduleHomeStackPath into cardScript
    if cardScript is not empty then

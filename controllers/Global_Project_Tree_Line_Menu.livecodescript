@@ -21,21 +21,6 @@ end refreshDisplay
 
 --> Global | Project | Tree | Line | Menu
 -
-on menu_ConvertToModule indexView, newProjectName
-   put the selected_Index of indexView into moduleStackName
-   if exists (stack moduleStackName) is false then
-      breakpoint
-      exit to top
-   end if
-   
-   put the filename of stack moduleStackName into oStackPath
-   -- put the module_Folder [newProjectName] of stack moduleStackName into moduleFolder
-   put project_GetFolder (newProjectName) into projectFolder
-   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
-   
-   project_CreateModule moduleStackName, rootModuleFolder, oStackPath
-end menu_ConvertToModule
-
 on menu_MoveUsed indexView, newProjectName
    put the selected_Index of indexView into stackName
    put the name of stack stackName into stackObject
@@ -52,8 +37,23 @@ on menu_MoveUsed indexView, newProjectName
    
    breakpoint
    -- refreshDisplay newProjectName
-   menu_Do "menu_DisplayActive", indexView, "libraries", "Global | Project | Line | Menu"
+   menu_Do "menu_DisplayActive", "Global | Project | Line | Menu", indexView, "libraries"
 end menu_MoveUsed
+
+on menu_ConvertToModule indexView, newProjectName
+   put the selected_Index of indexView into moduleStackName
+   if exists (stack moduleStackName) is false then
+      breakpoint
+      exit to top
+   end if
+   
+   put the filename of stack moduleStackName into oStackPath
+   -- put the module_Folder [newProjectName] of stack moduleStackName into moduleFolder
+   put project_GetFolder (newProjectName) into projectFolder
+   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
+   
+   project_CreateModule moduleStackName, rootModuleFolder, oStackPath
+end menu_ConvertToModule
 
 on menu_StartProject indexView, someBoolean
    put the selected_Index of indexView into projectName
@@ -100,6 +100,14 @@ end menu_AddEverythingToGit
 on _
 end _
 
+on menu_GoToHomeStack indexView
+   put the selected_Index of indexView into projectName
+   put library_FetchProjectHomeStackPath (projectName) into homeStackPath
+   if exists (stack homeStackPath) is false then breakpoint
+   
+   go to stack homeStackPath
+end menu_GoToHomeStack
+
 on menu_EditStackScript indexView
    put the selected_Index of indexView into projectName
    put library_FetchProjectHomeStackPath (projectName) into homeStackPath
@@ -116,14 +124,6 @@ on menu_RevealProjectFolder indexView
    put project_GetFolder (projectName) into projectFolder
    finder_Reveal projectFolder
 end menu_RevealProjectFolder
-
-on menu_DeleteProject indexView
-   put the selected_Index of indexView into projectName
-   answer warning merge ("Are you sure you want to close project '[[projectName]]' and move all files to the trash?") with "Cancel" or "OK"
-   if it is "Cancel" then exit to top
-   
-   project_Trash projectName
-end menu_DeleteProject
 
 on menu_RemoveProjectFromLibrary indexView
    put the selected_Index of indexView into projectName
@@ -143,6 +143,17 @@ on menu_DisplayProject indexView
    put library_ListProjectNames() into projectNames
    set the view_Index ["List of Projects"] of indexView to projectNames
 end menu_DisplayProject
+
+on _
+end _
+
+on menu_TrashProject indexView
+   put the selected_Index of indexView into projectName
+   answer warning merge ("Are you sure you want to close project '[[projectName]]' and move all files to the trash?") with "Cancel" or "OK"
+   if it is "Cancel" then exit to top
+   
+   project_Trash projectName
+end menu_TrashProject
 
 
 --> Global | Project | Tree | Line | Menu | Props

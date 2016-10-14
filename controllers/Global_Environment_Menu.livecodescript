@@ -37,15 +37,12 @@ on menu_DisplayRecentExports mTarget, howLong
    display_RecentExports howLong
 end menu_DisplayRecentExports
 
-on _
-end _
-
 on menu_Display indexView, displayWhat
    switch displayWhat
+      put displayWhat & comma & "Environment" into someTitle
       case "List Projects"
-         put library_ListProjectNames() into projectNames
-         set the view_Index [displayWhat] of indexView to projectNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayProject"
+         put library_ListProjectNames() into projectNames -- it's the default anyway
+         display_ProjectList projectNames, indexView, someTitle
          break
       case "List Active Projects"
          if the shiftKey is "Down" then
@@ -53,12 +50,11 @@ on menu_Display indexView, displayWhat
          else
             put library_ListProjectNames() into projectNames
          end if
-         display_ProjectList projectNames, indexView, "Active Projects,Environment"
+         display_ProjectList projectNames, indexView, someTitle
          break
       case "List Projects and Modules"
          put library_ListProjectNames ("all") into projectNames
-         set the view_Index [displayWhat] of indexView to projectNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayProject"
+         display_ProjectList projectNames, indexView, someTitle
          break
       case "-"
       case "Libraries and Models"
@@ -84,9 +80,9 @@ on menu_Display indexView, displayWhat
       case "-"
       case "Controllers"
          if the shiftKey is "Down" then
-            display_ActiveControllers
+            display_Controllers
          else
-            display_ActiveControllers indexView
+            display_Controllers indexView
          end if
          break
       case "-"
@@ -113,6 +109,13 @@ on menu_Display indexView, displayWhat
          break
    end switch
 end menu_Display
+
+on _
+end _
+
+on submenu_Project
+   return "Global | Library | Project | Model | Menu"
+end submenu_Project
 
 on submenu_Create
    return "Global | ScriptEditor | Create | Menu"
@@ -170,6 +173,30 @@ end from_Whichs
 
 --> Dev | Menu
 -
+on menu_WatchEditingScripts indexView, someBoolean
+   if someBoolean is true then
+      ide_AddRevEditScriptStack "LCW"
+   else
+      ide_RemoveRevEditScriptStack "LCW"
+   end if
+end menu_WatchEditingScripts
+
+getprop watch_EditingScripts
+   put ide_GetRevEditScriptStack ("LCW") into someBoolean
+   return someBoolean
+end watch_EditingScripts
+
+on menu_LivecodePluginArray
+   -- ide_AddRevEditScriptStack stackName
+   -- this adds the stack stackname to the list of stacks that receive the "revEditScript" command
+   -- send "revEditScript tObject" to this card of stack tPlugin
+   global gREVMessageDispatch
+   display_Array gREVMessageDispatch
+end  menu_LivecodePluginArray
+
+on _
+end _
+
 on menu_ShrinkStacks indexView, shrinkWhat
    switch shrinkWhat
       case "me"
@@ -203,13 +230,8 @@ on menu_ShrinkStacks indexView, shrinkWhat
    end switch
 end menu_ShrinkStacks
 
-on menu_GitProjects
-   
-end menu_GitProjects
-
-on menu_ProjectsWithoutGit
-   
-end menu_ProjectsWithoutGit
+on _
+end _
 
 on menu_LibraryProjectData
    put library_FetchProjectData() into libraryProjectData
@@ -299,16 +321,6 @@ on menu_TidyProjectLibrary
    library_TidyProjectModel
 end menu_TidyProjectLibrary
 
-on menu_ShrinkMe treeView, someBoolean
-   put the stack_Object of treeView into stackObject
-   put the scalefactor of stackObject = 1 into isNormal
-   if isNormal then
-      set the scalefactor of stackObject to 0.7
-   else
-      set the scalefactor of stackObject to 1
-   end if
-end menu_ShrinkMe
-
 on _
 end _
 
@@ -319,12 +331,6 @@ end menu_MultipleHilights
 
 --> Dev | Menu | Props
 -
-getprop shrink_Me [treeView]
-   put the stack_Object of treeView into stackObject
-   put the scalefactor of stackObject = 1 into isNormal
-   return isNormal is false
-end shrink_Me
-
 
 --> Menu | Props
 -

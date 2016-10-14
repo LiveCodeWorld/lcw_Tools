@@ -4,20 +4,21 @@
 license: GPLv3
 name: Global_Module_Menu
 type: controller
-version: 0.1
+version: 0.2
 
 
 --> Global | Module | Menu
 -
-on menu_EditMenu someView, menuStackName
+on menu_EditMenu viewOrStack, menuStackName
    edit the script of stack menuStackName
 end menu_EditMenu
 
-on menu_CreateModuleMenu someView
-   put the project_Name of someView into moduleStackName
+on menu_CreateModuleMenu viewOrStack
+   breakpoint
+   put the project_Name of viewOrStack into moduleStackName
    put _askMenuTitle (moduleStackName) into moduleStackName
    
-   put the module_Folder of someView into moduleFolder
+   put the module_Folder of viewOrStack into moduleFolder
    module_CreateController moduleStackName, moduleFolder
    put the result into moduleControllerStackPath
    edit the script of stack moduleControllerStackPath
@@ -26,8 +27,8 @@ end menu_CreateModuleMenu
 on _
 end _
 
-on menu_RevealModuleFolder someView
-   put the module_Folder of someView into moduleFolder
+on menu_RevealModuleFolder viewOrStack
+   put the module_Folder of viewOrStack into moduleFolder
    finder_Reveal moduleFolder
 end menu_RevealModuleFolder
 
