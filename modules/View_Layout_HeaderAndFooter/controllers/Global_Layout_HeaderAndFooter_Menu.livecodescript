@@ -75,14 +75,29 @@ on menu_UpdateComponents layoutView, withWhat
    switch withWhat
       case "Placeholders"
          set the control_Type of headerView to "placeholder"
+         put the result into pButton
+         set the background_Colour of pButton to "random"
+         
          set the control_Type of bodyView to "placeholder"
+         put the result into pButton
+         set the background_Colour of pButton to "random"
+         
          set the control_Type of footerView to "placeholder"
+         put the result into pButton
+         set the background_Colour of pButton to "random"
          break
       case "Browser"
          set the control_Type of headerView to "headerBar" -- "View|SivaSiva|Navigation|Bottom"
+         put the result into newHeaderView
+         set the behavior of newHeaderView to the name of stack "behavior_ViewHeader"
+         -- set the opaque of newHeaderView to true
+         set the backgroundcolor of newHeaderView to white
+         
          set the control_Type of bodyView to "browser"
          put the result into newBodyView
          set the url of newBodyView to "http://dev.himalayanacademy.com/monastery/meet-the-monks"
+         set the behavior of newBodyView to the name of stack "behavior_ViewBrowser"
+         
          set the control_Type of footerView to "View|SivaSiva|Navigation|Bottom"
          break
    end switch

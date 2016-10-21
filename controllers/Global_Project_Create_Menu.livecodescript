@@ -29,8 +29,10 @@ on _
 end _
 
 on menu_CreateProjectMenu projectName
-   put _askMenuTitle (projectName) into controllerStackName
-   project_CreateMenu controllerStackName, projectName
+   put _askMenuTitle (projectName) into gMenuTitle
+   put project_GetFolder (projectName) into projectFolder
+   breakpoint
+   project_CreateMenu projectFolder, gMenuTitle
    put the result into controllerStackObject
    edit the script of controllerStackObject
 end menu_CreateProjectMenu
@@ -125,6 +127,5 @@ private function _askMenuTitle projectName
    
    put "What is the name of your global menu...." into someQuestion
    put lcw_Ask (someQuestion, suggestedAnswer) into gMenuTitle
-   put module_FolderNameFromTitle (gMenuTitle) into moduleStackName
-   return moduleStackName
+   return gMenuTitle
 end _askMenuTitle

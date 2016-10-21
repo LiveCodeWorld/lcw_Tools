@@ -245,7 +245,7 @@ end owner_MenuItems
 --> Dev | Menu
 -
 on menu_TestTarget mTarget
-   put the mobile_Name of mTarget
+   put the name of mTarget
 end menu_TestTarget
 
 on menu_ChangeWidth mTarget

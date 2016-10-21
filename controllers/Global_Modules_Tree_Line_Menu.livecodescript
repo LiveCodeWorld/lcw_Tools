@@ -39,6 +39,19 @@ end menu_Target
 
 --> Global | Modules | Tree | Line | Menu
 -
+on menu_DisplayModuleConfiguration moduleName
+   put sivasiva_GetModuleConfigArray (moduleName) into configArray
+   
+   /*
+   put sivasiva_GetModuleJsonFile (moduleName) into moduleJsonFile
+   if there is not a file moduleJsonFile then return empty
+   put url ("binfile:" & moduleJsonFile) into configJSON
+   put jsonImport (configJSON) into configArray
+   */
+   
+   display_Array configArray, "sivasiva_GetModuleConfigArray()"
+end menu_DisplayModuleConfiguration
+
 on menu_RevealModuleFolder moduleName
    put LocalArray ["moduleFolder"] into moduleFolder
    if moduleFolder is empty then

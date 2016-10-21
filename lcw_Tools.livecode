@@ -30,9 +30,6 @@ on project_Init
    
    -- set the project_Start of me to true
    project_InitialiseFolder projectHomeStackFile
-   
-   -- custom
-   display_ProjectList
 end project_Init
 
 command lcw_Start projectHomeStackFile

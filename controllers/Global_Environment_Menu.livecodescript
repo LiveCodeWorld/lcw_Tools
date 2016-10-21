@@ -40,74 +40,73 @@ end menu_DisplayRecentExports
 on menu_Display indexView, displayWhat
    switch displayWhat
       put displayWhat & comma & "Environment" into someTitle
-      case "List Projects"
-         put library_ListProjectNames() into projectNames -- it's the default anyway
-         display_ProjectList projectNames, indexView, someTitle
-         break
-      case "List Active Projects"
-         if the shiftKey is "Down" then
-            put env_ListProjects() into projectNames
-         else
-            put library_ListProjectNames() into projectNames
-         end if
-         display_ProjectList projectNames, indexView, someTitle
-         break
-      case "List Projects and Modules"
-         put library_ListProjectNames ("all") into projectNames
-         display_ProjectList projectNames, indexView, someTitle
-         break
-      case "-"
-      case "Libraries and Models"
-         if the shiftKey is "Down" then
-            display_Libraries
-         else
-            display_Libraries indexView
-         end if
-         break
-      case "-"
-      case "List All Modules"
-         put library_ListProjectNames ("module") into projectNames
-         set the view_Index [displayWhat] of indexView to projectNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
-         break
-      case "Active Modules"
-         if the shiftKey is "Down" then
-            display_ActiveModules
-         else
-            display_ActiveModules indexView
-         end if
-         break
-      case "-"
-      case "Controllers"
-         if the shiftKey is "Down" then
-            display_Controllers
-         else
-            display_Controllers indexView
-         end if
-         break
-      case "-"
-      case "List All Behaviors"
-         put env_ListBehaviorStackNames() into behaviorStackNames
-         set the view_Index [displayWhat] of indexView to behaviorStackNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
-         break
-      case "Behaviors"
-         if the shiftKey is "Down" then
-            display_ActiveBehaviors
-         else
-            display_ActiveBehaviors indexView
-         end if
-         break
-      case "-"
-         -- case "models"
-      case "Views"
-         if the shiftKey is "Down" then
-            display_ActiveViews
-         else
-            display_ActiveViews indexView
-         end if
-         break
-   end switch
+   case "List Projects"
+      put library_ListProjectNames() into projectNames -- it's the default anyway
+      display_ProjectList projectNames, indexView, someTitle
+      break
+   case "List Active Projects"
+      if the shiftKey is "Down" then
+         put env_ListProjects() into projectNames
+      else
+         put library_ListProjectNames() into projectNames
+      end if
+      display_ProjectList projectNames, indexView, someTitle
+      break
+   case "List Projects and Modules"
+      display_Used
+      break
+   case "-"
+   case "Libraries and Models"
+      if the shiftKey is "Down" then
+         display_Libraries
+      else
+         display_Libraries indexView
+      end if
+      break
+   case "-"
+   case "List All Modules"
+      put library_ListProjectNames ("module") into projectNames
+      set the view_Index [displayWhat] of indexView to projectNames
+      set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
+      break
+   case "Active Modules"
+      if the shiftKey is "Down" then
+         display_ActiveModules
+      else
+         display_ActiveModules indexView
+      end if
+      break
+   case "-"
+   case "Controllers"
+      if the shiftKey is "Down" then
+         display_Controllers
+      else
+         display_Controllers indexView
+      end if
+      break
+   case "-"
+   case "List All Behaviors"
+      put env_ListBehaviorStackNames() into behaviorStackNames
+      set the view_Index [displayWhat] of indexView to behaviorStackNames
+      set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
+      break
+   case "Behaviors"
+      if the shiftKey is "Down" then
+         display_ActiveBehaviors
+      else
+         display_ActiveBehaviors indexView
+      end if
+      break
+   case "-"
+      -- case "models"
+   case "Views"
+      if the shiftKey is "Down" then
+         display_ActiveViews
+      else
+         display_ActiveViews indexView
+      end if
+      break
+end switch
 end menu_Display
 
 on _

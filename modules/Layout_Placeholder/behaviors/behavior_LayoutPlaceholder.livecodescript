@@ -2,7 +2,7 @@
 --> MetaData
 -
 license: GPLv3
-name: behavior_View|Layout|Placeholder
+name: behavior_LayoutPlaceholder
 type: view behavior
 version: 0.4
 copyright: David Bovill
@@ -14,12 +14,47 @@ It's also a great way to test the robsutness of your layout.
 Can you replace all your views with placeholders and back and everything still work?
 */
 
+--> Variables
+-
 local LocalArray
 
+
+--> Working on
+-
+getprop background_Colour
+    return the effective backgroundcolor of me
+end background_Colour
+
+setprop background_Colour someColour
+   if someColour is "random" then put colour_GetRandom() into someColour
+   set the backgroundcolor of me to someColour
+end background_Colour
+
+getprop view_Colour
+   -- legacy
+    return the effective backgroundcolor of the placeHolder_Button of me
+end view_Colour
+
+setprop view_Colour someColour
+   -- legacy
+   if someColour is "random" then put colour_GetRandom() into someColour
+   set the backgroundcolor of the placeHolder_Button of me to someColour
+end view_Colour
+
+
+--> View
+-
+getprop placeHolder_Button
+    return the long id of me
+end placeHolder_Button
+
 getprop view_Name
-   -- here so all we need to do is set the behavior
    return "View|Layout|Placeholder"
 end view_Name
+
+getprop view_Object
+    return the long id of me
+end view_Object
 
 
 --> Events
@@ -121,15 +156,6 @@ setprop view_Label someText
     end if
 end view_Label
 
-getprop view_Colour
-    return the effective backgroundcolor of the placeHolder_Button of me
-end view_Colour
-
-setprop view_Colour someColour
-   if someColour is "random" then put colour_GetRandom() into someColour
-   set the backgroundcolor of the placeHolder_Button of me to someColour
-end view_Colour
-
 
 --> Geometry
 -
@@ -147,17 +173,6 @@ setprop view_Height someHeight
    dispatch "LayoutControl" to myOwner with oRect -- experimental  allows a container to resize itself
    unlock screen
 end view_Height
-
-
---> Controls
--
-getprop placeHolder_Button
-    return the long id of me
-end placeHolder_Button
-
-getprop view_Object
-    return the long id of me
-end view_Object
 
 
 --> Deps

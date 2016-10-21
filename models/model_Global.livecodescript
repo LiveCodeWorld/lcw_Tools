@@ -117,20 +117,20 @@ command library_RestoreGlobalDump
 end library_RestoreGlobalDump
 
 function library_FetchGlobalDump
-   put library_FetchArray ("library_GlobalDump") into gatheredArray
+   put lcw_FetchArray ("library_GlobalDump.array") into gatheredArray
    return gatheredArray
 end library_FetchGlobalDump
 
 command library_StoreGlobalDump gatheredArray
-   library_StoreArray "library_GlobalDump", gatheredArray
+   lcw_StoreArray "library_GlobalDump.array", gatheredArray
 end library_StoreGlobalDump
 
 command library_DeleteGlobalDump
-   library_DeleteArray "library_GlobalDump"
+   lcw_DeleteArray "library_GlobalDump.array"
 end library_DeleteGlobalDump
 
 function library_GlobalDumpFile
-   put library_GetArrayFile ("library_GlobalDump") into libraryGlobalDumpFiles
+   put lcw_GetArrayFile ("library_GlobalDump.array") into libraryGlobalDumpFiles
    return libraryGlobalDumpFiles
 end library_GlobalDumpFile
 

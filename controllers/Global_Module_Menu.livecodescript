@@ -14,15 +14,24 @@ on menu_EditMenu viewOrStack, menuStackName
 end menu_EditMenu
 
 on menu_CreateModuleMenu viewOrStack
-   breakpoint
    put the project_Name of viewOrStack into moduleStackName
-   put _askMenuTitle (moduleStackName) into moduleStackName
+   put _askMenuTitle (moduleStackName) into gMenuTitle
+   put the module_Folder of viewOrStack into moduleFolder
+   module_CreateMenu moduleFolder, gMenuTitle
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateModuleMenu
+
+on menu_CreateModuleBehavior viewOrStack
+   put the project_Name of viewOrStack into moduleStackName
+   put project_DefaultBehaviorName (moduleStackName) into maybeBehaviorStackName
+   put lcw_Ask ("What name would you like for this modules behavior?", maybeBehaviorStackName) into behaviorStackName
    
    put the module_Folder of viewOrStack into moduleFolder
-   module_CreateController moduleStackName, moduleFolder
-   put the result into moduleControllerStackPath
-   edit the script of stack moduleControllerStackPath
-end menu_CreateModuleMenu
+   module_CreateBehavior moduleFolder, behaviorStackName
+   put the result into moduleBehaviorStackPath
+   edit the script of stack moduleBehaviorStackPath
+end menu_CreateModuleBehavior
 
 on _
 end _
@@ -57,17 +66,17 @@ end disabled_EditMenu
 
 --> Deps
 -
-private function _askMenuTitle moduleStackName
+private function _askMenuTitle moduleStackName, projectName
    put line 1 of the clipboarddata ["text"] into maybeMenuTitle
    if word -1 of maybeMenuTitle = "Menu" then
       put maybeMenuTitle into suggestedAnswer
    else
       set the itemdelimiter to "_"
-      put "Global |" && item -1 of moduleStackName && "| Menu" into suggestedAnswer
+      put "Global |" && item -1 of moduleStackName && "| Menu" into gMenuTitle
+      menu_NormalizeTitle gMenuTitle, true
    end if
    
    put "What is the name of your global menu...." into someQuestion
-   put lcw_Ask (someQuestion, suggestedAnswer) into gMenuTitle
-   put module_FolderNameFromTitle (gMenuTitle) into moduleStackName
-   return moduleStackName
+   put lcw_Ask (someQuestion, gMenuTitle) into gMenuTitle
+   return gMenuTitle
 end _askMenuTitle
