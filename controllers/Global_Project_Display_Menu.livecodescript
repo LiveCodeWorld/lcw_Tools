@@ -12,7 +12,7 @@ version: 0.2
 on menu_DisplayLibraries homeStackName
    put menu_GetTargetObject() into tObject
    put the index_View of tObject into indexView
-   display_Libraries indexView, homeStackName
+   display_LibrariesAndModels indexView, homeStackName
    return empty
 end menu_DisplayLibraries
 

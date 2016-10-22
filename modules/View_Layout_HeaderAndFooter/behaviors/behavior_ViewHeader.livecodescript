@@ -7,6 +7,20 @@ type: behavior
 version: 0.1
 
 
+--> Header | Props
+-
+getprop title_Text
+   put the label of me into titleText
+   return titleText
+end title_Text
+
+setprop title_Text titleText
+   set the label of me to titleText
+   return the long id of me
+end title_Text
+
+
+
 --> Object
 -
 getprop header_View
@@ -21,7 +35,7 @@ getprop view_Object
 end view_Object
 
 getprop view_Name
-   return "View|Layout|Header"
+   return "View|Header"
 end view_Name
 
 

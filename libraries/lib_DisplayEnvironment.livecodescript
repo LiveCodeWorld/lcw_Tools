@@ -22,12 +22,12 @@ end display_EnvironmentProjects
 
 --> Working on
 -
-command display_Used
+command display_ProjectsAndModules
    put library_ListProjectNames ("all") into projectNames
    display_ProjectList projectNames, indexView, "List Projects and Modules"
    put the result into indexView
    return indexView
-end display_Used
+end display_ProjectsAndModules
 
 command display_Project homeStackName, pGoOrEdit
    if exists (stack homeStackName) is true then
@@ -49,7 +49,8 @@ command display_Project homeStackName, pGoOrEdit
       end if
    end if
    
-   display_LibrariesAndModels homeStackPath
+   display_ModelsAndViews homeStackPath
+   -- display_LibrariesAndModels pIndexView, pProjectNames
    put the result into indexView
    set the menu_Target of indexView to homeStackName
    
@@ -74,10 +75,11 @@ command display_ProjectList pProjectNames, pIndexView, pStackTitle
    put empty into mUp
    put "Global | Environment | Menu" into mTitle
    put "Global | Project | Tree | Line | Menu" into mLineTitle
+   put empty into dragCommand
    
    if exists (pIndexView) is false then
       put empty into mUp
-      display_Index pProjectNames, pStackTitle, mTitle, mLineTitle, mUp, mDoubleUp
+      display_Index pProjectNames, pStackTitle, mTitle, mLineTitle, mUp, mDoubleUp, dragCommand, true
       put the result into displayView
       return displayView
    else
@@ -95,7 +97,7 @@ end display_ProjectList
 
 --> Display | Libraries
 -
-command display_LibrariesAndModels homeStackPath
+command display_ModelsAndViews homeStackPath
    put the short name of stack homeStackPath into homeStackName
    put the project_UsedStackNames of stack homeStackPath into stackNames
    
@@ -114,9 +116,9 @@ command display_LibrariesAndModels homeStackPath
    put the result into indexView
    set the multiple_Hilites of indexView to false
    return indexView
-end display_LibrariesAndModels
+end display_ModelsAndViews
 
-command display_Libraries pIndexView, pProjectNames
+command display_LibrariesAndModels pIndexView, pProjectNames
    -- see also "display_Project" and "display_LibrariesAndModels"
    put env_ListUsedStackNames (pProjectNames) into activeUsedStackNames
    sort activeUsedStackNames
@@ -127,9 +129,10 @@ command display_Libraries pIndexView, pProjectNames
    
    put "Global | Environment | Menu" into mTitle
    put "Global | Project | Tree | Line | Menu" into mLineTitle
+   put empty into dragCommand
    
    if exists (pIndexView) is false then
-      display_Index activeUsedStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp
+      display_Index activeUsedStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp, dragCommand, true
       put the result into displayView
       return displayView
    else
@@ -142,7 +145,7 @@ command display_Libraries pIndexView, pProjectNames
       unlock screen
       return pIndexView
    end if
-end display_Libraries
+end display_LibrariesAndModels
 
 
 --> Display | Events

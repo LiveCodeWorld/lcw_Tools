@@ -128,24 +128,6 @@ on menu_BehaviorsOfView mTarget
    put the object_Behaviors of mTarget
 end menu_BehaviorsOfView
 
-on menu_FixBrokenBehaviors menuChoice, mTarget
-   switch menuChoice
-      case "Fix view behaviors"
-         -- put the object_Behaviors of mTarget into someObjects
-         put the behavior_Objects of mTarget into someObjects
-         break
-      case "Fix all view behavors"
-         put view_WithBehaviorIndex() into someObjects
-         break
-   end switch
-   
-   repeat for each line someObject in someObjects
-      set the cursor to busy
-      set the behavior of someObject to the behavior of someObject
-   end repeat
-   put someObjects
-end menu_FixBrokenBehaviors
-
 
 --> Global | View | Update | Menu | Props
 -

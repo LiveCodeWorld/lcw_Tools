@@ -86,6 +86,21 @@ on menu_UpdateComponents layoutView, withWhat
          put the result into pButton
          set the background_Colour of pButton to "random"
          break
+      case "Log"
+         set the control_Type of headerView to "headerBar" -- "View|SivaSiva|Navigation|Bottom"
+         put the result into newHeaderView
+         set the behavior of newHeaderView to the name of stack "behavior_ViewHeader"
+         -- set the opaque of newHeaderView to true
+         set the backgroundcolor of newHeaderView to white
+         set the title_Text of newHeaderView to "Log"
+         
+         set the control_Type of bodyView to "field"
+         put the result into newBodyView
+         -- set the behavior of newBodyView to the name of stack "behavior_ViewBrowser"
+         
+         set the control_Type of footerView to "View|SivaSiva|Navigation|Bottom"
+         break
+         break
       case "Browser"
          set the control_Type of headerView to "headerBar" -- "View|SivaSiva|Navigation|Bottom"
          put the result into newHeaderView
@@ -103,6 +118,34 @@ on menu_UpdateComponents layoutView, withWhat
    end switch
    unlock screen
 end menu_UpdateComponents
+
+on menu_SwapFooter layoutView, whichView
+   put the footer_View of layoutView into footerView
+   switch whichView
+      case "navbar"
+         set the control_Type of footerView to "navbar"
+         put the result into newFooterView
+         put the name of stack "behavior_ViewNavBar" into bObject
+         set the behavior of newFooterView to bObject
+         break
+      case "Siva Siva navigation"
+         set the control_Type of footerView to "View|SivaSiva|Navigation|Bottom"
+         put the result into newFooterView
+         break
+   end switch
+end menu_SwapFooter
+
+getprop disabled_SwapFooter [layoutView]
+   put the view_IsTemplate of layoutView into isTemplate
+   return isTemplate
+end disabled_SwapFooter
+
+on _
+end _
+
+on menu_SetTitle layoutView
+   set the title_Text of layoutView to "Log"
+end menu_SetTitle
 
 on menu_SetOrientation layoutView, whichOrientation
    set the mobile_Orientation of layoutView to whichOrientation

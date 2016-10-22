@@ -53,14 +53,14 @@ on menu_Display indexView, displayWhat
       display_ProjectList projectNames, indexView, someTitle
       break
    case "List Projects and Modules"
-      display_Used
+      display_ProjectsAndModules
       break
    case "-"
    case "Libraries and Models"
       if the shiftKey is "Down" then
-         display_Libraries
+         display_LibrariesAndModels
       else
-         display_Libraries indexView
+         display_LibrariesAndModels indexView
       end if
       break
    case "-"

@@ -130,10 +130,12 @@ setprop mobile_Orientation whichOrientation
       case "portrait"
          set the header_IsVisible of me to true
          set the landscape_Layout of me to false
+         set the view_Margins of _footerView() to "16,8,16,10"
          break
       case "landscape"
          set the header_IsVisible of me to false
          set the landscape_Layout of me to true
+         set the view_Margins of _footerView() to "8"
          break
    end switch
    unlock screen

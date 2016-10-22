@@ -51,36 +51,7 @@ on _
 end _
 
 on menu_DisplayViewBehaviors viewObject
-   put the view_Behaviors of viewObject into bObjects
-   
-   put LocalArray ["moduleName"] into moduleName
-   display_Lines bObjects, "view_Behaviors", "mDoubleUp_EditBehavior", moduleName
-   put the result into indexView
-   
-   repeat with lineNum =1 to the number of lines of bObjects
-      put line lineNum of bObjects into bObject
-      if exists (bObject) is false then
-         put lineNum & comma after lineNumList
-      end if
-   end repeat
-   delete char -1 of lineNumList
-   if lineNumList is not empty then
-      set the line_Colour [lineNumList] of indexView to "red"
-   end if
-   
-   put the behavior of viewObject into bObject
-   put lineOffset (bObject, bObjects) into lineNum
-   set the line_Colour [lineNum] of indexView to "green"
-   
-   set the displayed_Object of indexView to viewObject
-   set the title_Menu of indexView to "Global | View | Behavior | Menu"
-   set the line_Menu of indexView to "Global | View | Behavior | Line | Menu"
-   
-   set the displayed_ProjectName of indexView to LocalArray ["projectName"]
-   set the displayed_ProjectFolder of indexView to LocalArray ["projectFolder"]
-   set the displayed_ModuleFolder of indexView to LocalArray ["moduleFolder"]
-   set the displayed_ModuleName of indexView to LocalArray ["moduleName"]
-   set the displayed_ModuleHomeStackPath of indexView to LocalArray ["moduleHomeStackPath"]   
+   display_ViewBehaviors viewObject
 end menu_DisplayViewBehaviors
 
 on _
@@ -305,18 +276,3 @@ getprop disabled_HierarchyObject [mTarget]
       return false
    end if
 end disabled_HierarchyObject
-
-
---> Private
--
-private command _SetMobileCardBehavior viewObject, someBoolean
-   put the card_Object of viewObject into viewCardObject
-   put the behavior_Objects of viewCardObject into bObjects
-   put the name of stack "behavior_LayoutMobileOrientation" into mobileBehaviorObject
-   if someBoolean is true then
-      line_Add mobileBehaviorObject, bObjects
-   else
-      line_Delete mobileBehaviorObject, bObjects
-   end if
-   set the behavior_Objects of viewCardObject to bObjects
-end _SetMobileCardBehavior

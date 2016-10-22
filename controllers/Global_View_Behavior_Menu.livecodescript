@@ -27,13 +27,35 @@ on menu_Init tObject
    put the displayed_ModuleHomeStackPath of indexView into LocalArray ["moduleHomeStackPath"]   
 end menu_Init
 
+private command _refresh viewObject
+   put LocalArray ["indexView"] into indexView
+   display_ViewBehaviors viewObject, indexView
+end _refresh
+
 
 --> Global | View | Behavior | Menu
 -
+on menu_Refresh viewObject
+   _refresh viewObject
+end menu_Refresh
+
+on menu_SetViewBehavior viewObject
+   put LocalArray ["moduleFolder"] into moduleFolder
+   answer file "Select a behavior for this view..." with moduleFolder -- with type "LiveCode Stacks|rev|RSTK"
+   if it is empty then exit to top
+   put it into stackPath
+   put the name of stack stackPath into bObject
+   set the behavior of viewObject to bObject
+   
+   _refresh viewObject
+end menu_SetViewBehavior
+
 on menu_DisplayNestedViewArray viewObject
-   put the view_NestedArray of viewObject into nestedViewArray
-   display_Array nestedViewArray, "view_NestedArray"
+   display_NestedViewArray viewObject
 end menu_DisplayNestedViewArray
+
+on _
+end _
 
 on menu_MoveExternalBehaviors viewObject, moveWhere
    put LocalArray ["projectName"] into thisProjectName
@@ -68,9 +90,6 @@ on menu_MoveExternalBehaviors viewObject, moveWhere
    delete char -1 of externalBehaviors
    put externalBehaviors
 end menu_MoveExternalBehaviors
-
-on _
-end _
 
 on menu_MobileBehavior viewObject, someBoolean
    -- adds or removes
@@ -250,6 +269,21 @@ getprop disabled_ConvertViewBehavior [scriptObject]
 end disabled_ConvertViewBehavior
 
 
+--> Private
+-
+private command _SetMobileCardBehavior viewObject, someBoolean
+   put the card_Object of viewObject into viewCardObject
+   put the behavior_Objects of viewCardObject into bObjects
+   put the name of stack "behavior_LayoutMobileOrientation" into mobileBehaviorObject
+   if someBoolean is true then
+      line_Add mobileBehaviorObject, bObjects
+   else
+      line_Delete mobileBehaviorObject, bObjects
+   end if
+   set the behavior_Objects of viewCardObject to bObjects
+end _SetMobileCardBehavior
+
+
 --> Dev | Menu
 -
 on menu_AddViewBehavior viewObject
@@ -265,9 +299,26 @@ on menu_ResetViewBehavior viewObject
    set the behavior of viewObject to bStackObject
 end menu_ResetViewBehavior
 
-on menu_FixViewBehaviors viewObject
-   display_BrokenBehaviors viewObject, true
-end menu_FixViewBehaviors
+on menu_FixBrokenBehaviors viewObject, menuChoice
+   switch menuChoice
+      case "Fix broken behaviors"
+         display_BrokenBehaviors viewObject, true
+         return the result
+      case "Fix view behaviors"
+         put the behavior_Objects of mTarget into someObjects
+         break
+      case "Fix all view behavors"
+         put view_WithBehaviorIndex() into someObjects
+         break
+   end switch
+   
+   repeat for each line someObject in someObjects
+      set the cursor to busy
+      set the behavior of someObject to the behavior of someObject
+   end repeat
+   put someObjects
+end menu_FixBrokenBehaviors
+
 
 on _
 end _

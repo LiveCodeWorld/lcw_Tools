@@ -26,9 +26,9 @@ command display_Module moduleFolder
    end if
    
    set the itemdelimiter to slash
-   put project_GetName (moduleFolder) into moduleFolderName
+   put project_GetHomeStackName (moduleFolder) into moduleFolderName
    put item 1 to -3 of moduleFolder & slash into projectFolder
-   put project_GetName (projectFolder) into projectName
+   put project_GetHomeStackName (projectFolder) into projectName
    put merge ("[[moduleFolderName]],[[projectName]] Module") into someTitle
    
    go to stack moduleHomeStackPath

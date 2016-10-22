@@ -87,7 +87,7 @@ end menu_DisplayModule
 -
 getprop disabled_AddModuleProject [moduleName]
    put the module_Folder of viewObject into moduleFolder
-   put project_GetName (moduleFolder) into moduleName
+   put project_GetHomeStackName (moduleFolder) into moduleName
    put library_FetchProjectFolder (moduleName) into moduleFolder
    if there is a folder moduleFolder then return "delete"
    
