@@ -32,9 +32,12 @@ command display_View viewObject, pIndexView
    put the view_Props of viewObject into viewProps
    
    put the view_Name of viewObject into viewName
-   put menu_ConstructViewMenu (viewObject, true) into mTitle
-   put viewName & comma & "View" into stackTitle
+   put the module_Name of viewObject into moduleName
+   put the project_Name of viewObject into projectName
    
+   put viewName & comma & projectName into stackTitle
+   
+   put menu_ConstructViewMenu (viewObject, true) into mTitle  
    put "Global | Module | Tree | Line | Menu" into mLineTitle
    put empty into mUp
    put "mDouble_EditProp" into mDoubleUp
@@ -53,112 +56,199 @@ command display_View viewObject, pIndexView
       set the line_Menu of pIndexView to mLineTitle
       unlock screen
       return pIndexView
-   end if  
+   end if
+   
+   put the module_Folder of viewObject into moduleFolder
+   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put the project_Folder of viewObject into projectFolder
+   put the project_Name of viewObject into projectName
+   
    set the displayed_Object of indexView to viewObject
    set the displayed_ViewName of indexView to viewName
-   -- set the displayed_ModuleFolder of indexView to moduleFolder
-   -- set the displayed_ModuleName of indexView to moduleFolderName
-   -- set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
-   -- set the displayed_ProjectName of indexView to projectName
-   -- set the displayed_ProjectFolder of indexView to projectFolder
+   set the displayed_ModuleFolder of indexView to moduleFolder
+   set the displayed_ModuleName of indexView to moduleFolderName
+   set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
+   set the displayed_ProjectName of indexView to projectName
+   set the displayed_ProjectFolder of indexView to projectFolder
    return indexView
 end display_View
 
 command display_ViewBehaviors viewObject, pIndexView
    put the view_Behaviors of viewObject into bObjects
    
-   put LocalArray ["moduleName"] into moduleName
    put the view_Name of viewObject into viewName
-   put viewName & ",view_Behaviors" into stackTitle
+   put the module_Name of viewObject into moduleName
+   put the project_Name of viewObject into projectName
+   
+   put viewName & comma & projectName into stackTitle
+   
+   put the module_Folder of viewObject into moduleFolder
+   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put the project_Folder of viewObject into projectFolder
+   put the project_Name of viewObject into projectName
    
    if exists (pIndexView) then
       set the view_Index of pIndexView to bObjects
       put pIndexView into indexView
-      
-      -- set the displayed_ProjectName of indexView to the project_Name of viewObject
-      -- set the displayed_ProjectFolder of indexView to the project_Folder of viewObject
-      set the displayed_ModuleFolder of indexView to the module_Folder of viewObject
-      set the displayed_ModuleName of indexView to the module_Name of viewObject
-      set the displayed_ModuleHomeStackPath of indexView to the module_HomeStackpath of viewObject
    else
       display_Lines bObjects, stackTitle, "mDoubleUp_EditBehavior", moduleName
       put the result into indexView
-      
       set the title_Menu of indexView to "Global | View | Behavior | Menu"
       set the line_Menu of indexView to "Global | View | Behavior | Line | Menu"
-      
-      set the displayed_ProjectName of indexView to LocalArray ["projectName"]
-      set the displayed_ProjectFolder of indexView to LocalArray ["projectFolder"]
-      set the displayed_ModuleFolder of indexView to LocalArray ["moduleFolder"]
-      set the displayed_ModuleName of indexView to LocalArray ["moduleName"]
-      set the displayed_ModuleHomeStackPath of indexView to LocalArray ["moduleHomeStackPath"]   
    end if
    
+   set the displayed_Object of indexView to viewObject
+   set the displayed_ViewName of indexView to viewName
+   set the displayed_ModuleFolder of indexView to moduleFolder
+   set the displayed_ModuleName of indexView to moduleFolderName
+   set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
+   set the displayed_ProjectName of indexView to projectName
+   set the displayed_ProjectFolder of indexView to projectFolder
+   
    put the behavior of viewObject into bObject
+   put the module_Name of viewObject into thisModuleName
+   put the project_Name of viewObject into thisProjectName
+   
    repeat with lineNum =1 to the number of lines of bObjects
       put line lineNum of bObjects into cObject
       put exists (cObject) is false into notThere
+      if notThere is true then
+         switch
+            case cObject = bObject
+               set the line_Colour [lineNum] of indexView to "purple"
+               break
+            case notThere
+               set the line_Colour [lineNum] of indexView to "red"
+               break
+         end switch
+         next repeat
+      end if
+      
+      put the project_Name of cObject into thatProjectName
+      put thisProjectName is not thatProjectName into inAnotherProject
       switch
-         case notThere and cObject = bObject
-            set the line_Colour [lineNum] of indexView to "purple"
+         case cObject = bObject and inAnotherProject
+            set the line_Colour [lineNum] of indexView to "dark blue"
             break
          case cObject = bObject
             set the line_Colour [lineNum] of indexView to "green"
             break
-         case notThere
-            set the line_Colour [lineNum] of indexView to "red"
+         case inAnotherProject
+            set the line_Colour [lineNum] of indexView to "orange"
             break
+         default
+            -- it's within the project so leave as deafult (black) colour
       end switch
    end repeat
    
-   set the displayed_Object of indexView to viewObject
+   return indexView
 end display_ViewBehaviors
 
--- command display_ViewBehaviors viewObject
-   put the view_Behaviors of viewObject into bObjects
+command mDoubleUp_EditBehavior indexView, bObject
+   put the displayed_Object of indexView into viewObject
    
-   put LocalArray ["moduleName"] into moduleName
-   display_Lines bObjects, "view_Behaviors", "mDoubleUp_EditBehavior", moduleName
-   put the result into indexView
+   put the textcolor of the clickLine into lineColour
+   switch lineColour
+      case "255,0,0" -- red
+         -- behavior is missing
+         breakpoint
+         break
+      case "142,53,239" -- purple
+         -- default behavior is missing
+         breakpoint
+         break
+      case "0,255,0" -- green
+         -- default behavior in this project
+         edit the script of bObject
+         break
+      case "248,122,23" -- orange
+         -- inAnotherProject
+         _askMoveBehavior "Do you want to import this behavior from project '[[otherProjectName]]'?", bObject, viewObject
+         display_ViewBehaviors viewObject, indexView
+         break
+      case "0,0,139" -- dark blue
+         -- default behavior is in another project
+         _askMoveBehavior "Do you want to import this default behavior from project '[[otherProjectName]]'?", bObject, viewObject
+         set the behavior of viewObject to the behavior of viewObject -- probably not necessary?
+         display_ViewBehaviors viewObject, indexView
+         break
+      default
+         -- subview in this project
+         edit the script of bObject
+         -- put lineColour
+   end switch
+end mDoubleUp_EditBehavior
+
+private command _askMoveBehavior someComment, bObject, viewObject
+   put the project_Name of bObject into otherProjectName
+   put merge (someComment) into someComment
+   replace "'" with quote in someComment
+   answer someComment with "Cancel" or "Copy" or "Move"
+   switch it
+      case "Copy"
+         breakpoint
+         break
+      case "Move"
+         if word 1 of bObject is not "stack" then
+            breakpoint
+            exit to top
+         end if
+         
+         answer "Do you want to move the behavior to the behavior folder in the module_Folder or the project_Folder?" with "Cancel" or "Project" or "Module"   
+         switch it
+            case "Cancel"
+               exit to top
+            case "Project"
+               put the project_Folder of viewObject into projectFolder
+               put project_ConstructFolder ("behaviors", projectFolder) into newBehaviorFolder
+               break
+            case "Module"
+               put the module_Folder of viewObject into moduleFolder
+               put project_ConstructFolder ("behaviors", moduleFolder) into newBehaviorFolder
+               break
+         end switch
+         folder_CreateNested newBehaviorFolder
+         
+         set the itemdelimiter to slash
+         put the filename of bObject into oldBehaviorPath
+         put item -1 of oldBehaviorPath into shortFile
+         put newBehaviorFolder & shortFile into newBehaviorPath
+         
+         breakpoint
+         project_MoveStack oldBehaviorPath, newBehaviorPath, true
+         break
+      default
+         -- case "Cancel" 
+         exit to top
+   end switch
    
-   repeat with lineNum =1 to the number of lines of bObjects
-      put line lineNum of bObjects into bObject
-      if exists (bObject) is false then
-         put lineNum & comma after lineNumList
-      end if
-   end repeat
-   delete char -1 of lineNumList
-   if lineNumList is not empty then
-      set the line_Colour [lineNumList] of indexView to "red"
-   end if
-   
-   put the behavior of viewObject into bObject
-   put lineOffset (bObject, bObjects) into lineNum
-   set the line_Colour [lineNum] of indexView to "green"
-   
-   set the displayed_Object of indexView to viewObject
-   set the title_Menu of indexView to "Global | View | Behavior | Menu"
-   set the line_Menu of indexView to "Global | View | Behavior | Line | Menu"
-   
-   set the displayed_ProjectName of indexView to LocalArray ["projectName"]
-   set the displayed_ProjectFolder of indexView to LocalArray ["projectFolder"]
-   set the displayed_ModuleFolder of indexView to LocalArray ["moduleFolder"]
-   set the displayed_ModuleName of indexView to LocalArray ["moduleName"]
-   set the displayed_ModuleHomeStackPath of indexView to LocalArray ["moduleHomeStackPath"]   
-end display_ViewBehaviors
+end _askMoveBehavior
 
 command display_NestedViewArray viewObject
    put the view_NestedArray of viewObject into nestedViewArray
    
    put the view_Name of viewObject into viewName
+   put the module_Name of viewObject into moduleName
+   put the project_Name of viewObject into projectName
+   
    put menu_ConstructViewMenu (viewObject, true) into mTitle
-   put viewName & comma & "view_NestedArray" into stackTitle
+   put viewName & comma & projectName into stackTitle
    
    display_Array nestedViewArray, stackTitle, mTitle
    put the result into arrayView
    
    set the displayed_Object of arrayView to viewObject
    set the displayed_ViewName of arrayView to viewName
+   
+   put the module_Folder of viewObject into moduleFolder
+   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put the project_Folder of viewObject into projectFolder
+   
+   set the displayed_ModuleFolder of arrayView to moduleFolder
+   set the displayed_ModuleName of arrayView to moduleFolderName
+   set the displayed_ModuleHomeStackPath of arrayView to moduleHomeStackPath
+   set the displayed_ProjectName of arrayView to projectName
+   set the displayed_ProjectFolder of arrayView to projectFolder
    
    return arrayView
 end display_NestedViewArray

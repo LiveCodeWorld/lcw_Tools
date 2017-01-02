@@ -52,6 +52,10 @@ on menu_Display indexView, displayWhat
       end if
       display_ProjectList projectNames, indexView, someTitle
       break
+   case "List All Projects"
+      put library_ListProjectNames ("all") into projectNames -- it's the default anyway
+      display_ProjectList projectNames, indexView, someTitle
+      break
    case "List Projects and Modules"
       display_ProjectsAndModules
       break

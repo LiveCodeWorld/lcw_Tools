@@ -9,6 +9,6 @@ version: 0.1
 
 --> Global | Project | FrontScripts | Tree | Line | Menu
 -
-on menu_Test
+on menu_DeleteFile
    breakpoint
-end menu_Test
+end menu_DeleteFile

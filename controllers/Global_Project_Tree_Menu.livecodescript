@@ -11,12 +11,61 @@ version: 0.2
 -
 /* mTarget should already be set by set the menu_Target of indexView to projectName */
 
+local LocalArray
+
+on menu_Init tObject
+   put the index_View of tObject into LocalArray ["indexView"]
+end menu_Init
+
+getprop menu_CheckTarget [projectName]
+   put projectName & ".wiki" into wikiProjectName
+   put library_FetchProjectFolder (wikiProjectName) into wikiFolder
+   put wikiFolder into LocalArray ["wikiFolder"]
+   return true
+end menu_CheckTarget
+
 
 --> Global | Project | Tree | Menu
 -
 on menu_GitStatus projectName
    display_GitProjectStatus projectName
 end menu_GitStatus
+
+on menu_AddProjectWiki projectName
+   put projectName & ".wiki" into wikiProjectName
+   
+   answer folder "Select a folder containing a project..."
+   put it into projectFolder
+   if it is empty then exit to top
+   if projectFolder ends with ".wiki" is false then
+      answer warning "Not a GitHub wiki project"
+      exit to top
+   end if
+   
+   put projectFolder into projectArray ["projectFolder"]
+   put "wiki" into projectArray ["projectType"]
+   library_StoreProjectArray wikiProjectName, projectArray
+   
+   display_ProjectList
+end menu_AddProjectWiki
+
+on menu_CreateLibraryPages projectName
+   -- put projectName & ".wiki" into wikiProjectName
+   -- put library_FetchProjectFolder (wikiProjectName) into wikiFolder
+   put LocalArray ["wikiFolder"] into wikiFolder
+   put LocalArray ["indexView"] into indexView
+   put the view_Index of indexView into stackNames
+   repeat for each line stackName in stackNames
+      put wikiFolder & stackName & ".md" into wikiPageFile
+      if there is a file wikiPageFile then
+         breakpoint
+      else
+         put the github_WikiPage of stack stackName into wikiMarkdown
+         put "file:" & wikiPageFile into someURL
+         put wikiMarkdown into url someURL
+      end if
+   end repeat
+end menu_CreateLibraryPages
 
 on _
 end _
@@ -61,6 +110,19 @@ on menu_InspectHomeStack homeStackName
    object_Inspect stackObject
 end menu_InspectHomeStack
 
+on menu_ExportStandaloneSettings homeStackName
+   put "cRevStandaloneSettings" into setName
+   put the name of stack homeStackName into homeStackObject
+   
+   put the customproperties [setName] of homeStackObject into customArray
+   -- display_Array customArray
+   
+   set the project_Array of homeStackObject to  customArray
+   -- custom_DeleteSet setName, homeStackObject
+   put the project_Array of homeStackObject into customArray
+   display_Array customArray
+end menu_ExportStandaloneSettings
+
 on _
 end _
 
@@ -76,6 +138,11 @@ on menu_DisplayHomeStackFiles homeStackName
    put the name of stack homeStackName into stackObject
    display_Array stackFileArray, merge ("[[stackObject]],stackFile_Array")
 end menu_DisplayHomeStackFiles
+
+on menu_ExportHomeStackFiles homeStackName
+   put the stackfiles of stack homeStackName into homeStackFiles
+   put homeStackFiles
+end menu_ExportHomeStackFiles
 
 on _
 end _
@@ -149,3 +216,24 @@ getprop project_Choices
 end project_Choices
 
 
+--> Global | Project | Tree | Menu | Disabled
+-
+getprop disabled_AddProjectWiki [projectName]
+   -- put projectName & ".wiki" into wikiProjectName
+   -- put library_FetchProjectFolder (wikiProjectName) into wikiFolder
+   put LocalArray ["wikiFolder"] into wikiFolder
+   if there is a folder wikiFolder then
+      return "delete"
+   else
+      return false
+   end if
+end disabled_AddProjectWiki
+
+getprop disabled_CreateLibraryPages [projectName]
+   put LocalArray ["wikiFolder"] into wikiFolder
+   if there is a folder wikiFolder then
+      return false
+   else
+      return true
+   end if
+end disabled_CreateLibraryPages

@@ -31,7 +31,6 @@ end _
 on menu_CreateProjectMenu projectName
    put _askMenuTitle (projectName) into gMenuTitle
    put project_GetFolder (projectName) into projectFolder
-   breakpoint
    project_CreateMenu projectFolder, gMenuTitle
    put the result into controllerStackObject
    edit the script of controllerStackObject

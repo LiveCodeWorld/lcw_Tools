@@ -126,7 +126,6 @@ command module_CreateMenu moduleFolder, pGlobalMenuTitle, pControllerScript
 end module_CreateMenu
 
 command project_CreateMenu moduleOrProjectFolder, pGlobalMenuTitle, pControllerScript
-   breakpoint
    if there is not a folder moduleOrProjectFolder then
       put moduleOrProjectFolder
       answer warning "Project or module folder does not exists!"

@@ -27,13 +27,6 @@ on menu_Init tObject
 end menu_Init
 
 
---> Display | Events
--
-command mDoubleUp_EditBehavior indexView, bObject
-   edit the script of bObject
-end mDoubleUp_EditBehavior
-
-
 --> Global | View | Script | Menu
 -
 on menu_ImportedBehaviors viewObject, someBoolean
