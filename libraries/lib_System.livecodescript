@@ -4,7 +4,7 @@
 license: GPLv3
 name: lib_System
 type: library
-version: 0.1
+version: 0.2
 
 
 --> System | Target
@@ -207,13 +207,14 @@ end script_GetLineAboveMe
 getprop screen_Rect [pWhichRect]
    put the stack_Name of the target into stackName
    put the loc of stack stackName into globalTargetLoc
-
+   
    switch pWhichRect
       case "full"
          get the screenRects
          break
       case "effective"
-         get the effective screenRects
+         -- get the effective working screenRects -- rev bug: no longer works unless working is also there
+         get the effective working screenRects
          break
       default -- "working"
          get the working screenRects
@@ -252,6 +253,41 @@ getprop screen_Height
    return item 4 of someRect - item 2 of someRect
 end screen_Height
 
+command screen_GatherStacks pResetTinyRects, pSomeGlobalLoc, pStackNames
+   replace comma with CR in screen_GatherStacks
+   if pStackNames is empty then
+      put the openstacks into pStackNames
+   end if
+   --
+   repeat for each line sName in pStackNames
+      stack_RestorePosition sName, pSomeGlobalLoc, pResetTinyRects
+   end repeat
+end screen_GatherStacks
+
+command stack_RestorePosition pStackName, pSomeGlobalLoc, pResetTinyRects
+   if pStackName is empty then 
+      put the short name of this stack into pStackName
+   end if
+   if pSomeGlobalLoc is empty then
+      put the screenloc into pSomeGlobalLoc
+   end if
+   --
+   if pResetTinyRects is not false then
+      set the visible of stack pStackName to true
+      --
+      if the width of stack pStackName < 10 then
+         breakpoint
+         set the with of  stack pStackName to 200
+      end if
+      if the height of stack pStackName < 10 then
+         breakpoint
+         set the height of  stack pStackName to 200
+      end if
+   end if
+   --
+   set the loc of  stack pStackName to pSomeGlobalLoc
+end stack_RestorePosition
+   
 function system_GetScreenRect screenNum, pWhichRect
    put word -1 of screenNum into screenNum -- allws for "Screen 2" as displayed in menus
    switch pWhichRect
@@ -263,7 +299,9 @@ function system_GetScreenRect screenNum, pWhichRect
          Adding the effective adjective to either form returns the area of the screen the application has to itself. 
          In particular, if the keyboard is activated, it take into account if the keyboard is taking up space on the screen. (Android and iOS only)
          */
-         get the effective screenRects
+         
+         -- get the effective screenRects -- rev bug
+         get the effective working screenRects
          break
       default -- "working"
          /*

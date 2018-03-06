@@ -21,17 +21,58 @@ local LocalArray
 --> Events
 -
 on browserNavigateBegin clickedURL
-   pass browserNavigateBegin
-   
-   -- "http://libbrowser_dummy_url/list_ImageFileIDs%2Cc%2Cstack+%22behavior_ServerScriptContainer%22%2C1"
    set the itemdelimiter to slash
    put item -1 of clickedURL into urlEncodedHKey
    put urldecode (urlEncodedHKey) into hKey
    
-   hKey_Edit hKey
+   -- This gets called when the browser view is first opened
+   -- if the number of
+   
+   -- and on every link clicked that loads a page
+   -- "http://libbrowser_dummy_url/list_ImageFileIDs%2Cc%2Cstack+%22behavior_ServerScriptContainer%22%2C1"
+   
+   breakpoint
+   hkey_Deconstruct hKey, hName, hType, hObject, hNum
+   switch hObject
+      case "missing"
+         put hkey_Find (hKey) into foundHkey
+         if foundHkey is empty then
+            -- spotlight
+            breakpoint
+            -- put hkey_Construct (hName, privateHype, hierarchyObject) into hKey
+            -- put hKeyLine_FromTripple (hName, hType, hObject) into hKey
+            display_SpotlightHandler hKey
+         else
+            hKey_Edit foundHkey
+         end if
+         break
+      default
+         hKey_Edit hKey
+   end switch
 end browserNavigateBegin
 
--- on browserFrameDocumentLoadBegin
+on browserDocumentLoadBegin pUrl
+   -- working
+   pass browserDocumentLoadBegin
+end browserDocumentLoadBegin
+
+on browserBeforeNavigate
+   breakpoint
+   put the params
+end browserBeforeNavigate
+
+on browserUnhandledLoadRequest
+   breakpoint
+   put the params
+end browserUnhandledLoadRequest
+
+on browserFrameDocumentLoadFailed
+   breakpoint
+   put the params
+end browserFrameDocumentLoadFailed
+
+on browserFrameDocumentLoadBegin
+   breakpoint
    put the params
 end browserFrameDocumentLoadBegin
 
@@ -145,6 +186,7 @@ end svg_File
 setprop svg_File [isFluid] svgPath
    put "file:" & svgPath into svgURL
    put url svgURL into svgXML
+   -- put svgXML
    if isFluid is true then
       svg_SetDimensions svgXML, "100%", "100%"
    end if
@@ -155,6 +197,7 @@ setprop svg_File [isFluid] svgPath
    
    set the htmltext of me to someHtml
    put svgURL into LocalArray ["svg_URL"]
+   
    return someHtml
 end svg_File
 

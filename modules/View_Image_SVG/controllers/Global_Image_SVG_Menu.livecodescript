@@ -146,6 +146,16 @@ end fluid_Svg
 
 --> Dev | Menu
 -
+on menu_DisplaySvgFile svgView
+   put the svg_File of svgView into svgFile
+   set the svg_File of svgView to svgFile
+   
+   put scriptEditor_PaneObject ("Deps") into paneObject
+   set the svg_File [true] of control 1 of paneObject to imageFile
+   
+   put the svg_File [true] of control 1 of paneObject & CR & svgFile
+end menu_DisplaySvgFile
+
 on menu_DisplaySvgHeader svgView
    put the svg_HeaderArray of svgView into svgHeaderArray
    display_Array svgHeaderArray
@@ -182,7 +192,7 @@ on _
 end _
 
 on menu_DisplayProcessedHkeyArray svgView
-   put the textstack_ProcessedHkeyArray of scriptObject into processedHkeyArray  
+   put the textStack_HkeyArray of scriptObject into processedHkeyArray  
    display_Array processedHkeyArray, "processedHkeyArray"
 end menu_DisplayProcessedHkeyArray
 
@@ -194,20 +204,18 @@ on menu_DisplayControllerGraph scriptObject
    -- put overlay_GetImageFile (overlayFolder, "HAP")
 end menu_DisplayControllerGraph
 
-on menu_CreateControllerProject scriptObject
-   -- put the textStack_Folder of scriptObject into mainStackFolder
-   put the project_OverlayFolder of scriptObject into projectOverlayFolder
-   put projectOverlayFolder
-   finder_Reveal projectOverlayFolder
-end menu_CreateControllerProject
-
-on menu_DependencyObjects scriptObject
-   -- put the missing_HkeyArray of scriptObject into missingHkeyArray
-   put the project_DependencyStacks of scriptObject into dependencyStacks
+-- on menu_DependencyObjects scriptObject
+-- put the missing_HkeyArray of scriptObject into missingHkeyArray
+put the dep_StackNames of scriptObject into depStackNames
 end menu_DependencyObjects
 
 on _
 end _
+
+on menu_RevealSvgFile svgView
+   put the svg_File of svgView into svgFile
+   finder_Reveal svgFile
+end menu_RevealSvgFile
 
 on menu_RevealHkeyOverlayFolder svgView
    put the displayed_Hkey of svgView into hKey

@@ -28,7 +28,12 @@ end mDouble_DisplayStack
 
 --> Display | Project | Views
 -
-command display_View viewObject, pIndexView
+command display_View viewName
+   put view_GetTemplateObject (viewName) into viewTemplate
+   object_GoTo viewTemplate
+end display_View
+
+command display_ViewIndex viewObject, pIndexView
    put the view_Props of viewObject into viewProps
    
    put the view_Name of viewObject into viewName
@@ -37,7 +42,7 @@ command display_View viewObject, pIndexView
    
    put viewName & comma & projectName into stackTitle
    
-   put menu_ConstructViewMenu (viewObject, true) into mTitle  
+   put view_ConstructToolMenu (viewObject, true) into mTitle  
    put "Global | Module | Tree | Line | Menu" into mLineTitle
    put empty into mUp
    put "mDouble_EditProp" into mDoubleUp
@@ -71,27 +76,30 @@ command display_View viewObject, pIndexView
    set the displayed_ProjectName of indexView to projectName
    set the displayed_ProjectFolder of indexView to projectFolder
    return indexView
-end display_View
+end display_ViewIndex
 
-command display_ViewBehaviors viewObject, pIndexView
+command display_ViewBehaviors viewObject, pIndexView, pStacklabel
    put the view_Behaviors of viewObject into bObjects
-   
    put the view_Name of viewObject into viewName
-   put the module_Name of viewObject into moduleName
-   put the project_Name of viewObject into projectName
    
-   put viewName & comma & projectName into stackTitle
-   
-   put the module_Folder of viewObject into moduleFolder
-   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
    put the project_Folder of viewObject into projectFolder
-   put the project_Name of viewObject into projectName
+   if projectFolder is empty then
+      -- may not be in a module or project
+      put viewName & comma & "No Project" into stackTitle
+   else
+      put the project_Name of viewObject into projectName
+      put the module_Folder of viewObject into moduleFolder
+      put the module_Name of viewObject into moduleName
+      put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+      
+      put viewName & comma & projectName into stackTitle
+   end if
    
    if exists (pIndexView) then
       set the view_Index of pIndexView to bObjects
       put pIndexView into indexView
    else
-      display_Lines bObjects, stackTitle, "mDoubleUp_EditBehavior", moduleName
+      display_Lines bObjects, stackTitle, "mDoubleUp_EditBehavior", moduleName, pStacklabel
       put the result into indexView
       set the title_Menu of indexView to "Global | View | Behavior | Menu"
       set the line_Menu of indexView to "Global | View | Behavior | Line | Menu"
@@ -99,15 +107,19 @@ command display_ViewBehaviors viewObject, pIndexView
    
    set the displayed_Object of indexView to viewObject
    set the displayed_ViewName of indexView to viewName
-   set the displayed_ModuleFolder of indexView to moduleFolder
-   set the displayed_ModuleName of indexView to moduleFolderName
-   set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
-   set the displayed_ProjectName of indexView to projectName
-   set the displayed_ProjectFolder of indexView to projectFolder
    
+   if projectFolder is not empty then
+      set the displayed_ModuleFolder of indexView to moduleFolder
+      set the displayed_ModuleName of indexView to moduleFolderName
+      set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
+      set the displayed_ProjectName of indexView to projectName
+      set the displayed_ProjectFolder of indexView to projectFolder
+   end if
+   
+   -- now let's colour the behavior lines
+   put moduleName into thisModuleName
+   put projectName into thisProjectName
    put the behavior of viewObject into bObject
-   put the module_Name of viewObject into thisModuleName
-   put the project_Name of viewObject into thisProjectName
    
    repeat with lineNum =1 to the number of lines of bObjects
       put line lineNum of bObjects into cObject
@@ -231,7 +243,7 @@ command display_NestedViewArray viewObject
    put the module_Name of viewObject into moduleName
    put the project_Name of viewObject into projectName
    
-   put menu_ConstructViewMenu (viewObject, true) into mTitle
+   put view_ConstructToolMenu (viewObject, true) into mTitle
    put viewName & comma & projectName into stackTitle
    
    display_Array nestedViewArray, stackTitle, mTitle
@@ -292,11 +304,12 @@ end display_ActiveViews
 
 --> Deps
 -
-function menu_ConstructViewMenu viewObject, isaView
+function view_ConstructToolMenu viewObject, isaView
    put the view_MenuTitle [true] of viewObject into mTitle
    put CR & "-" after mTitle
    if isaView is not false then
-      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
       put CR & "-" after mTitle
       put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
       put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
@@ -308,5 +321,5 @@ function menu_ConstructViewMenu viewObject, isaView
       put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
    end if
    return mTitle
-end menu_ConstructViewMenu
+end view_ConstructToolMenu
 

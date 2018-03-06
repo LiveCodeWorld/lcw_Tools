@@ -42,7 +42,11 @@ end menu_ExportAndIndexProject
 on _
 end _
 
-on menu_ExportAllProjects
+on menu_ExportMenusAndStackFiles
+   env_ExportMenusAndStackFiles
+end menu_ExportMenusAndStackFiles
+
+on menu_ExportAndIndexHandlers
    env_ExportAndIndexProjects
    answer "Exported all stacks!"
-end menu_ExportAllProjects
+end menu_ExportAndIndexHandlers

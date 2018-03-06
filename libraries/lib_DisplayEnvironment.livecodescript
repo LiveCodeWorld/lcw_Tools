@@ -4,21 +4,35 @@
 license: GPLv3
 name: lib_DisplayEnvironment
 type: library
-version: 0.4
+version: 0.6
 
 /*
 Here we gather all the handlers that make it easy to display handlers, stacks, projects, and the environment.
-
--- command display_EnvironmentProjects   
-put library_ListProjectNames() into projectNames
-put "List of Projects,Environment" into displayTitle
-display_Index projectNames, displayTitle, "Global | Environment | Menu", "Global | Project | Tree | Line | Menu", empty, "mDouble_DisplayProject"
-put the result into displayView
-set the multiple_Hilites of displayView to false
-return displayView
-end display_EnvironmentProjects
-
 */
+
+--> Display | Events
+-
+on mDouble_DisplayProject targetObject, stackName
+   display_Project stackName
+end mDouble_DisplayProject
+
+command mDouble_DisplayStack indexView, stackName
+   switch
+      case exists (stack stackName) is false
+         answer merge("Could not find stack '[[stackName]]'.")
+         break
+      case the scriptonly of stack stackName is true
+         edit the script of stack stackName
+         break
+      default
+         go to stack stackName
+   end switch
+end mDouble_DisplayStack
+
+command mDouble_DisplayBehavior indexView, stackName
+   mDouble_DisplayStack indexView, stackName
+end mDouble_DisplayBehavior
+
 
 --> Working on
 -
@@ -29,7 +43,7 @@ command display_ProjectsAndModules
    return indexView
 end display_ProjectsAndModules
 
-command display_Project homeStackName, pGoOrEdit
+command display_Project homeStackName, pGoHow
    if exists (stack homeStackName) is true then
       put the effective filename of stack homeStackName into homeStackPath
    else
@@ -41,25 +55,29 @@ command display_Project homeStackName, pGoOrEdit
       end if
    end if
    
-   if pGoOrEdit is true then
-      if the scriptonly of stack homeStackPath is true then
-         edit the script of stack homeStackPath
-      else
-         go to stack homeStackPath
-      end if
-   end if
-   
    display_ModelsAndViews homeStackPath
    -- display_LibrariesAndModels pIndexView, pProjectNames
    put the result into indexView
    set the menu_Target of indexView to homeStackName
    
-   display_ProjectModules homeStackName
+   -- display_ProjectModules homeStackName
    
-   -- could check to see if it is already loaded
-   -- but here we just load again (may be useful)
-   project_Start homeStackName
-   
+   switch pGoHow
+      case "edit"
+         edit the script of stack homeStackPath
+         break
+      case "go"
+         go to stack homeStackPath
+         break
+      case "start"
+         project_Start homeStackName
+      default
+         if the scriptonly of stack homeStackPath is true then
+            -- edit the script of stack homeStackPath
+         else
+            go to stack homeStackPath
+         end if
+   end switch
    return indexView
 end display_Project
 
@@ -69,9 +87,18 @@ end display_Project
 command display_ProjectList pProjectNames, pIndexView, pStackTitle
    if pProjectNames is empty then put library_ListProjectNames() into pProjectNames
    if pStackTitle is empty then put "List of Projects,Environment" into pStackTitle
+   if pIndexView is empty then
+      put the openstacks into dStackNames
+      repeat for each line dStackName in dStackNames
+         if word 1 to 2 of dStackName is not "Display Index" then next repeat
+         if the label of stack dStackName = "Environment" then
+            put the long id of group 1 of stack dStackName into pIndexView
+            exit repeat
+         end if
+      end repeat
+   end if
    
    put "mDouble_DisplayProject" into mDoubleUp
-   
    put empty into mUp
    put "Global | Environment | Menu" into mTitle
    put "Global | Project | Tree | Line | Menu" into mLineTitle
@@ -81,6 +108,8 @@ command display_ProjectList pProjectNames, pIndexView, pStackTitle
       put empty into mUp
       display_Index pProjectNames, pStackTitle, mTitle, mLineTitle, mUp, mDoubleUp, dragCommand, true
       put the result into displayView
+      set the field_Style of displayView to "display selected"
+      set the selected_Index of displayView to env_ListProjects()
       return displayView
    else
       lock screen
@@ -89,6 +118,9 @@ command display_ProjectList pProjectNames, pIndexView, pStackTitle
       set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
       set the title_Menu of pIndexView to mTitle
       set the line_Menu of pIndexView to mLineTitle
+      set the field_Style of pIndexView to "display selected"
+      --
+      set the selected_Index of pIndexView to env_ListProjects()
       unlock screen
       return pIndexView
    end if
@@ -146,31 +178,6 @@ command display_LibrariesAndModels pIndexView, pProjectNames
       return pIndexView
    end if
 end display_LibrariesAndModels
-
-
---> Display | Events
--
-command mDouble_DisplayStack indexView, stackName
-   switch
-      case exists (stack stackName) is false
-         answer merge("Could not find stack '[[stackName]]'.")
-         break
-      case the scriptonly of stack stackName is true
-         edit the script of stack stackName
-         break
-      default
-         go to stack stackName
-   end switch
-end mDouble_DisplayStack
-
-on mDouble_DisplayProject targetObject, stackName
-   display_Project stackName
-end mDouble_DisplayProject
-
-command mDouble_DisplayBehavior indexView, stackName
-   mDouble_DisplayStack indexView, stackName
-end mDouble_DisplayBehavior
-
 
 
 --> Display | Project | Standard

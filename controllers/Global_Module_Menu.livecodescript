@@ -14,8 +14,17 @@ on menu_EditMenu viewOrStack, menuStackName
 end menu_EditMenu
 
 on menu_CreateModuleMenu viewOrStack
-   put the project_Name of viewOrStack into moduleStackName
-   put _askMenuTitle (moduleStackName) into gMenuTitle
+   breakpoint
+   if the view_Name of viewOrStack is not empty then
+      -- put view_ConstructToolMenu (viewOrStack, true) into gMenuTitle
+      put the view_MenuTitle [true] of viewOrStack into gMenuTitle
+      put "What is the name of your global menu...." into someQuestion
+      put lcw_Ask (someQuestion, gMenuTitle) into gMenuTitle
+   else
+      put the project_Name of viewOrStack into moduleStackName
+      put _askMenuTitle (moduleStackName) into gMenuTitle
+   end if
+   
    put the module_Folder of viewOrStack into moduleFolder
    module_CreateMenu moduleFolder, gMenuTitle
    put the result into controllerStackObject
@@ -27,6 +36,7 @@ on menu_CreateModuleBehavior viewOrStack
    put project_DefaultBehaviorName (moduleStackName) into maybeBehaviorStackName
    put lcw_Ask ("What name would you like for this modules behavior?", maybeBehaviorStackName) into behaviorStackName
    
+   breakpoint
    put the module_Folder of viewOrStack into moduleFolder
    module_CreateBehavior moduleFolder, behaviorStackName
    put the result into moduleBehaviorStackPath

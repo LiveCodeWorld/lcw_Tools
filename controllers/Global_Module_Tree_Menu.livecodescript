@@ -35,12 +35,59 @@ end menu_Target
 
 --> Global | Module | Tree | Menu
 -
-on submenu_Module
-   return "Global | Module | Menu"
-end submenu_Module
+on menu_CreateStandAlone indexView
+   put the view_Name of indexView into vName
+   put view_GetTemplateObject (vName) into templateObject
+   if exists (templateObject) is false then
+      breakpoint
+   end if
+   
+   put the stack_Name of templateObject into stackName
+   clone stack stackName
+   put it into clonedStack
+   set the destroyStack of clonedStack to true
+   set the destroyWindow of clonedStack to true
+   
+   put the long id of cd 1 of clonedStack into clonedTemplateCard
+   put the long id of control 1 of clonedTemplateCard into clonedView
+   
+   -- put the module_Behaviors of viewObject into bObjects
+   set the imported_ViewBehaviors of clonedView to true
+   
+   
+   -- set the behavior of clonedTemplateCard to empty
+   
+   display_ViewBehaviors clonedView, empty, clonedStack
+end menu_CreateStandAlone
+
+command _importMenus viewObject
+   put the module_Controllers of viewObject into cObjects
+   repeat for each line cObject in cObjects
+      if exists (cObject) is false then 
+         breakpoint
+         next repeat
+      end if
+      
+      if word 1 of cObject is not "stack" then
+         breakpoint
+         next repeat
+      end if
+      
+      put the stack_Name of cObject into cStackName
+      put cStackName && "Dep"
+      
+      clone cObject
+      put it into clonedBehaviorStack
+      set the name of clonedBehaviorStack to newName
+   end repeat
+end _importMenus
 
 on _
 end _
+   
+on submenu_Module
+   return "Global | Module | Menu"
+end submenu_Module
 
 on submenu_Dev
    return "Dev | Menu"
@@ -49,10 +96,17 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_ModuleInfo someView
+on menu_EditViewMenuFunction
+   -- find the function that creates the menu table for the tree
+   hkey_Edit "F view_ConstructToolMenu"
+   -- put the name of stack "lib_DisplayView" into stackObject
+   -- edit the script of stackObject
+end menu_EditViewMenuFunction
+
+on menu_ModuleInfo viewObject
    -- put menu_GetTargetObject() into tObject
    -- put the index_View of tObject into indexView
-   put the module_Array of someView into moduleArray
+   put the module_Array of viewObject into moduleArray
    put moduleArray ["viewName"] into viewName
    put merge ("[[viewName]],Module Array") into someTitle
    display_Array moduleArray, someTitle
@@ -70,51 +124,13 @@ end menu_EditMenus
 
 --> Global | Module | Tree | Line | Menu
 -
-on menu_ViewProperty someView
+on menu_ViewProperty viewObject
    put menu_GetTargetObject() into tObject
    put the index_View of tObject into indexView
    
-   put the displayed_Object of indexView into someView
+   put the displayed_Object of indexView into viewObject
    -- put the title_Text of indexView into moduleFolderName
    put the selected_Index of indexView into viewProp
    
-   put the viewProp of someView
+   put the viewProp of viewObject
 end menu_ViewProperty
-
-
---> Global | Modules | Tree | Menu
--
-on menu_CreateModule indexView
-   put the title_Text of indexView into moduleShortFolder
-   
-   put "Choose a name for your new module...." into someQuestion
-   put the clipboarddata ["text"] into suggestedAnswer
-   set the itemdelimiter to "|"
-   if item 1 of suggestedAnswer is not "View" then
-      put "View|Test" into suggestedAnswer
-   end if
-   put lcw_Ask (someQuestion, suggestedAnswer) into moduleStackName
-   
-   put project_GetFolder (moduleShortFolder) into projectFolder
-   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
-   project_CreateModule moduleStackName, rootModuleFolder
-end menu_CreateModule
-
-on _
-end _
-
-on menu_Refresh indexView
-   put the title_Text of indexView into projectHomeStackName
-   display_ProjectModules projectHomeStackName, indexView
-end menu_Refresh
-
-on menu_CheckModules indexView
-   put the title_Text of indexView into projectName
-   put the view_Index of indexView into moduleNames
-   
-   repeat for each line moduleName in moduleNames
-      put the long id of control 1 of cd 1 of stack moduleName into templateView
-      dispatch "view_FixBehavior" to templateView with templateView
-      go to stack moduleName
-   end repeat
-end menu_CheckModules

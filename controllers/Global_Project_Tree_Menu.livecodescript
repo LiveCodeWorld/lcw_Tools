@@ -27,6 +27,14 @@ end menu_CheckTarget
 
 --> Global | Project | Tree | Menu
 -
+on menu_StartProject projectName, someBoolean
+   if someBoolean is true then
+      project_Start projectName
+   else
+      project_Stop projectName
+   end if
+end menu_StartProject
+
 on menu_GitStatus projectName
    display_GitProjectStatus projectName
 end menu_GitStatus
@@ -147,14 +155,6 @@ end menu_ExportHomeStackFiles
 on _
 end _
 
-on menu_StartProject projectName, someBoolean
-   if someBoolean is true then
-      project_Start projectName
-   else
-      project_Stop projectName
-   end if
-end menu_StartProject
-
 on menu_ChangeProject projectName, projectChoice
    put library_FetchProjectHomeStackPath (projectChoice) into homeStackPath
    put the project_UsedStackNames of stack homeStackPath into stackNames
@@ -187,21 +187,27 @@ end menu_DisplayProjectFolder
 on menu_ExportAndIndexProject projectName
    put merge ("Do you want to export and index project '[[projectName]]'?") into someComment
    lcw_Answer someComment
-   project_ExportAndIndex projectName, true
+   
+   -- project_ExportAndIndex projectName, true
+   
+   env_ExportAndIndexProject projectName
+   put the result into hkeyPlaceArray
+   display_Array hkeyPlaceArray
 end menu_ExportAndIndexProject
 
 
 --> Global | Project | Tree | Menu | Props
 -
+getprop start_Project [projectName]
+   put project_IsActive (projectName) is true into someBoolean
+   return someBoolean
+end start_Project
+
 getprop home_IsScriptOnly [projectName]
    put project_GetHomeStackPath (projectName) into homeStackPath
    put the scriptonly of stack homeStackPath into someBoolean
    return someBoolean
 end home_IsScriptOnly
-
-getprop start_Project [projectName]
-   return project_IsActive (projectName) is true
-end start_Project
 
 getprop project_Choice [indexView]
    put menu_GettargetObject() into tObject

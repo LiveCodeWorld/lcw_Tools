@@ -47,7 +47,7 @@ end watch_FileChanged
 -
 on menu_EditHtml browserView, shortHtmlFile
    put the project_HtmlFile [shortHtmlFile] of browserView into localFile
-   launch_Atom localFile
+   atom_DisplayFile localFile
 end menu_EditHtml
 
 on _
@@ -109,7 +109,7 @@ on menu_CreateHtmlFile browserView
    
    put the clipboarddata ["text"] into maybeText
    put maybeText into url ("file:" & localFile)
-   launch_Atom localFile
+   atom_DisplayFile localFile
 end menu_CreateHtmlFile
 
 

@@ -716,8 +716,8 @@ end spotlight_GetAttribute
 function spotlight_GetFileInfo someFile
    put "mdls" into someShell
    if someFile is not empty then
-      shell_BashParamEscape someFile
-      -- put kwote(someFile) into someFile
+      -- shell_BashParamEscape someFile
+      put kwote(someFile) into someFile
       put space & someFile after someShell
    end if
    get shell(someShell)

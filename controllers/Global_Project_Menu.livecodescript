@@ -157,8 +157,8 @@ getprop project_Name
    return env_GetProjectFocus()
 end project_Name
 
-getprop project_Names
-   return library_ListProjectNames()
+-- getprop project_Names
+return library_ListProjectNames()
 end project_Names
 
 getprop project_StackNames

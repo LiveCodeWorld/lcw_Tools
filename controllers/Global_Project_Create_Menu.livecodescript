@@ -36,6 +36,29 @@ on menu_CreateProjectMenu projectName
    edit the script of controllerStackObject
 end menu_CreateProjectMenu
 
+on menu_CreateRecentMenu projectName
+   put lcw_Ask ("What short name do you want for the Recent menu?", projectName) into shortName
+   put ide_ConstructMenuTitle (shortName, "Recent") into gMenuTitle
+   
+   put project_GetFolder (projectName) into projectFolder
+   project_CreateMenu projectFolder, gMenuTitle
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateRecentMenu
+
+on menu_CreateHandlerMenu projectName
+   put lcw_Ask ("What short name do you want for the Handler menu?", projectName) into shortName
+   put ide_ConstructMenuTitle (shortName, "List") into gMenuTitle
+   
+   put project_GetFolder (projectName) into projectFolder
+   project_CreateMenu projectFolder, gMenuTitle
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateHandlerMenu
+
+on _
+end _
+
 on menu_CreateProjectLibrary projectName
    put "Choose a name for your script-only library stack...." into someQuestion
    set the itemdelimiter to "_"

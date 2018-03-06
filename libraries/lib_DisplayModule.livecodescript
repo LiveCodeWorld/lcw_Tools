@@ -51,12 +51,15 @@ command display_Module moduleFolder
       put the short name of stack moduleHomeStackPath into viewTitle
    end if
    
-   put menu_ConstructViewMenu (displayedObject, isaView) into mTitle
-   
-   put empty into mLineTitle
+   put view_ConstructToolMenu (displayedObject, isaView) into mTitles
+   put line 1 of mTitles into mTitle
+   if menu_Exists (mTitle) is false then
+      put "Global | Module | Tree | Menu" into mTitle
+   end if
+   put "Global | Module | Tree | Line | Menu" into mLineTitle
    put empty into mUp
    
-   display_Index viewProps, someTitle, mTitle, "Global | Module | Tree | Line | Menu", mUp, "mDouble_EditProp"
+   display_Index viewProps, someTitle, mTitles, mLineTitle, mUp, "mDouble_EditProp"
    put the result into indexView
    set the multiple_Hilites of indexView to false
    

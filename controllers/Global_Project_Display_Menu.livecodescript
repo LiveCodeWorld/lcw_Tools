@@ -4,7 +4,7 @@
 license: GPLv3
 name: Global_Project_Display_Menu
 type: controller
-version: 0.2
+version: 0.3
 
 
 --> Global | Project | Display | Menu
@@ -18,7 +18,7 @@ end menu_DisplayLibraries
 
 on menu_DisplayUsed homeStackName
    breakpoint
-   display_Project homeStackName, false
+   display_Project homeStackName
    return empty
 end menu_DisplayUsed
 

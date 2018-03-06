@@ -31,7 +31,7 @@ end menu_Init
 -
 on menu_ImportedBehaviors viewObject, someBoolean
    -- this is a property of "behavior_ViewCardTemplate"
-   set the imported_Behaviors of viewObject to someBoolean
+   set the imported_ViewBehaviors of viewObject to someBoolean
 end menu_ImportedBehaviors
 
 on menu_ExportBehaviors viewObject

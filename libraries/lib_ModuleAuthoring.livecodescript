@@ -232,6 +232,7 @@ command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, 
          put "home" into pLibType
          project_CreateStack rootModuleFolder, moduleStackName, shortFolder, "home", pScript, true
          put the result into moduleHomeStackPath
+         save stack moduleHomeStackPath
          
          project_CreateStandardFolders moduleFolder, "behaviors,controllers"
          
@@ -239,7 +240,7 @@ command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, 
          module_CreateBehavior moduleFolder
          put the result into moduleBehaviorStackPath
          
-         module_CreateController moduleStackName, moduleFolder
+         module_CreateMenu moduleFolder
          put the result into moduleControllerStackPath
    end switch
    
@@ -267,7 +268,7 @@ command module_MoveController moduleStackName, moduleFolder
          return empty
       end if
    else
-      module_CreateController moduleStackName, moduleFolder
+      module_CreateMenu moduleFolder -- ,moduleStackName
       put the result into newModuleBehaviorStackPath
       return newModuleBehaviorStackPath
    end if

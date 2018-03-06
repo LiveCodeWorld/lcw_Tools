@@ -4,7 +4,7 @@
 license: GPLv3
 name: lib_FunctionKey
 type: library
-version: 0.1
+version: 0.2
 
 
 --> FunctionKey
@@ -26,7 +26,7 @@ on functionKey keyNumber
          repeat for each line viewObject in topViewObjects
             -- display_NestedViewArray viewObject
             
-            display_View viewObject
+            display_ViewIndex viewObject
             put the result into indexView
             put the stack_Object of indexView into stackObject
             set the loc of stackObject to oLoc
@@ -40,11 +40,15 @@ on functionKey keyNumber
       case 4
          put the view_Objects of topCard into viewObjects
          repeat for each line viewObject in viewObjects
-            display_View viewObject
+            display_ViewIndex viewObject
          end repeat
          break
       case 6
          display_GitStatus the topStack
+         break
+      case 8
+         put line 1 to 3 of stack_OpenIndex() into stackNames
+         stack_SetToMainScreen stackNames
          break
       case 10
          stack_ToggleShrink
@@ -56,10 +60,10 @@ on functionKey keyNumber
          end repeat
          break
       default
-         put keyNumber
-         breakpoint
+         if the optionKey is "Down" then
+            put keyNumber
+            breakpoint
+         end if
    end switch
    pass functionKey
 end functionKey
-
-

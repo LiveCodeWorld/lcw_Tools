@@ -7,16 +7,35 @@ type: controller
 version: 0.2
 
 
---> Private
+--> Init
 -
-private command refreshDisplay projectName
-   lock screen
-   put LocalArray ["indexView"] into indexView   
-   put project_ListUsedStackNames (projectName) into usedStackNames
-   set the view_Index of indexView to usedStackNames
-   set the title_Text of indexView to projectName
-   unlock screen
-end refreshDisplay
+local LocalArray
+
+on menu_Init tObject
+   put the index_View of tObject into indexView
+   
+   put the selected_Index of indexView into projectName
+   put library_FetchProjectFolder (projectName) into projectFolder
+   
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   if homeStackPath is empty then
+      put projectFolder & projectName & ".livecode" into homeStackPath
+      if exists (stack homeStackPath) is false then
+         breakpoint
+      end if
+   end if
+   
+   put git_GetCheckoutFolder (homeStackPath) into gitCheckoutFolder
+   put there is a folder gitCheckoutFolder into gitIsInitialised
+   put git_GetRemoteAddress (projectFolder) into remoteAddress
+   
+   put projectName into LocalArray ["projectName"]
+   put projectFolder into LocalArray ["projectFolder"]
+   put remoteAddress into LocalArray ["remoteAddress"]
+   put homeStackPath into LocalArray ["homeStackPath"]
+   put gitCheckoutFolder into LocalArray ["gitCheckoutFolder"]
+   put gitIsInitialised into LocalArray ["gitIsInitialised"]
+end menu_Init
 
 
 --> Global | Project | Tree | Line | Menu
@@ -31,7 +50,8 @@ on menu_MoveUsed indexView, newProjectName
       exit to top
    end if
    
-   project_MoveLibrary stackObject, newProjectName
+   put the short name of stackObject into stackName
+   project_MoveLibrary stackName, newProjectName
    
    lcw_Notify merge ("Moved library to new project '[[newProjectName]]'!")
    
@@ -62,10 +82,42 @@ on menu_StartProject indexView, someBoolean
    else
       project_Stop projectName
    end if
+   set the selected_Index of indexView to env_ListProjects()
 end menu_StartProject
 
 on _
 end _
+
+on menu_ExportMenusAndStackFiles indexView
+   put the selected_Index of indexView into projectName
+   put library_FetchProjectFolder (projectName) into projectFolder
+   -- put project_GetFolder (projectName) into projectFolder
+   
+   project_ExportMenusAndStackFiles projectFolder
+end menu_ExportMenusAndStackFiles
+
+on menu_ExportAndIndexProject indexView
+   put the selected_Index of indexView into projectName
+   -- put library_FetchProjectFolder (projectName) into projectFolder
+   -- put project_GetFolder (projectName) into projectFolder
+   
+   breakpoint
+   env_ExportAndIndexProject projectName
+   put the result into hkeyPlaceArray
+   
+   display_Array hkeyPlaceArray
+end menu_ExportAndIndexProject
+
+on _
+end _
+
+on menu_InitialiseGit indexView
+   put LocalArray ["projectFolder"] into projectFolder
+   git_InitFolder projectFolder
+   
+   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
+   display_GitFolderStatus gitCheckoutFolder
+end menu_InitialiseGit
 
 on menu_GitStatus indexView
    put the selected_Index of indexView into projectName
@@ -75,27 +127,25 @@ on menu_GitStatus indexView
    display_GitFolderStatus gitCheckoutFolder
 end menu_GitStatus
 
-on menu_InitialiseGit indexView
-   put the selected_Index of indexView into projectName
-   put library_FetchProjectFolder (projectName) into projectFolder
-   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
-   
-   git_InitFolder projectFolder
-   
-   display_GitFolderStatus gitCheckoutFolder
-end menu_InitialiseGit
+on menu_LaunchGithub
+   put LocalArray ["remoteAddress"] into remoteAddress
+   put github_FindRepoName (remoteAddress) into repoName
+   github_Launch repoName
+end menu_LaunchGithub
 
-on menu_AddEverythingToGit indexView
-   put the selected_Index of indexView into gitProjectName
-   put library_FetchProjectFolder (gitProjectName) into projectFolder
-   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
-   
-   breakpoint
-   git_AddEverything gitCheckoutFolder
-   put the result into shellResult
-   
-   display_GitFolderStatus gitCheckoutFolder
-end menu_AddEverythingToGit
+on menu_DisplayGithubInfo
+   put LocalArray ["remoteAddress"] into remoteAddress
+   put github_FindRepoName (remoteAddress) into repoName
+   display_GitHubInfo repoName
+end menu_DisplayGithubInfo
+
+on _
+end _
+
+on menu_DisplayProjectDeps indexView
+   put the selected_Index of indexView into projectName
+   put project_ListUsedDeps (projectName)
+end menu_DisplayProjectDeps
 
 on _
 end _
@@ -155,6 +205,35 @@ on menu_TrashProject indexView
    project_Trash projectName
 end menu_TrashProject
 
+on _
+end _
+
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Dev | Menu
+-
+on menu_FixRemote indexView
+   put LocalArray ["remoteAddress"] into projectFolder
+   put lcw_Ask ("Enter git remote address...", "git@github.com:LiveCodeWorld/lcw.git")into gitRemoteAddress
+   git_SetRemoteOrigin gitRemoteAddress, projectFolder
+   put the result
+end menu_FixRemote
+
+on menu_AddEverythingToGit indexView
+   put the selected_Index of indexView into gitProjectName
+   put library_FetchProjectFolder (gitProjectName) into projectFolder
+   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
+   
+   breakpoint
+   git_AddEverything gitCheckoutFolder
+   put the result into shellResult
+   
+   display_GitFolderStatus gitCheckoutFolder
+end menu_AddEverythingToGit
+
 
 --> Global | Project | Tree | Line | Menu | Props
 -
@@ -197,10 +276,7 @@ getprop disabled_MoveUsed [indexView]
 end disabled_MoveUsed
 
 getprop disabled_GitStatus [indexView]
-   put the selected_Index of indexView into projectName
-   put library_FetchProjectFolder (projectName) into projectFolder
-   put git_GetCheckoutFolder (projectFolder) into gitCheckoutFolder
-   if there is a folder gitCheckoutFolder then
+   if LocalArray ["gitIsInitialised"] then
       return false
    else
       return "delete"
@@ -208,16 +284,48 @@ getprop disabled_GitStatus [indexView]
 end disabled_GitStatus
 
 getprop disabled_InitialiseGit [indexView]
-   -- put the git_WithinCheckoutFolder of stack stackPath into someBoolean
-   put the selected_Index of indexView into projectName
-   put project_GetHomeStackPath (projectName) into stackPath
-   put git_GetCheckoutFolder (stackPath) into gitCheckoutFolder
-   if there is a folder gitCheckoutFolder then
+   if LocalArray ["gitIsInitialised"] then
       return "delete"
    else
       return false
    end if
 end disabled_InitialiseGit
+
+getprop disabled_AddEverythingToGit [indexView]
+   if LocalArray ["gitIsInitialised"] then
+      return false
+   else
+      return true
+      return "delete"
+   end if
+end disabled_AddEverythingToGit
+
+getprop disabled_LaunchGithub [indexView]
+   if LocalArray ["remoteAddress"] is empty then
+      return true
+      return "delete"
+   else
+      return false
+   end if
+end disabled_LaunchGithub
+   
+getprop disabled_DisplayGithubInfo [indexView]
+   if LocalArray ["remoteAddress"] is empty then
+      return true
+      return "delete"
+   else
+      return false
+   end if
+end disabled_DisplayGithubInfo
+
+getprop disabled_FixRemote [indexView]
+   if LocalArray ["gitIsInitialised"] then
+      return false
+   else
+      return true
+      return "delete"
+   end if
+end disabled_FixRemote
 
 getprop disabled_StartProject [indexView]
    put the title_Text of indexView into listType
@@ -228,3 +336,14 @@ getprop disabled_StartProject [indexView]
    end if
 end disabled_StartProject
 
+
+--> Deps
+-
+private command refreshDisplay projectName
+   lock screen
+   put LocalArray ["indexView"] into indexView   
+   put project_ListUsedStackNames (projectName) into usedStackNames
+   set the view_Index of indexView to usedStackNames
+   set the title_Text of indexView to projectName
+   unlock screen
+end refreshDisplay

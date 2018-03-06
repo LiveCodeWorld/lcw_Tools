@@ -146,7 +146,7 @@ end menu_EditThisTemplate
 
 on menu_EditTemplate mTarget, templateName
    put scaffold_GetFolder (templateName) into someFile
-   launch someFile with "Atom"
+   atom_DisplayFile someFile
    return the result
 end menu_EditTemplate
 
@@ -158,7 +158,7 @@ on menu_CopyMergeScriptToClipboard mTarget, templateName
    
    -- could get all the script metadata
    put user_GetName() into ObjectAuthor
-   put rev_ScriptObject() into scriptObject
+   put scriptEditor_Object() into scriptObject
    put the view_Name of scriptObject into viewName
    
    put merge (templateScript) into someScript
@@ -188,10 +188,10 @@ end menu_Target
 --> Deps
 -
 command text_EditFile someFile
-   launch someFile with "Atom"
-   return the result
-   
-   put "edit" && kwote(someFile) into someShell
-   put shell (someShell) into shellResult
+   atom_DisplayFile someFile
+   if the result is not empty then
+      put "edit" && kwote(someFile) into someShell
+      put shell (someShell) into shellResult
+   end if
 end text_EditFile
 

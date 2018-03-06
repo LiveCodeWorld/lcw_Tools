@@ -4,7 +4,7 @@
 license: GPLv3
 name: Global_Environment_Menu
 type: controller
-version: 0.3
+version: 0.6
 
 
 --> Variables
@@ -30,88 +30,134 @@ on doubleup_DisplayScriptOnlyfolder indexView, mainStackName
    end if
 end doubleup_DisplayScriptOnlyfolder
 
+function textStack_ConstructDataFolder mainStackName, pStackName, pLongObjectID
+   -- same functionality as "getprop data_Folder"
+   
+   put textStack_ConstructFolder (mainStackName) into textStackFolder -- textStack_Folder
+   put textStackFolder & "data/" into textStackDataFolder
+   
+   switch pStackName
+      case empty
+      case mainStackName
+         put textStackDataFolder & "objects/" into dataFolder
+         break
+      default
+         put textStackDataFolder & "objects/substacks/" & pStackName & "/" into dataFolder
+   end switch
+   
+   switch word 1 of pLongObjectID
+      case empty
+      case "stack"
+         put "stack/" after dataFolder
+         break
+      default
+         put word 1 of pLongObjectID & "_" & word 3 of pLongObjectID & "/" after dataFolder
+   end switch
+   return dataFolder
+end textStack_ConstructDataFolder
+
 
 --> Global | Environment | Menu
 -
 on menu_DisplayRecentExports mTarget, howLong
+   if howLong = "ask" then
+      put lcw_Ask ("How many hours...", 60) into someHours
+      if someHours is not a number then exit to top
+      put someHours * 60 into howLong
+   end if
    display_RecentExports howLong
 end menu_DisplayRecentExports
-
+   
 on menu_Display indexView, displayWhat
+   put displayWhat & comma & "Environment" into someTitle
    switch displayWhat
-      put displayWhat & comma & "Environment" into someTitle
-   case "List Projects"
-      put library_ListProjectNames() into projectNames -- it's the default anyway
-      display_ProjectList projectNames, indexView, someTitle
-      break
-   case "List Active Projects"
-      if the shiftKey is "Down" then
-         put env_ListProjects() into projectNames
-      else
-         put library_ListProjectNames() into projectNames
-      end if
-      display_ProjectList projectNames, indexView, someTitle
-      break
-   case "List All Projects"
-      put library_ListProjectNames ("all") into projectNames -- it's the default anyway
-      display_ProjectList projectNames, indexView, someTitle
-      break
-   case "List Projects and Modules"
-      display_ProjectsAndModules
-      break
-   case "-"
-   case "Libraries and Models"
-      if the shiftKey is "Down" then
-         display_LibrariesAndModels
-      else
-         display_LibrariesAndModels indexView
-      end if
-      break
-   case "-"
-   case "List All Modules"
-      put library_ListProjectNames ("module") into projectNames
-      set the view_Index [displayWhat] of indexView to projectNames
-      set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
-      break
-   case "Active Modules"
-      if the shiftKey is "Down" then
-         display_ActiveModules
-      else
-         display_ActiveModules indexView
-      end if
-      break
-   case "-"
-   case "Controllers"
-      if the shiftKey is "Down" then
-         display_Controllers
-      else
-         display_Controllers indexView
-      end if
-      break
-   case "-"
-   case "List All Behaviors"
-      put env_ListBehaviorStackNames() into behaviorStackNames
-      set the view_Index [displayWhat] of indexView to behaviorStackNames
-      set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
-      break
-   case "Behaviors"
-      if the shiftKey is "Down" then
-         display_ActiveBehaviors
-      else
-         display_ActiveBehaviors indexView
-      end if
-      break
-   case "-"
-      -- case "models"
-   case "Views"
-      if the shiftKey is "Down" then
-         display_ActiveViews
-      else
-         display_ActiveViews indexView
-      end if
-      break
-end switch
+      case "List Projects"
+         put library_ListProjectNames() into projectNames -- it's the default anyway
+         display_ProjectList projectNames, indexView, someTitle
+         break
+      case "List Active Projects"
+         if the shiftKey is "Down" then
+            put env_ListProjects() into projectNames
+         else
+            put library_ListProjectNames() into projectNames
+         end if
+         display_ProjectList projectNames, indexView, someTitle
+         break
+      case "List All Projects"
+         put library_ListProjectNames ("all") into projectNames -- it's the default anyway
+         display_ProjectList projectNames, indexView, someTitle
+         break
+      case "List Projects and Modules"
+         display_ProjectsAndModules
+         break
+      case "-"
+      case "Libraries and Models"
+         if the shiftKey is "Down" then
+            display_LibrariesAndModels
+         else
+            display_LibrariesAndModels indexView
+         end if
+         break
+      case "-"
+      case "List All Modules"
+         put library_ListProjectNames ("module") into projectNames
+         set the view_Index [displayWhat] of indexView to projectNames
+         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
+         break
+      case "Active Modules"
+         if the shiftKey is "Down" then
+            display_ActiveModules
+         else
+            display_ActiveModules indexView
+         end if
+         break
+      case "-"
+      case "Controllers"
+         if the shiftKey is "Down" then
+            display_Controllers
+         else
+            display_Controllers indexView
+         end if
+         break
+      case "-"
+      case "List All Behaviors"
+         put env_ListBehaviorStackNames() into behaviorStackNames
+         set the view_Index [displayWhat] of indexView to behaviorStackNames
+         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
+         break
+      case "Behaviors"
+         if the shiftKey is "Down" then
+            display_ActiveBehaviors
+         else
+            display_ActiveBehaviors indexView
+         end if
+         break
+      case "-"
+         -- case "models"
+      case "Views"
+         if the shiftKey is "Down" then
+            display_ActiveViews
+         else
+            display_ActiveViews indexView
+         end if
+         break
+   end switch
 end menu_Display
+
+on _
+end _
+
+on menu_IndicateStarted
+   display_ProjectList
+end menu_IndicateStarted
+
+on menu_SetMenu mTarget, mTitle
+   ide_SetMenuTitle "Recent", mTitle
+end menu_SetMenu
+
+on menu_SetWatchMenu mTarget
+   ide_SetScriptEditorTitles "Watch"
+end menu_SetWatchMenu
 
 on _
 end _
@@ -142,10 +188,31 @@ end submenu_Dev
 
 --> Global | Environment | Menu | Props
 -
+getprop m_Title
+   return ide_ShortTitle ("Recent")
+end m_Title
+
+getprop m_Titles
+   put ide_ListShortMenuTitles ("Recent") into shortNames
+   return shortNames
+end m_Titles
+
+getprop how_Longs
+   return "5 min,10 min,20 min,30 min,300 min,-,ask"
+end how_Longs
+
+getprop from_Whichs
+   return "the used environment,-,the openstacks,the usedstacks"
+end from_Whichs
+
 getprop display_What [indexView]
    put the title_Text of indexView into someTitle
    return someTitle
 end display_What
+
+getprop display_Whats [indexView]
+   return "List Projects,List Active Projects,List All Projects,List Projects and Modules,-,Libraries and Models,Libraries and Models,-,List All Modules,Active Modules,-,Controllers,List All Behaviors,Behaviors,Views"
+end display_Whats
 
 getprop active_Projects
    put env_ListProjects() into activeProjects
@@ -161,17 +228,6 @@ end disabled_LoadStoredPlaceArray
 getprop disabled_StoreActivePlaceArray
    return LocalArray ["storedIsDifferent"] is false
 end disabled_StoreActivePlaceArray
-
-
---> Global | Environment | Menu | Props
--
-getprop how_Longs
-   return "5 min,10 min,20 min,30 min,300 min"
-end how_Longs
-
-getprop from_Whichs
-   return "the used environment,-,the openstacks,the usedstacks"
-end from_Whichs
 
 
 --> Dev | Menu

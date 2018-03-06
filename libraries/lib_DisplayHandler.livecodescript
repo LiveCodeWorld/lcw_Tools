@@ -74,49 +74,6 @@ end display_HandlerDeps
 
 --> Deps
 -
-getprop stack_PlaceArray
-   /*
-   -- see also "hkeyLine_WalkExportedHkeyArray"
-   
-   This only looks at calls, and hkeys in the actual object.
-   It does not walk the dependency tree.
-   usefull for a quicl look at first level dependencies.
-   */
-   
-   local pDepArray
-   
-   put the long id of the target into tObject
-   put the revAvailableHandlers of tObject into hTable
-   put the data_Folder of tObject into dataFolder
-   put revRuggedID (tObject) into rObject
-   put script_FetchHkeyPlaceArray() into hkeyPlaceArray
-   
-   repeat for each line hTableLine in hTable
-      put word 1 to 2 of hTableLine into shortHkey
-      put hKeyLine_Construct (shortHkey, rObject) into pHkey
-      put handler_FetchCalls (shortHkey, dataFolder) into shortCalls
-      put shortCalls into pDepArray ["Handlers"][pHkey]
-      
-      set the wholematches to false
-      repeat for each line shortCall in shortCalls
-         put shortCall & space into searchString
-         if lineOffset (searchString, hTable) > 0 then
-            next repeat
-         end if
-         
-         put hkey_GetPlace (shortCall, hkeyPlaceArray) into cObject
-         if exists (cObject) is false then
-            put empty into pDepArray ["Missing"][rObject][shortCall][pHkey]
-         else
-            put the project_Name of cObject into cProjectName
-            put hKeyLine_Construct (shortCall, cObject) into cHkey
-            put empty into pDepArray ["Calls"][cProjectName][cObject][cHkey][pHkey]
-         end if
-      end repeat
-   end repeat
-   return pDepArray
-end stack_PlaceArray
-
 function hkeyArray_ToProjectDependencyArray hTableLineArray
    local pDepArray
    repeat for each key hTableLine in hTableLineArray
@@ -154,7 +111,7 @@ function hkeyLine_WalkExportedHkeyArray hKeyLine, pProjectName
    local hKeyLinkArray
    
    put script_FetchHkeyPlaceArray (pProjectName) into hkeyPlaceArray
-   put hkeyLine_FetchCalls (hKeyLine) into shortCallHkeyLines
+   put hkey_FetchCalls (hKeyLine) into shortCallHkeyLines
    repeat for each line shortCallHkeyLine in shortCallHkeyLines 
       hkeyLine_WalkExportedHkeyArray shortCallHkeyLine, hKeyLine, hKeyLinkArray, hkeyPlaceArray
    end repeat
@@ -164,6 +121,7 @@ end hkeyLine_WalkExportedHkeyArray
 private command hkeyLine_WalkExportedHkeyArray shortCallHkeyLine, parentHKeyLine, @hKeyLinkArray, hkeyPlaceArray
    hKeyLine_Deconstruct shortCallHkeyLine, cName, cType, hObject
    put hkey_GetPlace (shortCallHkeyLine, hkeyPlaceArray) into cObject -- find it
+   -- put hkey_Find (hName, hType, externalObjects) into externalHkey
    
    if exists (cObject) is false then 
       put hKeyLine_Construct (shortCallHkeyLine, "Missing") into missingCall
@@ -178,9 +136,9 @@ private command hkeyLine_WalkExportedHkeyArray shortCallHkeyLine, parentHKeyLine
    
    -- add it to the array
    put true into hKeyLinkArray [parentHKeyLine][foundCall]
-      
+   
    -- now lets repeat and recurse for each call found
-   put hkeyLine_FetchCalls (foundCall) into childShortHkeyLines   
+   put hkey_FetchCalls (foundCall) into childShortHkeyLines   
    repeat for each line childShortHkeyLine in childShortHkeyLines
       hkeyLine_WalkExportedHkeyArray childShortHkeyLine, foundCall, hKeyLinkArray, hkeyPlaceArray
    end repeat
