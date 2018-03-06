@@ -279,6 +279,7 @@ getprop disabled_GitStatus [indexView]
    if LocalArray ["gitIsInitialised"] then
       return false
    else
+      return true
       return "delete"
    end if
 end disabled_GitStatus
