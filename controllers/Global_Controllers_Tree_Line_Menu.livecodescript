@@ -67,21 +67,26 @@ on menu_RevealFolder indexView
    finder_Reveal controllerFolder
 end menu_RevealFolder
 
-on menu_MoveStack indexView, newProjectName
+on menu_MoveController indexView, newProjectName
    put the selected_Index of indexView into stackName
    put the name of stack stackName into stackObject
    
    put the project_Name of stackObject into oProjectName
    if oProjectName = newProjectName then
-      answer warning merge ("Stack is already in project '[[newProjectName]]'. Choose a new project to move this library to!")
-      exit to top
+      get merge ("Stack is already in project '[[newProjectName]]'. Choose a new project to move this library to!")
+      lcw_WarnAndExit it
    end if
    
-   put the short name of stackObject into stackName
-   project_MoveLibrary stackName, newProjectName
+   get merge ("Do you want to move the controller [[stackName]]to the new project [[newProjectName]]?")
+   text_PrettyQuote it
+   lcw_AnswerSheet it
+   
+   -- moves the stack realtively
+   -- as it is a controller it moves the stack to the controller folder in the new project folder
+   project_MoveStackRelative stackName, newProjectName
    
    display_ProjectControllers newProjectName, indexView
-end menu_MoveStack
+end menu_MoveController
 
 
 --> Global | Controllers | Tree | Line | Menu | Props

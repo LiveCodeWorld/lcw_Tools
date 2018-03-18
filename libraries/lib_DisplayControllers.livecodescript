@@ -4,23 +4,49 @@
 license: GPLv3
 name: lib_DisplayControllers
 type: library
-version: 0.1
+version: 0.2
 
 
 --> Display | Events
 -
-command mDouble_DisplayStack indexView, stackName
-   switch
-      case exists (stack stackName) is false
-         answer merge("Could not find stack '[[stackName]]'.")
-         break
-      case the scriptonly of stack stackName is true
-         edit the script of stack stackName
-         break
-      default
-         go to stack stackName
-   end switch
-end mDouble_DisplayStack
+command mDoubleUp_CheckRigControllers
+   displayView, shortFile
+   put the folder_Path of displayView into folderPath
+   put server_GetURL() into serverURL
+   put server_GetSshUser() into sshUser
+   put server_GetSshKeyPath() into sshKeyPath
+   --
+   put shortFile
+end mDoubleUp_CheckRigControllers
+
+
+--> Display | Rig | Controller | Handlers
+-
+command display_ControllerHandlers controllerScript, pControllerShortFile, serverTLD
+   server_LoadDetails "rest.livecode.world"
+   --
+   put rig_ListControllerFiles() into shortStackFiles
+   display_Lines shortStackFiles, "Rig Controllers", "mDoubleUp_CheckRigControllers"
+   put the result into displayView
+   --
+   put rig_GetFolder ("controllers") into folderPath
+   set the folder_Path of displayView to folderPath
+end display_ControllerHandlers
+
+command display_RigControllerArray
+   server_LoadDetails "rest.livecode.world"
+   --
+   put rig_FetchControllerPathArray() into controllerPathArray
+   
+   put "Global | Revigniter | Display | Controller | Menu" into treeMenuTitle
+   put "Global | Revigniter | Display | Controller | Line | Menu" into lineMenuTitle
+   put server_GetURL() into serverURL
+   put serverURL & comma & "rig_FetchControllerPathArray()" into someTitle
+   --
+   display_Array controllerPathArray, someTitle, treeMenuTitle, lineMenuTitle
+   put the result into arrayView
+   return arrayView
+end display_RigControllerArray
 
 
 --> Display | Project | Controllers

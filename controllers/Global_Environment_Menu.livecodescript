@@ -71,9 +71,9 @@ end menu_DisplayRecentExports
 on menu_Display indexView, displayWhat
    put displayWhat & comma & "Environment" into someTitle
    switch displayWhat
-      case "List Projects"
+      case "List All Projects"
          put library_ListProjectNames() into projectNames -- it's the default anyway
-         display_ProjectList projectNames, indexView, someTitle
+         display_LcwProjectList projectNames
          break
       case "List Active Projects"
          if the shiftKey is "Down" then
@@ -81,60 +81,41 @@ on menu_Display indexView, displayWhat
          else
             put library_ListProjectNames() into projectNames
          end if
-         display_ProjectList projectNames, indexView, someTitle
-         break
-      case "List All Projects"
-         put library_ListProjectNames ("all") into projectNames -- it's the default anyway
-         display_ProjectList projectNames, indexView, someTitle
-         break
-      case "List Projects and Modules"
-         display_ProjectsAndModules
+         display_LcwProjectList projectNames
          break
       case "-"
-      case "Libraries and Models"
+      case "List All Libs"
          if the shiftKey is "Down" then
-            display_LibrariesAndModels
+            display_LcwLibs
          else
-            display_LibrariesAndModels indexView
+            display_LcwLibs indexView
          end if
          break
-      case "-"
       case "List All Modules"
          put library_ListProjectNames ("module") into projectNames
          set the view_Index [displayWhat] of indexView to projectNames
          set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
          break
-      case "Active Modules"
-         if the shiftKey is "Down" then
-            display_ActiveModules
-         else
-            display_ActiveModules indexView
-         end if
-         break
-      case "-"
-      case "Controllers"
+      case "List All Controllers"
          if the shiftKey is "Down" then
             display_Controllers
          else
             display_Controllers indexView
          end if
          break
-      case "-"
       case "List All Behaviors"
          put env_ListBehaviorStackNames() into behaviorStackNames
          set the view_Index [displayWhat] of indexView to behaviorStackNames
          set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
          break
-      case "Behaviors"
+         
          if the shiftKey is "Down" then
             display_ActiveBehaviors
          else
             display_ActiveBehaviors indexView
          end if
-         break
       case "-"
-         -- case "models"
-      case "Views"
+      case "List LCW Views"
          if the shiftKey is "Down" then
             display_ActiveViews
          else
@@ -148,7 +129,7 @@ on _
 end _
 
 on menu_IndicateStarted
-   display_ProjectList
+   display_LcwProjectList
 end menu_IndicateStarted
 
 on menu_SetMenu mTarget, mTitle

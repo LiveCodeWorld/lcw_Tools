@@ -14,11 +14,10 @@ on functionKey keyNumber
    put the top_Card of the topStack into topCard
    switch keyNumber
       case 1
-         display_ProjectList
+         display_LcwProjectList
          break
       case 2
-         display_LibrariesAndModels
-         -- display_ProjectsAndModules
+         display_LcwLibs
          break
       case 3
          put the top_ViewObjects of topCard into topViewObjects
