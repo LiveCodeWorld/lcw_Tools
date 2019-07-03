@@ -25,9 +25,56 @@ on mDouble_DisplayStack indexView, stackName
    end switch
 end mDouble_DisplayStack
 
+command mDoubleUp_EditBehavior indexView, bObject
+   put the displayed_Object of indexView into viewObject
+   
+   put the textcolor of the clickLine into lineColour
+   switch lineColour
+      case "255,0,0" -- red
+         -- behavior is missing
+         breakpoint
+         break
+      case "142,53,239" -- purple
+         -- default behavior is missing
+         breakpoint
+         break
+      case "0,255,0" -- green
+         -- default behavior in this project
+         edit the script of bObject
+         break
+      case "248,122,23" -- orange
+         -- inAnotherProject
+         _askMoveBehavior "Do you want to import this behavior from project '[[otherProjectName]]'?", bObject, viewObject
+         display_ViewBehaviors viewObject, indexView
+         break
+      case "0,0,139" -- dark blue
+         -- default behavior is in another project
+         _askMoveBehavior "Do you want to import this default behavior from project '[[otherProjectName]]'?", bObject, viewObject
+         set the behavior of viewObject to the behavior of viewObject -- probably not necessary?
+         display_ViewBehaviors viewObject, indexView
+         break
+      default
+         -- subview in this project
+         edit the script of bObject
+         -- put lineColour
+   end switch
+end mDoubleUp_EditBehavior
+
 
 --> Display | Project | Views
 -
+command display_ClonedView viewName, pInvisible, pCloneName, pDestroyBoolean
+   put view_GetTemplateObject (viewName) into viewTemplate
+   if pInvisible is true then
+      stack_CloneInvisible viewName, pCloneName, pDestroyBoolean
+   else
+      stack_Clone viewName, pDestroyBoolean, pCloneName
+   end if
+   put the result into clonedStackName
+   put the long id of control 1 of cd 1 of stack clonedStackName into clonedView
+   return clonedView
+end display_ClonedView
+
 command display_View viewName
    put view_GetTemplateObject (viewName) into viewTemplate
    object_GoTo viewTemplate
@@ -156,86 +203,6 @@ command display_ViewBehaviors viewObject, pIndexView, pStacklabel
    return indexView
 end display_ViewBehaviors
 
-command mDoubleUp_EditBehavior indexView, bObject
-   put the displayed_Object of indexView into viewObject
-   
-   put the textcolor of the clickLine into lineColour
-   switch lineColour
-      case "255,0,0" -- red
-         -- behavior is missing
-         breakpoint
-         break
-      case "142,53,239" -- purple
-         -- default behavior is missing
-         breakpoint
-         break
-      case "0,255,0" -- green
-         -- default behavior in this project
-         edit the script of bObject
-         break
-      case "248,122,23" -- orange
-         -- inAnotherProject
-         _askMoveBehavior "Do you want to import this behavior from project '[[otherProjectName]]'?", bObject, viewObject
-         display_ViewBehaviors viewObject, indexView
-         break
-      case "0,0,139" -- dark blue
-         -- default behavior is in another project
-         _askMoveBehavior "Do you want to import this default behavior from project '[[otherProjectName]]'?", bObject, viewObject
-         set the behavior of viewObject to the behavior of viewObject -- probably not necessary?
-         display_ViewBehaviors viewObject, indexView
-         break
-      default
-         -- subview in this project
-         edit the script of bObject
-         -- put lineColour
-   end switch
-end mDoubleUp_EditBehavior
-
-private command _askMoveBehavior someComment, bObject, viewObject
-   put the project_Name of bObject into otherProjectName
-   put merge (someComment) into someComment
-   replace "'" with quote in someComment
-   answer someComment with "Cancel" or "Copy" or "Move"
-   switch it
-      case "Copy"
-         breakpoint
-         break
-      case "Move"
-         if word 1 of bObject is not "stack" then
-            breakpoint
-            exit to top
-         end if
-         
-         answer "Do you want to move the behavior to the behavior folder in the module_Folder or the project_Folder?" with "Cancel" or "Project" or "Module"   
-         switch it
-            case "Cancel"
-               exit to top
-            case "Project"
-               put the project_Folder of viewObject into projectFolder
-               put project_ConstructFolder ("behaviors", projectFolder) into newBehaviorFolder
-               break
-            case "Module"
-               put the module_Folder of viewObject into moduleFolder
-               put project_ConstructFolder ("behaviors", moduleFolder) into newBehaviorFolder
-               break
-         end switch
-         folder_CreateNested newBehaviorFolder
-         
-         set the itemdelimiter to slash
-         put the filename of bObject into oldBehaviorPath
-         put item -1 of oldBehaviorPath into shortFile
-         put newBehaviorFolder & shortFile into newBehaviorPath
-         
-         breakpoint
-         project_MoveStack oldBehaviorPath, newBehaviorPath, true
-         break
-      default
-         -- case "Cancel" 
-         exit to top
-   end switch
-   
-end _askMoveBehavior
-
 command display_NestedViewArray viewObject
    put the view_NestedArray of viewObject into nestedViewArray
    
@@ -302,6 +269,53 @@ command display_ActiveViews pIndexView
 end display_ActiveViews
 
 
+--> Private
+-
+private command _askMoveBehavior someComment, bObject, viewObject
+   put the project_Name of bObject into otherProjectName
+   put merge (someComment) into someComment
+   replace "'" with quote in someComment
+   answer someComment with "Cancel" or "Copy" or "Move"
+   switch it
+      case "Copy"
+         breakpoint
+         break
+      case "Move"
+         if word 1 of bObject is not "stack" then
+            breakpoint
+            exit to top
+         end if
+         
+         answer "Do you want to move the behavior to the behavior folder in the module_Folder or the project_Folder?" with "Cancel" or "Project" or "Module"   
+         switch it
+            case "Cancel"
+               exit to top
+            case "Project"
+               put the project_Folder of viewObject into projectFolder
+               put project_ConstructFolder ("behaviors", projectFolder) into newBehaviorFolder
+               break
+            case "Module"
+               put the module_Folder of viewObject into moduleFolder
+               put project_ConstructFolder ("behaviors", moduleFolder) into newBehaviorFolder
+               break
+         end switch
+         folder_CreateNested newBehaviorFolder
+         
+         set the itemdelimiter to slash
+         put the filename of bObject into oldBehaviorPath
+         put item -1 of oldBehaviorPath into shortFile
+         put newBehaviorFolder & shortFile into newBehaviorPath
+         
+         breakpoint
+         project_MoveStack oldBehaviorPath, newBehaviorPath, true
+         break
+      default
+         -- case "Cancel" 
+         exit to top
+   end switch
+end _askMoveBehavior
+
+
 --> Deps
 -
 function view_ConstructToolMenu viewObject, isaView
@@ -322,4 +336,3 @@ function view_ConstructToolMenu viewObject, isaView
    end if
    return mTitle
 end view_ConstructToolMenu
-

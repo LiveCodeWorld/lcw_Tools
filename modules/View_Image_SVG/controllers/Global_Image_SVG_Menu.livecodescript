@@ -4,7 +4,7 @@
 license: GPLv3
 name: Global_Image_SVG_Menu
 type: controller
-version: 0.1
+version: 0.2
 
 
 --> Menu | Props
@@ -21,6 +21,61 @@ end menu_Target
 
 --> Global | Image | SVG | Menu
 -
+on menu_ObjectProcessedArray svgView
+   put the displayed_Object of svgView into hObject
+   put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  
+   display_Array processedHkeyArray, "processedHkeyArray"
+end menu_ObjectProcessedArray
+
+on _
+end _
+
+on menu_HandlerArray svgView
+   put the displayed_Hkey of svgView into hKey
+   hkey_Deconstruct hKey, hName, hType, hObject, hNum
+   
+   put hkey_SvgFile (hKey) into svgFile
+   
+   
+   put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  
+   display_Array processedHkeyArray, "processedHkeyArray"
+end menu_HandlerArray
+
+on _
+end _
+
+on menu_HandlerFolder svgView
+   put the displayed_Hkey of svgView into hKey
+   put hkey_Folder (hKey) into hFolder
+   finder_Reveal hFolder
+end menu_HandlerFolder
+
+on menu_HandlerMetadataFolder svgView
+   put the displayed_Hkey of svgView into hKey
+   --
+   put hkey_MetadataFolder (hKey) into someFolder
+   -- put the metadata_Folder [hKey] of hObject into someFolder
+   finder_Reveal someFolder
+end menu_HandlerMetadataFolder
+
+on menu_ObjectMetadataFolder svgView
+   put the displayed_Object of svgView into hObject
+   --
+   put the metadata_Folder of hObject into someFolder
+   finder_Reveal someFolder
+end menu_ObjectMetadataFolder
+
+on _
+end _
+
+on menu_DisplayObjectDepArray displayView
+   put the displayed_Object of displayView into hObject
+   display_ObjectDepArray hObject
+end menu_DisplayObjectDepArray
+
+on _
+end _
+
 on menu_SvgTools svgView
    display_Index svgIndex, "SVG Tools", "Global | Image | SVG | Menu"
    put the result into indexView
@@ -146,15 +201,22 @@ end fluid_Svg
 
 --> Dev | Menu
 -
-on menu_DisplaySvgFile svgView
+on menu_DisplaySvgPane svgView
+   put the displayed_Object of svgView into scriptObject
+   put the svg_File of svgView into svgFile
+   --
+   display_SVG svgFile
+end menu_DisplaySvgPane
+
+on menu_DisplaySvgPane svgView
    put the svg_File of svgView into svgFile
    set the svg_File of svgView to svgFile
-   
+   --
    put scriptEditor_PaneObject ("Deps") into paneObject
    set the svg_File [true] of control 1 of paneObject to imageFile
-   
+   --
    put the svg_File [true] of control 1 of paneObject & CR & svgFile
-end menu_DisplaySvgFile
+end menu_DisplaySvgPane
 
 on menu_DisplaySvgHeader svgView
    put the svg_HeaderArray of svgView into svgHeaderArray
@@ -187,27 +249,6 @@ on menu_EditSvgBehavior svgView
    put the behavior of svgView into bObject
    edit the script of bObject
 end menu_EditSvgBehavior
-
-on _
-end _
-
-on menu_DisplayProcessedHkeyArray svgView
-   put the textStack_HkeyArray of scriptObject into processedHkeyArray  
-   display_Array processedHkeyArray, "processedHkeyArray"
-end menu_DisplayProcessedHkeyArray
-
-on menu_DisplayControllerGraph scriptObject
-   put the project_MetadataFolder of scriptObject & CR after folderInfo
-   
-   put folderInfo
-   
-   -- put overlay_GetImageFile (overlayFolder, "HAP")
-end menu_DisplayControllerGraph
-
--- on menu_DependencyObjects scriptObject
--- put the missing_HkeyArray of scriptObject into missingHkeyArray
-put the dep_StackNames of scriptObject into depStackNames
-end menu_DependencyObjects
 
 on _
 end _

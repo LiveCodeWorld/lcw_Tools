@@ -4,7 +4,7 @@
 license: GPLv3
 name: behavior_ViewImageSVG
 type: view behavior
-version: 0.3
+version: 0.4
 
 
 /*
@@ -19,36 +19,13 @@ local LocalArray
 
 
 --> Events
--
+-   
 on browserNavigateBegin clickedURL
-   set the itemdelimiter to slash
-   put item -1 of clickedURL into urlEncodedHKey
-   put urldecode (urlEncodedHKey) into hKey
-   
    -- This gets called when the browser view is first opened
-   -- if the number of
-   
    -- and on every link clicked that loads a page
    -- "http://libbrowser_dummy_url/list_ImageFileIDs%2Cc%2Cstack+%22behavior_ServerScriptContainer%22%2C1"
    
-   breakpoint
-   hkey_Deconstruct hKey, hName, hType, hObject, hNum
-   switch hObject
-      case "missing"
-         put hkey_Find (hKey) into foundHkey
-         if foundHkey is empty then
-            -- spotlight
-            breakpoint
-            -- put hkey_Construct (hName, privateHype, hierarchyObject) into hKey
-            -- put hKeyLine_FromTripple (hName, hType, hObject) into hKey
-            display_SpotlightHandler hKey
-         else
-            hKey_Edit foundHkey
-         end if
-         break
-      default
-         hKey_Edit hKey
-   end switch
+   dispatch "svg_BrowserNavigate" with clickedURL
 end browserNavigateBegin
 
 on browserDocumentLoadBegin pUrl
@@ -97,7 +74,7 @@ setprop displayed_Object hObject
    put hObject into item 3 of LocalArray ["hKey"]
 end displayed_Object
 
--- getprop displayed_Hkey
+getprop displayed_Hkey
    put LocalArray ["hKey"] into hKey
    return hKey
 end displayed_Hkey
@@ -322,7 +299,7 @@ setprop svg_HeaderArray svgHeaderArray
    end repeat
    delete char -1 of newSvgHeader
    put ">" after newSvgHeader
-
+   
    set the svg_Header of me to newSvgHeader
    put the result into svgXML
    return svgXML

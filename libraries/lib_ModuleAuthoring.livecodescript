@@ -12,7 +12,6 @@ version: 0.3
 --> Module | Behavior
 
 command module_CreateBehavior moduleFolder, pBehaviorStackName, pBehaviorScript
-   breakpoint
    if pBehaviorStackName is empty then
       set the itemdelimiter to slash
       put item -1 of moduleFolder into shortFolderName
@@ -118,7 +117,6 @@ A lcw controller is also know less formally as a "menu".
 */
 
 command module_CreateMenu moduleFolder, pGlobalMenuTitle, pControllerScript
-   breakpoint
    folder_CreateNested moduleFolder
    project_CreateMenu moduleFolder, pGlobalMenuTitle, pControllerScript   
    put the result into controllerStackObject

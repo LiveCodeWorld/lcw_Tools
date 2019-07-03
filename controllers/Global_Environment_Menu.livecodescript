@@ -15,7 +15,7 @@ local LocalArray
 --> Events | Display
 -
 on doubleup_DisplayScriptOnlyfolder indexView, mainStackName
-   -- put the data_Folder [true] of stack mainStackName into testDataFolder
+   -- put the dataObject_Folder [true] of stack mainStackName into testDataFolder
    put textStack_ConstructDataFolder (mainStackName) into dataFolder
    put script_ReconstructFromExported (dataFolder) into someScript
    
@@ -31,7 +31,7 @@ on doubleup_DisplayScriptOnlyfolder indexView, mainStackName
 end doubleup_DisplayScriptOnlyfolder
 
 function textStack_ConstructDataFolder mainStackName, pStackName, pLongObjectID
-   -- same functionality as "getprop data_Folder"
+   -- same functionality as "getprop dataObject_Folder"
    
    put textStack_ConstructFolder (mainStackName) into textStackFolder -- textStack_Folder
    put textStackFolder & "data/" into textStackDataFolder
@@ -56,9 +56,64 @@ function textStack_ConstructDataFolder mainStackName, pStackName, pLongObjectID
    return dataFolder
 end textStack_ConstructDataFolder
 
+on mDoubleUp_SaveStack indexView, mStackName
+   put the bad_StackArray of indexView into testArray
+   put testArray ["bad path"][mStackName] into stackPath
+   switch
+      case there is a file stackPath
+         put "OK"
+         break
+      default
+         put "Missing:" && stackPath
+   end switch
+end mDoubleUp_SaveStack
+
+
+--> Menu | Props
+-
+getprop menuStyle_Param
+   return the menu_Style of stack "lib_MenuArray"
+end menuStyle_Param
+
+getprop menuStyle_Params
+   return "Array,Old"
+end menuStyle_Params
+
+getprop setMenu_Param
+   return ide_ShortTitle ("Recent")
+end setMenu_Param
+
+getprop setMenu_Params
+   put ide_ListShortMenuTitles ("Recent") into shortNames
+   return shortNames
+end setMenu_Params
+
+getprop displayRecentExports_Params
+   return "5 min,10 min,20 min,30 min,300 min,-,ask"
+end displayRecentExports_Params
+
+getprop display_Params
+   return "List Projects,-,Libraries and Models,Libraries and Models,-,List All Modules,-,Controllers,List All Behaviors,Behaviors,Views"
+end display_Params
+
 
 --> Global | Environment | Menu
 -
+on menu_DisplayRigControllers
+   display_RigControllers
+end menu_DisplayRigControllers
+
+on menu_DisplayFederationServers
+   display_FederationServers
+end menu_DisplayFederationServers
+
+on menu_DisplayAtopiaFolders
+   display_AtopiaDomains
+end menu_DisplayAtopiaFolders
+
+on _
+end _
+
 on menu_DisplayRecentExports mTarget, howLong
    if howLong = "ask" then
       put lcw_Ask ("How many hours...", 60) into someHours
@@ -67,7 +122,10 @@ on menu_DisplayRecentExports mTarget, howLong
    end if
    display_RecentExports howLong
 end menu_DisplayRecentExports
-   
+
+on _
+end _
+
 on menu_Display indexView, displayWhat
    put displayWhat & comma & "Environment" into someTitle
    switch displayWhat
@@ -125,35 +183,24 @@ on menu_Display indexView, displayWhat
    end switch
 end menu_Display
 
-on _
-end _
-
-on menu_IndicateStarted
-   display_LcwProjectList
-end menu_IndicateStarted
-
-on menu_SetMenu mTarget, mTitle
-   ide_SetMenuTitle "Recent", mTitle
-end menu_SetMenu
-
-on menu_SetWatchMenu mTarget
-   ide_SetScriptEditorTitles "Watch"
-end menu_SetWatchMenu
-
-on _
-end _
-
-on submenu_Project
-   return "Global | Library | Project | Model | Menu"
-end submenu_Project
-
 on submenu_Create
    return "Global | ScriptEditor | Create | Menu"
 end submenu_Create
 
-on submenu_Export
-   return "Global | Project | Export | Menu"
-end submenu_Export
+on _
+end _
+
+on menu_SetMenu mTarget, shortName
+   ide_SetMenuTitle "Recent", shortName
+   --
+   put ide_GetMenuTitle ("Recent") into mTitle
+   menu_Edit mTitle
+   put mTitle
+end menu_SetMenu
+
+on menu_MenuStyle indexView, mStyle
+   set the menu_Style of stack "lib_MenuArray" to mStyle
+end menu_MenuStyle
 
 on _
 end _
@@ -162,21 +209,40 @@ on submenu_Git
    return "Global | GIT | Menu"
 end submenu_Git
 
+on menu_WatchEditingScripts indexView, someBoolean
+   if someBoolean is true then
+      ide_AddRevEditScriptStack "LCW"
+   else
+      ide_RemoveRevEditScriptStack "LCW"
+   end if
+end menu_WatchEditingScripts
+
+
+--> END
+-
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
 
 
---> Global | Environment | Menu | Props
+--> Menu | Props | old
 -
-getprop m_Title
-   return ide_ShortTitle ("Recent")
-end m_Title
+getprop m_Styles
+   return "Array,Old"
+end m_Styles
 
-getprop m_Titles
+getprop m_Style
+   return the menu_Style of stack "lib_MenuArray"
+end m_Style
+
+getprop short_Name
+   return ide_ShortTitle ("Recent")
+end short_Name
+
+getprop short_Names
    put ide_ListShortMenuTitles ("Recent") into shortNames
    return shortNames
-end m_Titles
+end short_Names
 
 getprop how_Longs
    return "5 min,10 min,20 min,30 min,300 min,-,ask"
@@ -202,6 +268,14 @@ end active_Projects
 
 --> Global | Environment | Menu | Disabled
 -
+command init_PlaceArray
+   -- ???
+   put script_FetchHkeyPlaceArray() into storedHkeyPlaceArray
+   put hkeyLine_GetPlaceArray() into hkeyPlaceArray
+   put hkeyPlaceArray is not storedHkeyPlaceArray into LocalArray ["storedIsDifferent"]
+   return storedHkeyPlaceArray
+end init_PlaceArray
+
 getprop disabled_LoadStoredPlaceArray
    return LocalArray ["storedIsDifferent"] is false
 end disabled_LoadStoredPlaceArray
@@ -210,21 +284,32 @@ getprop disabled_StoreActivePlaceArray
    return LocalArray ["storedIsDifferent"] is false
 end disabled_StoreActivePlaceArray
 
-
---> Dev | Menu
--
-on menu_WatchEditingScripts indexView, someBoolean
-   if someBoolean is true then
-      ide_AddRevEditScriptStack "LCW"
-   else
-      ide_RemoveRevEditScriptStack "LCW"
-   end if
-end menu_WatchEditingScripts
-
 getprop watch_EditingScripts
    put ide_GetRevEditScriptStack ("LCW") into someBoolean
    return someBoolean
 end watch_EditingScripts
+
+
+--> Dev | Menu
+-
+on menu_IndicateStarted
+   display_LcwProjectList
+end menu_IndicateStarted
+
+on menu_SetWatchMenu mTarget
+   ide_SetScriptEditorTitles "Watch"
+end menu_SetWatchMenu
+
+on submenu_Project
+   return "Global | Library | Project | Model | Menu"
+end submenu_Project
+
+on submenu_Export
+   return "Global | Project | Export | Menu"
+end submenu_Export
+
+on _
+end _
 
 on menu_LivecodePluginArray
    -- ide_AddRevEditScriptStack stackName
@@ -280,7 +365,7 @@ end menu_LibraryProjectData
 
 on _
 end _
- 
+
 on menu_RecreateScriptOnlyStack
    put lcw_UserMetadataFolder() into textStackRoot
    put folder_ListShort (textStackRoot) into exportedScriptOnlyStacks
@@ -367,35 +452,6 @@ end _
 on menu_MultipleHilights treeView
    put the multi_Hilites of treeView
 end menu_MultipleHilights
-
-
---> Dev | Menu | Props
--
-
---> Menu | Props
--
-on menu_Init
-   put script_FetchHkeyPlaceArray() into storedHkeyPlaceArray
-   put hkeyLine_GetPlaceArray() into hkeyPlaceArray
-   put hkeyPlaceArray is not storedHkeyPlaceArray into LocalArray ["storedIsDifferent"]
-   return storedHkeyPlaceArray
-end menu_Init
-
-
---> Display
--
--- command editHandler treeView, lineNums, pathItems
-if the optionKey is "Down" then breakpoint
-
-set the itemdelimiter to slash
-put item 1 of pathItems into shortHkeyLine
-put item 2 of pathItems into hObject
-put word 1 of lineNums into startLineNum
-put word 2 of lineNums into endLineNum
-
-put hKeyLine_Construct (shortHkeyLine, hObject) into hTableLine
-hkey_Edit hTableLine
-end editHandler
 
 
 --> Deps

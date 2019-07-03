@@ -72,7 +72,7 @@ on menu_CreateProjectLibrary projectName
    start using stack stackName
    lcw_Notify ("Stack" && kwote (stackName) && "is now known and used!")
    edit the script of stack stackName
-   finder_Reveal projectFolder
+   -- finder_Reveal projectFolder
 end menu_CreateProjectLibrary
 
 on menu_CreateProjectModel projectName

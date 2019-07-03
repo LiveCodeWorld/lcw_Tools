@@ -9,27 +9,10 @@ version: 0.1
 
 --> Menu | Props
 -
-getprop menu_Target
-   put menu_GetTargetObject() into tObject
-   put the index_View of tObject into indexView
-   put the displayed_Object of indexView into viewObject
-   return viewObject
-   
-   /*
-   put the title_text of tObject into moduleStackName
-   put module_NameToFolder (moduleStackName) into moduleFolderName 
-   
-   put the stack_Object of tObject into stackObject
-   put the label of stackObject into projectName
-   delete word -1 of projectName
-   
-   put module_GetHomeStackPath (moduleFolderName, projectName) into moduleHomeStackPath
-   if exists (control 1 of cd 1 of stack moduleHomeStackPath) is false then
-      breakpoint
-      return empty
-   end if
-   put the long id of control 1 of cd 1 of stack moduleHomeStackPath into viewObject
-   */
+-- getprop menu_Target [tObject]
+put the index_View of tObject into indexView
+put the displayed_Object of indexView into viewObject
+return viewObject
 end menu_Target
 
 
