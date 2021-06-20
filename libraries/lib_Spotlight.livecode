@@ -19,22 +19,207 @@ which is painfully slow.
 
 https://stackoverflow.com/questions/30271328/how-do-i-get-mdfind-to-include-folder-matches-in-addition-to-files
 
+mdfind is the Terminal equivalent of Spotlight. It's very powerful and most important of all, scriptable. Below are a few common commands.
+
+mdfind -name rails
+Search your entire Mac for everything with "rails" in the name.
+mdfind "rails" -onlyin ~/Documents/
+Search for text within a specific directory.
+mdfind "kind:image date:yesterday"
+Return image files that were edited yesterday.
+mdfind 'kMDItemFSCreationDate < $time.today(0) && kMDItemFSCreationDate > $time.today(-1) && kMDItemKind = *image'
+Return image files between yesterday and today.
+
+mdfind "kind:Livecode Stack date:yesterday"
+mdfind "kind:Livecode Stack name:caddy" -- name is case insensitive
 */
 
 --> Working On
 -
+function spotlight_ListMovieInfo movieFile
+   put "Duration Seconds,File Size,Total Bit Rate,Kind,Codecs" into attributeNames
+   --
+   put spotlight_MovieInfoArray (movieFile) into movieInfoArray
+   put spotlight_ConstructInfoText (movieInfoArray, attributeNames) into movieInfo
+   return movieInfo
+end spotlight_ListMovieInfo
+
+function spotlight_ConstructInfoText movieInfoArray, pAttributeNames
+   if pAttributeNames is empty then
+      put the keys of movieInfoArray into pAttributeNames
+      sort pAttributeNames
+   else
+      replace comma with CR in pAttributeNames
+   end if
+   --
+   repeat for each line attributeName in pAttributeNames
+      put movieInfoArray [attributeName] into attributeValue
+      put attributeName & ":" && attributeValue & CR after movieInfo
+   end repeat
+   delete char -1 of movieInfo
+   return movieInfo
+end spotlight_ConstructInfoText
+
+function spotlight_MovieInfoArray movieFile
+   put spotlight_GetFileInfo (movieFile) into spotlightFileInfo
+   put spotlight_ConstructFileInfoArray (spotlightFileInfo) into fileInfoArray
+   --
+   get "Duration Seconds,File Size,Total Bit Rate,Kind,Codecs"
+   repeat for each item attributeName in it
+      -- put "KMDItem" & attributeName into someKey
+      put fileInfoArray [attributeName] into attributeValue
+      put attributeValue into movieInfoArray [attributeName]
+   end repeat
+   return movieInfoArray
+end spotlight_MovieInfoArray
+
+function spotlight_ConstructFileInfoArray spotlightFileInfo
+   replace (CR & "    ") with space in spotlightFileInfo
+   replace (CR & ")") with " )" in spotlightFileInfo
+   --
+   set the itemdelimiter to "="
+   repeat for each line someLine in spotlightFileInfo
+      put word 1 to -1 of item 1 of someLine into someKey
+      if char 1 to 7 of someKey = "KMDItem" then
+         delete char 1 to 7 of someKey
+      end if
+      if char 1 to 2 of someKey = "FS" then
+         put "File" into char 1 to 2 of someKey
+      end if
+      put text_SplitCaps (someKey) into someKey
+      --
+      get item 2 to -1 of someLine
+      put word 1 to -1 of it into someValue
+      if char 1 of someValue = "(" then 
+         delete char 1 of someValue
+         delete char -1 of someValue
+         put word 1 to -1 of someValue into someValue
+      end if
+      --
+      put someValue into fileInfoArray [someKey]
+   end repeat
+   return fileInfoArray
+end spotlight_ConstructFileInfoArray
+
+function spotlight_MetaMovieHash movieFile
+   get spotlight_MovieInfoArray (movieFile)
+   return text_Hash (it)
+end spotlight_MetaMovieHash
+
+function spotlight_ExtractAttribute spotlightFileInfo, attributeName
+   if char 1 to 7 of attributeName is not "kMDItem" then put "kMDItem" before attributeName
+   --
+   put spotlight_ConstructFileInfoArray (spotlightFileInfo) into fileInfoArray
+   put fileInfoArray [attributeName] into attributeValue
+   return attributeValue
+   
+   -- (?im)kMDItemCodecs += +(.*)
+   -- older regExp way
+   -- put ".*" into notaBracket
+   put "[^\)]*" into notaBracket
+   -- put "(?im)" &  attributeName & " += +(.*)" into someReg
+   put "(?im)" &  attributeName & " += +(" & notaBracket & ")" into someReg
+   if matchtext (spotlightFileInfo, someReg, someValue) is true then
+      return someValue
+   else
+      return empty
+   end if
+end spotlight_ExtractAttribute
+
+function spotlight_GetMovieDurationInSeconds movieFile
+   put "mdls -name kMDItemDurationSeconds" && kwote (movieFile) into someShell
+   put word -1 of line 1 of shell (someShell) into movieSeconds
+   return movieSeconds
+end spotlight_GetMovieDurationInSeconds
+
+function spotlight_GetPixelWidth someFile
+   return spotlight_GetAttribute (someFile, "kMDItemPixelWidth")
+end spotlight_GetPixelWidth
+
+function spotlight_GetPixelHeight someFile
+   return spotlight_GetAttribute (someFile, "kMDItemPixelHeight")
+end spotlight_GetPixelHeight
+
+
+--> Spotlight | Attribute
+-
+function spotlight_GetFileSize someFile
+   return spotlight_GetAttribute (someFile, "kMDItemFSSize")
+end spotlight_GetFileSize
+
+function spotlight_GetAttribute someFile, attributeName
+   put spotlight_GetFileInfo(someFile) into spotlightFileInfo
+   return spotlight_ExtractAttribute (spotlightFileInfo, attributeName)
+end spotlight_GetAttribute
+
+function spotlight_GetFileInfo someFile
+   put "mdls" into someShell
+   if someFile is not empty then
+      -- shell_BashParamEscape someFile
+      put kwote(someFile) into someFile
+      put space & someFile after someShell
+   end if
+   get shell(someShell)
+   -- delete line 1 of it
+   return line 2 to -1 of it
+end spotlight_GetFileInfo
+
+
+--> Spotlight | Stack
+-
+function spotlight_FindStack fileBit, pFolder
+   /*
+   http://blog.clawpaws.net/post/2007/02/11/Making-OS-X-Fat-Binaries-with-Traditional-Tools
+   http://developer.apple.com/documentation/Carbon/Conceptual/SpotlightQuery/Concepts/QueryFormat.html
+   */
+   -- these also work
+   -- put spotlight_FindFile (shortFile)
+   -- put spotlight_ListStacks() into allStacks
+   -- filter allStacks with ("*/" & shortFile)
+   
+   -- name is case insensitive
+   if pFolder is empty then
+      put merge ("mdfind 'kind:Livecode Stack name:[[fileBit]]'") into someShell
+   else
+      put merge ("mdfind [[fileBit]] -onlyin [[pFolder]] kind:Livecode Stack") into someShell
+   end if
+   --
+   get shell(someShell)
+   return it
+   
+   /*
+   put "(kMDItemKind = 'LiveCode Stack')" into queryExpression
+   
+   if fileBit is not empty then
+      replace (quote & "'") with empty in fileBit
+      get merge("(kMDItemDisplayName = '[[fileBit]]')")
+      put space & "&&" && it after queryExpression
+   end if
+   
+   put "mdfind" && kwote (queryExpression) into someShell
+   
+   if inFolder is not empty then
+      shell_BashParamEscape inFolder
+      put space & "-onlyin" && inFolder after someShell
+   end if
+   get shell(someShell)
+   return it
+   */ 
+end spotlight_FindStack
+
+
 --> Script Export | Paths
 -
 function script_FileToObject somePaths
    -- /lcw_User/lcw_Metadata/Global_Project_Menu/data/objects/stack/lcw_script.txt
    -- /lcw_User/lcw_Metadata/Rescue Livecode World/data/objects/button_1209/lcw_script.txt
-
+   
    set the itemdelimiter to slash
    repeat for each line somePath in somePaths
       delete item -1 of somePath
       put script_ExportedRootToObject (somePath) into someObject
       if exists (someObject) is false then next repeat
-
+      
       put someObject & CR after someObjects
    end repeat
    delete char -1 of someObjects
@@ -43,17 +228,17 @@ end script_FileToObject
 
 function script_ExportedRootToObject somePath
    -- assumes homeStackName = mProjectFolderName
-
+   
    put lcw_UserMetadataFolder() into lcwUserMetadataFolder
    project_FindFromPath somePath, homeStackName, projectFolder, projectStackPath
    put the result into foundBoolean
-
+   
    set the itemdelimiter to slash
    put the number of items of projectFolder into startItemNum
    put item (startItemNum + 2) of somePath into mProjectFolderName
    put item -1 of somePath into objectBit
    put item (startItemNum + 5) of somePath into maybeSubStack
-
+   
    if maybeSubStack = "substacks" then
       put item (startItemNum + 6) of somePath into subStackName
       if exists (stack subStackName of stack mProjectFolderName) is false then return empty
@@ -62,7 +247,7 @@ function script_ExportedRootToObject somePath
       if exists (stack mProjectFolderName) is false then return empty
       put the name of stack mProjectFolderName into stackObject
    end if
-
+   
    set the itemdelimiter to "_"
    put item 1 of objectBit into objectType
    switch objectType
@@ -86,7 +271,7 @@ end script_ExportedRootToObject
 private command project_FindFromPath fileOrFolder, @homeStackName, @projectFolder, @homeStackPath
    -- this is overcomplicated (replace with spearate handlers)
    -- only used by "script_ExportedRootToObject"
-
+   
    put fileOrFolder into someFolder
    switch
       case fileOrFolder is empty
@@ -106,12 +291,12 @@ private command project_FindFromPath fileOrFolder, @homeStackName, @projectFolde
          answer warning "Cannot locate a folder or file with this path. Would you like to create a folder?" with "Cancel" or "Create"
          breakpoint
          if it is "Cancel" then exit to top
-
+         
          put empty into homeStackName
          put empty into projectFolder
          put empty into homeStackPath
          return false
-
+         
          put fileOrFolder into someFolder
          if char -1 of someFolder is not slash then
             -- we assume folders end with slash. So this is a file.
@@ -120,7 +305,7 @@ private command project_FindFromPath fileOrFolder, @homeStackName, @projectFolde
          end if
          folder_CreateNested someFolder
    end switch
-
+   
    project_FindFromFolder someFolder, homeStackName, projectFolder, homeStackPath
    put the result into someBoolean
    return the result
@@ -132,25 +317,6 @@ function handler_FetchFromFolder handlerFolder
    return handlerFolder
 end handler_FetchFromFolder
 
-command display_GlobalMenu mTitle, pAnywhere
-   put spotlight_FindGlobalMenu (mTitle, pAnywhere) into foundFiles
-   
-   put foundFiles
-   put lcw_UserMetadataFolder() into inFolder
-   display_Files foundFiles, inFolder
-   
-   put stack_PathsToNames (foundFiles) into stackNames
-   if stackNames is empty then
-      answer "No stacks!"
-      exit to top
-   end if
-   
-   put merge ("[[mTitle]],Found Global Menus") into someTitle
-   display_Index stackNames, someTitle,"Global | View | Tree | Menu", mLineTitle, mUp, "mDouble_DisplayStack"
-   put the result into indexView
-   set the multiple_Hilites of indexView to false
-end display_GlobalMenu
-
 function spotlight_FindGlobalMenu mTitle, pAnywhere
    -- mdfind 'kMDItemTextContent == "--> Global | Script | Menu"'
    if pAnywhere is true then
@@ -158,7 +324,7 @@ function spotlight_FindGlobalMenu mTitle, pAnywhere
    else
       put lcw_UserMetadataFolder() into inFolder
    end if
-
+   
    put "-->" && mTitle into mTitleSuiteHeader
    put spotlight_FindInExportedScript (mTitleSuiteHeader) into foundFiles
    return foundFiles
@@ -175,7 +341,7 @@ end spotlight_FindAllGlobalMenuArray
 --> Props
 -
 getprop spotlight_Kinds
-    return spotlight_ListFileKinds()
+   return spotlight_ListFileKinds()
 end spotlight_Kinds
 
 getprop spotlight_Attributes
@@ -185,7 +351,7 @@ end spotlight_Attributes
 getprop spotlight_DateRanges
    -- mdfind "kind:pdf date:this week"
    -- The date ranges that can be specified are:
-
+   
    return "this month,this week,this year,-,today,yesterday,tomorrow,-,next month,next week,next year"
 end spotlight_DateRanges
 
@@ -197,18 +363,18 @@ function spotlight_FindInStack someText, inFolder
    http://blog.clawpaws.net/post/2007/02/11/Making-OS-X-Fat-Binaries-with-Traditional-Tools
    http://developer.apple.com/documentation/Carbon/Conceptual/SpotlightQuery/Concepts/QueryFormat.html
    */
-
+   
    put "(kMDItemKind = 'LiveCode Stack')" into queryExpression
-
+   
    if someText is not empty then
       replace (quote & "'") with empty in someText
       get merge("('[[someText]]')")
       put space & "&&" && it after queryExpression
    end if
-
+   
    put "mdfind" && kwote(queryExpression) into someShell
    put someShell
-
+   
    if inFolder is not empty then
       shell_BashParamEscape inFolder
       put space & "-onlyin" && inFolder after someShell
@@ -216,43 +382,15 @@ function spotlight_FindInStack someText, inFolder
    return shell(someShell)
 end spotlight_FindInStack
 
-function spotlight_FindStack fileBit, inFolder
-   /*
-   http://blog.clawpaws.net/post/2007/02/11/Making-OS-X-Fat-Binaries-with-Traditional-Tools
-   http://developer.apple.com/documentation/Carbon/Conceptual/SpotlightQuery/Concepts/QueryFormat.html
-   */
-   -- these also work
-   -- put spotlight_FindFile (shortFile)
-   -- put spotlight_ListStacks() into allStacks
-   -- filter allStacks with ("*/" & shortFile)
-
-   put "(kMDItemKind = 'LiveCode Stack')" into queryExpression
-
-   if fileBit is not empty then
-      replace (quote & "'") with empty in fileBit
-      get merge("(kMDItemDisplayName = '[[fileBit]]')")
-      put space & "&&" && it after queryExpression
-   end if
-
-   put "mdfind" && kwote (queryExpression) into someShell
-
-   if inFolder is not empty then
-      shell_BashParamEscape inFolder
-      put space & "-onlyin" && inFolder after someShell
-   end if
-   get shell(someShell)
-   return it
-end spotlight_FindStack
-
 function spotlight_ListStacks pInsideFolder
    put "(kMDItemKind = 'LiveCode Stack')" into queryExpression
    put "mdfind" && kwote(queryExpression) into someShell
-
+   
    if pInsideFolder is not empty then
       shell_BashParamEscape pInsideFolder
       put space & "-onlyin" && pInsideFolder after someShell
    end if
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_ListStacks
@@ -288,29 +426,29 @@ function spotlight_FileDuplicates
    #
    # dupecheck - identified potential duplicates of a file using Spotlight metadata
    # by Derick Fay, October 2006
-
+   
    # if [ -n $1 ]; then 	# -n tests to see if the argument is non empty
    echo "usage: dupecheck filename"
    exit
    fi
-
+   
    #extract metadata from the file to be checked
    size=`mdls "$1" | grep kMDItemFSSize`
    name=`mdls "$1" | grep kMDItemFSName`
    kind=`mdls "$1" | grep kMDItemKind`
-
+   
    #trim the strings
    size1=${size:33}
    name1=${name:33}
    kind1=${kind:33}
-
+   
    #run the searches
    echo "Possible matches based on filename:"
    mdfind "kMDItemFSName == $name1"
    echo
    echo "Possible matches based on size and kind:"
    mdfind "kMDItemFSSize == $size1 && kMDItemKind=$kind1"
-
+   
    */
 end spotlight_FileDuplicates
 
@@ -320,7 +458,7 @@ function spotlight_FindStackCalls stackName
    repeat for each line callFile in callFiles
       put url ("binfile:" & callFile) into shortHkeys
       repeat for each line shortHkey in shortHkeys
-         put stackObject in callArray [shortHkey]
+         put stackObject into callArray [shortHkey]
       end repeat
    end repeat
 end spotlight_FindStackCalls
@@ -358,7 +496,7 @@ function spotlight_FindHandlerFile hKey, pAnywhere
    else
       put lcw_UserMetadataFolder() into inFolder
    end if
-
+   
    switch
       case hKey is empty
          put "'kMDItemFSName == lcw_handler.txt" into mdfindString
@@ -421,11 +559,11 @@ end spotlight_ListRecentlyExportedObjects
 function spotlight_ListRecentlyExportedCallFiles pSeconds, pInFolder
    if pSeconds is empty then put 60*60*20 into pSeconds
    put merge ("mdfind 'kMDItemFSContentChangeDate >= $time.now(-[[pSeconds]]) && kMDItemFSName == lcw_calls.txt'") into someShell
-
+   
    if pInFolder is empty then put lcw_UserMetadataFolder () into pInFolder
    shell_BashParamEscape pInFolder
    put space & "-onlyin" && pInFolder after someShell
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_ListRecentlyExportedCallFiles
@@ -433,36 +571,37 @@ end spotlight_ListRecentlyExportedCallFiles
 function spotlight_ListRecentlyExportedHandlerFiles pSeconds, pInFolder
    if pSeconds is empty then put 60*60*20 into pSeconds
    put merge ("mdfind 'kMDItemFSContentChangeDate >= $time.now(-[[pSeconds]]) && kMDItemFSName == lcw_handler.txt'") into someShell
-
+   
    if pInFolder is empty then put lcw_UserMetadataFolder () into pInFolder
    shell_BashParamEscape pInFolder
    put space & "-onlyin" && pInFolder after someShell
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_ListRecentlyExportedHandlerFiles
 
 function spotlight_ListRecentlyExportedScriptFiles pSeconds, pInFolder
    if pSeconds is empty then put 60*60*20 into pSeconds
-   put merge ("mdfind 'kMDItemFSContentChangeDate >= $time.now(-[[pSeconds]]) && kMDItemFSName == lcw_script.txt'") into someShell
-
+   -- put merge ("mdfind 'kMDItemFSContentChangeDate >= $time.now(-[[pSeconds]]) && kMDItemFSName == lcw_script.txt'") into someShell
+   put merge ("mdfind 'kMDItemFSContentChangeDate >= $time.now(-[[pSeconds]]) && kMDItemFSName == lcw_Handler.txt'") into someShell
+   
    if pInFolder is empty then put lcw_UserMetadataFolder () into pInFolder
    shell_BashParamEscape pInFolder
-   put space & "-onlyin" && pInFolder after someShell
-
+   -- put space & "-onlyin" && pInFolder after someShell
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_ListRecentlyExportedScriptFiles
 
 -- function spotlight_GetRecentQuery pWhich
-   switch pWhich
-      default -- case "this week"
-         return "'(kMDItemFSContentChangeDate == $time.this_week(-1))'" into thisWeekQuery
-   end switch
-   -- mdfind '(kMDItemFSContentChangeDate >= $time.today(-1)) && (kMDItemFSContentChangeDate < $time.now) && (kMDItemContentTypeTree = "public.content")'
-   -- put "'(kMDItemFSContentChangeDate >= $time.today(-1)) && (kMDItemFSContentChangeDate < $time.now)'" into todayQuery
-   -- put space & "&& (kMDItemContentTypeTree = "public.content")" after todayQuery
-   return todayQuery
+switch pWhich
+   default -- case "this week"
+      return "'(kMDItemFSContentChangeDate == $time.this_week(-1))'" into thisWeekQuery
+end switch
+-- mdfind '(kMDItemFSContentChangeDate >= $time.today(-1)) && (kMDItemFSContentChangeDate < $time.now) && (kMDItemContentTypeTree = "public.content")'
+-- put "'(kMDItemFSContentChangeDate >= $time.today(-1)) && (kMDItemFSContentChangeDate < $time.now)'" into todayQuery
+-- put space & "&& (kMDItemContentTypeTree = "public.content")" after todayQuery
+return todayQuery
 end spotlight_GetRecentQuery
 
 function spotlight_FindStackCalls stackName
@@ -471,7 +610,7 @@ function spotlight_FindStackCalls stackName
    repeat for each line callFile in callFiles
       put url ("binfile:" & callFile) into shortHkeys
       repeat for each line shortHkey in shortHkeys
-         put stackObject in callArray [shortHkey]
+         put stackObject into callArray [shortHkey]
       end repeat
    end repeat
 end spotlight_FindStackCalls
@@ -512,7 +651,7 @@ end spotlight_FindStackCallFiles
 
 function spotlight_FindFileName shortFile, pAnywhere
    put mdfind && "'kMDItemFSName ==" && shortFile &  "'" into someShell
-
+   
    switch
       case pAnywhere is true
          break
@@ -525,7 +664,7 @@ function spotlight_FindFileName shortFile, pAnywhere
          shell_BashParamEscape pAnywhere
          put space & "-onlyin" && pAnywhere after someShell
    end switch
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_FindFileName
@@ -535,9 +674,9 @@ function spotlight_FindInExportedScript someTextContent, inFolder
    put "'kMDItemFSName == script.txt&&kMDItemTextContent ==" into mdfindString
    put space & kwote (someTextContent) after mdfindString
    put "'" after mdfindString
-
+   
    put mdfind && mdfindString into someShell
-
+   
    if inFolder is not empty then
       shell_BashParamEscape inFolder
       put space & "-onlyin" && inFolder after someShell
@@ -550,9 +689,9 @@ function spotlight_FindText someTextContent, inFolder
    put "'kMDItemTextContent ==" into mdfindString
    put space & kwote (someTextContent) after mdfindString
    put "'" after mdfindString
-
+   
    put mdfind && mdfindString into someShell
-
+   
    if inFolder is not empty then
       shell_BashParamEscape inFolder
       put space & "-onlyin" && inFolder after someShell
@@ -575,25 +714,25 @@ function spotlight_FindFolders folderName, inFolder, pDontUseLiteral
    -- http://osx.c0de.academy/spotlight-and-word-search.html
    -- mdfind 'kMDItemFSName=*.pdf'
    -- mdfind -name ha_RigStacks kind:folders
-
+   
    -- mdfind kind:folders F spotlight_FindFolders
    put "mdfind" into someShell
-
+   
    -- no longer works
    if pDontUseLiteral is not true then put space & "-literal" after someShell
    -- put space & "-name" && "'" & folderName & "'" after someShell -- does not work with literal
-
+   
    put space & kwote ("kMDItemDisplayName ==" && kwote(folderName, "'")) after someShell
    put space & "kind:folders" after someShell
-
+   
    -- put "mdfind" && "'" & "kMDItemFSName=" & folderName & "'" after someShell
    -- if pFindInvisible is true then put "&&kMDItemFSInvisible==1" after someShell -- does not seem to work ???
-
+   
    if inFolder is not empty then
       -- shell_BashParamEscape inFolder
       put space & "-onlyin" && kwote (inFolder, "'") after someShell
    end if
-
+   
    -- put someShell
    put shell (someShell) into shellResult
    return shellResult
@@ -617,9 +756,9 @@ command spotlight_ForceUpdate pSomeFolder
    else
       shell_BashParamEscape pSomeFolder
    end if
-
+   
    set the cursor to watch
-
+   
    -- needs sudo?
    put "mdutil -E" into someShell
    put space & pSomeFolder after someShell
@@ -641,76 +780,76 @@ function spotlight_FindExecutable pShortFileName
    -- mdfind 'kMDItemFSName = fossil kMDItemKind = "Unix Executable File"'
    put "mdfind '" into someShell
    if pShortFileName is not empty then
-       -- bug:  only in home directory (permissions?). Use "spotlight_FindExecutable()" and then filter executable paths.
+      -- bug:  only in home directory (permissions?). Use "spotlight_FindExecutable()" and then filter executable paths.
       put "kMDItemFSName" && "==" && kwote (pShortFileName) & space after someShell
    end if
    put "kMDItemKind" && "==" && kwote("Unix Executable File") & space after someShell
    delete char -1 of someShell
    put "'" after someShell
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_FindExecutable
 
 function spotlight_FindApplications appBit, inFolder
    put "mdfind" && kwote("(kMDItemKind = 'Application')") into someShell
-
+   
    if inFolder is not empty then
       shell_BashParamEscape inFolder
       put space & "-onlyin" && inFolder after someShell
    end if
-
+   
    if fileBit is not empty then
       text_StripSurroundingQuotes fileBit
       put kwote (fileBit) into fileBit
       put space & "&&" && fileBit after someShell
    end if
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_FindApplications
 
 function spotlight_FindFile fileBit, pFolder
    put "mdfind" into someShell
-
+   
    if pFolder is not empty then
       shell_BashParamEscape pFolder
       put space & "-onlyin" && pFolder after someShell
    end if
-
+   
    if fileBit is not empty then
       shell_BashParamEscape fileBit
       put space & "-name" && fileBit after someShell
    end if
-
+   
    put shell (someShell) into shellResult
    return shellResult
 end spotlight_FindFile
 
 function spotlight_TranslateDateRange niceRange
-    return "date:" & niceRange
+   return "date:" & niceRange
 end spotlight_TranslateDateRange
 
 function spotlight_GetFileComment someFile
-    applescript_ConvertPath someFile
-    put merge("comment of the file [[someFile]]") into appleScriptLine
-    return appleScript_DoLine(appleScriptLine, "Finder" , false)
+   applescript_ConvertPath someFile
+   put merge("comment of the file [[someFile]]") into appleScriptLine
+   return appleScript_DoLine(appleScriptLine, "Finder" , false)
 end spotlight_GetFileComment
 
 on spotlight_SetFileComment someFile, commentText
-    --set Spotlight comment
-    applescript_ConvertPath someFile
-
-    replace quote with "'" in commentText
-    put kwote(commentText) into commentText
-
-    put merge("set the comment of the file [[someFile]] to [[commentText]] as string") into appleScriptLine
-    get appleScript_DoLine(appleScriptLine, "Finder" , true)
-    return it
+   --set Spotlight comment
+   applescript_ConvertPath someFile
+   
+   replace quote with "'" in commentText
+   put kwote(commentText) into commentText
+   
+   put merge("set the comment of the file [[someFile]] to [[commentText]] as string") into appleScriptLine
+   get appleScript_DoLine(appleScriptLine, "Finder" , true)
+   return it
 end spotlight_SetFileComment
 
 on spotlight_Import
-    -- mdimport -d 4 somefile
+   -- mdimport -d 4 somefile
 end spotlight_Import
 
 function spotlight_GetFileKind someFile
@@ -732,113 +871,59 @@ function spotlight_ListFileKinds
 end spotlight_ListFileKinds
 
 function spotlight_TranslateKind niceKind
-    switch niceKind
-        case "Applications"
-            return  "kind:application"
-        case "Contacts"
-            return "kind:contact"
-        case "folders"
-            return "kind:folder"
-        case "Email"
-            return "kind:email"
-        case "iCal Events"
-            return  "kind:event"
-        case "iCal To Dos"
-            return "kind:todo"
-        case "Images"
-            return  "kind:image"
-        case "movies"
-            return "kind:movie"
-        case "Music"
-            return "kind:music"
-        case "Audio"
-            return "kind:audio"
-        case "PDF"
-            return "kind:pdf"
-        case "Preferences"
-            return "kind:preferences"
-        case "Bookmarks"
-            return "kind:bookmark"
-        case "Fonts"
-            return "kind:font"
-        case "Presentations"
-            return "kind:presentations"
-    end switch
+   switch niceKind
+      case "Applications"
+         return  "kind:application"
+      case "Contacts"
+         return "kind:contact"
+      case "folders"
+         return "kind:folder"
+      case "Email"
+         return "kind:email"
+      case "iCal Events"
+         return  "kind:event"
+      case "iCal To Dos"
+         return "kind:todo"
+      case "Images"
+         return  "kind:image"
+      case "movies"
+         return "kind:movie"
+      case "Music"
+         return "kind:music"
+      case "Audio"
+         return "kind:audio"
+      case "PDF"
+         return "kind:pdf"
+      case "Preferences"
+         return "kind:preferences"
+      case "Bookmarks"
+         return "kind:bookmark"
+      case "Fonts"
+         return "kind:font"
+      case "Presentations"
+         return "kind:presentations"
+   end switch
 end spotlight_TranslateKind
 
 function spotlight_kMDItemID someFile
-    return spotlight_GetAttribute(someFile, "ID")
+   return spotlight_GetAttribute(someFile, "ID")
 end spotlight_kMDItemID
 
 -- command spotlight_ExtractFixedDetails someFile, @kMDItemID
-    put spotlight_GetFileInfo (someFile) into spotlightFileInfo
-    put spotlight_ExtractAttribute(spotlightFileInfo, "ID") into kMDItemID
+put spotlight_GetFileInfo (someFile) into spotlightFileInfo
+put spotlight_ExtractAttribute(spotlightFileInfo, "ID") into kMDItemID
 end spotlight_ExtractFixedDetails
 
 on spotlight_DisplayDates someFile
-    -- does not change when copied
-    get "ItemAttributeChangeDate"
-    repeat for each item someItem in it
-        put someItem & ":" && spotlight_GetAttribute(someFile, someItem)
-    end repeat
-
-    -- all change when copied!
-    get "FSCreationDate,FSContentChangeDate,ContentModificationDate,ContentModificationDate"
-    repeat for each item someItem in it
-        put someItem & ":" && spotlight_GetAttribute(someFile, someItem)
-    end repeat
+   -- does not change when copied
+   get "ItemAttributeChangeDate"
+   repeat for each item someItem in it
+      put someItem & ":" && spotlight_GetAttribute(someFile, someItem)
+   end repeat
+   
+   -- all change when copied!
+   get "FSCreationDate,FSContentChangeDate,ContentModificationDate,ContentModificationDate"
+   repeat for each item someItem in it
+      put someItem & ":" && spotlight_GetAttribute(someFile, someItem)
+   end repeat
 end spotlight_DisplayDates
-
-function spotlight_MetaMovieHash movieFile
-    get spotlight_ExtractFixedMovieInfo(movieFile)
-    put it
-    return text_Hash(it)
-end spotlight_MetaMovieHash
-
-function spotlight_ExtractFixedMovieInfo movieFile
-    get "DurationSeconds,FSSize,TotalBitRate,Kind,Codecs"
-    repeat for each item someItem in it
-        put someItem & ":" && spotlight_GetAttribute(movieFile, someItem) & CR after fixedMovieInfo
-    end repeat
-    delete char -1 of fixedMovieInfo
-    return fixedMovieInfo
-end spotlight_ExtractFixedMovieInfo
-
-function spotlight_GetFileSize someFile
-   return spotlight_GetAttribute (someFile, "kMDItemFSSize")
-end spotlight_GetFileSize
-
-function spotlight_GetPixelWidth someFile
-   return spotlight_GetAttribute (someFile, "kMDItemPixelWidth")
-end spotlight_GetPixelWidth
-
-function spotlight_GetPixelHeight someFile
-   return spotlight_GetAttribute (someFile, "kMDItemPixelHeight")
-end spotlight_GetPixelHeight
-
-function spotlight_GetAttribute someFile, attributeName
-   put spotlight_GetFileInfo(someFile) into spotlightFileInfo
-   return spotlight_ExtractAttribute (spotlightFileInfo, attributeName)
-end spotlight_GetAttribute
-
-function spotlight_GetFileInfo someFile
-   put "mdls" into someShell
-   if someFile is not empty then
-      -- shell_BashParamEscape someFile
-      put kwote(someFile) into someFile
-      put space & someFile after someShell
-   end if
-   get shell(someShell)
-   -- delete line 1 of it
-   return line 2 to -1 of it
-end spotlight_GetFileInfo
-
-function spotlight_ExtractAttribute spotlightFileInfo, attributeName
-    if char 1 to 7 of attributeName is not "kMDItem" then put "kMDItem" before attributeName
-    put "(?im)" &  attributeName & " += +(.*)" into someReg
-    if matchtext (spotlightFileInfo, someReg, someValue) is true then
-        return someValue
-    else
-        return empty
-    end if
-end spotlight_ExtractAttribute

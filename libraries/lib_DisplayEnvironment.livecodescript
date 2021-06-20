@@ -8,214 +8,149 @@ version: 0.6
 
 /*
 Here we gather all the handlers that make it easy to display handlers, stacks, projects, and the environment.
+see "lib_FunctionKey"
 */
 
 --> Working on
 -
-function project_DisplayMenuTitles projectName
-   put project_ConstructMenuTitle (projectName) & tab & "submenu" after projectMenuTitles
+command project_AskCreate
+   put the stack_Folder of stack "LCW" into rootFolder
+   set the itemdelimiter to slash
+   delete item -1 of rootFolder
+   
+   set the itemdelimiter to comma
+   answer folder "Select a root folder for your new project.." with rootFolder
+   if it is empty then exit to top   
+   
+   put lcw_Ask ("What name do you want to give the new project?", "lcw_XXX") into newProjectName
+   put library_ListProjectNames() into existingProjectNames
+   if newProjectName is among the lines of existingProjectNames then
+      answer warning merge ("You already have a project named '[[newProjectName]]'!")
+      exit to top
+   end if
+   
+   if exists (stack newProjectName) is true then
+      answer warning merge ("There is already a stack named '[[newProjectName]]'!")
+      exit to top
+   end if
+   
+   text_AddTrailing rootFolder, slash
+   put rootFolder & newProjectName & slash into newProjectFolder
+   if there is a folder newProjectFolder then
+      answer warning merge ("There is already a folder named '[[newProjectName]]' in this location!")
+      exit to top
+   end if
+   
+   project_Create newProjectFolder
+   put the result into homeStackPath
+   edit the script of stack homeStackPath
    --
-   put CR & "-" after projectMenuTitles
-   if "Global | Project | Display | Menu" is not among the lines of projectMenuTitles then
-      put CR & "Global | Project | Display | Menu" & tab & "submenu" after projectMenuTitles
-   end if
-   if "Global | Project | Create | Menu" is not among the lines of projectMenuTitles then
-      put CR & "Global | Project | Create | Menu" & tab & "submenu" after projectMenuTitles
-   end if
-   if "Global | Project | Tree | Menu" is not among the lines of projectMenuTitles then
-      put CR & "-" after projectMenuTitles
-      put CR & "Global | Project | Tree | Menu" after projectMenuTitles
-   end if
-   return projectMenuTitles
-end project_DisplayMenuTitles
+   display_LcwProjectList
+end project_AskCreate
 
 
 --> Display | Events
 -
-on mDouble_DisplayStackDeps treeView, stackName
+on mDouble_DisplayProject displayView, projectName
+   if the optionkey is "Down" then breakpoint
+   
+   display_ProjectLibs projectName
+end mDouble_DisplayProject
+
+on mDouble_DisplayStackDeps displayView, stackName
    if the optionkey is "Down" then breakpoint
    
    put the name of stack stackName into stackObject
-   if the optionKey is "Down" then
+   if the shiftKey is "Down" then
       display_StackDeps stackObject
    end if
    edit the script of stackObject
    return true
 end mDouble_DisplayStackDeps
 
-on mDouble_DisplayProject displayView, stackName
+command mDouble_DisplayBehavior displayView, stackName
    if the optionkey is "Down" then breakpoint
    
-   display_ProjectLibs stackName
-end mDouble_DisplayProject
-
-command mDouble_DisplayBehavior indexView, stackName
-   if the optionkey is "Down" then breakpoint
-   
-   mDouble_DisplayStack indexView, stackName
+   mDouble_DisplayStack displayView, stackName
 end mDouble_DisplayBehavior
 
 
---> Display | Project | List
+--> Display | LCW
 -
-command display_LcwProjectList pProjectNames
-   -- was "display_LcwProjectList"
-   if pProjectNames is empty then put library_ListProjectNames() into pProjectNames
-   put "List of Projects,Environment" into pStackTitle
-   
-   put "mDouble_DisplayProject" into mDoubleUp
-   put empty into mUp
-   put "Global | Environment | Menu" into mTitle
-   put "Global | Project | Tree | Line | Menu" into mLineTitle
-   put empty into dragCommand
-   
-   put display_FindView ("Environment") into indexView
-   if exists (indexView) is false then
-      put empty into mUp
-      display_Index pProjectNames, pStackTitle, mTitle, mLineTitle, mUp, mDoubleUp, dragCommand, true
-      put the result into indexView
-      set the field_Style of indexView to "display selected"
-      set the selected_Index of indexView to env_ListProjects()
-   else
-      display_UpdateLcwProjectList indexView, pProjectNames, pStackTitle, mDoubleUp, mTitle, mLineTitle
-   end if
-   return indexView
-end display_LcwProjectList
-
-command display_UpdateLcwProjectList pIndexView, pProjectNames, pStackTitle, mDoubleUp, mTitle, mLineTitle
-   -- Refactor: all these params are unecessary I think
-   
-   lock screen
-   set the view_Index of pIndexView to pProjectNames
-   set the stack_Title of pIndexView to pStackTitle
-   set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
-   set the title_Menu of pIndexView to mTitle
-   set the line_Menu of pIndexView to mLineTitle
-   set the field_Style of pIndexView to "display selected"
-   --
-   set the selected_Index of pIndexView to env_ListProjects()
-   unlock screen
-   return pIndexView
-end display_UpdateLcwProjectList
-
-command display_LcwLibs pIndexView, pProjectNames
-   put env_ListUsedStackNames (pProjectNames) into activeUsedStackNames
+command display_EnvironmentLibs
+   put env_ListUsedStackNames() into activeUsedStackNames
    sort activeUsedStackNames
    
-   put empty into mUp
-   put "mDouble_DisplayStackDeps" into mDoubleUp
-   put "Active Libraries,Environment" into stackTitle
-   
    put "Global | Environment | Menu" into mTitle
    put "Global | Project | Tree | Line | Menu" into mLineTitle
-   put empty into dragCommand
-   
-   if exists (pIndexView) is false then
-      display_Index activeUsedStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp, dragCommand, true
-      put the result into displayView
-      return displayView
-   else
-      lock screen
-      set the view_Index of pIndexView to activeUsedStackNames
-      set the stack_Title of pIndexView to stackTitle
-      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
-      set the title_Menu of pIndexView to mTitle
-      set the line_Menu of pIndexView to mLineTitle
-      unlock screen
-      return pIndexView
-   end if
-end display_LcwLibs
-
-
---> Display | Project | Libraries
--
-command display_ProjectLibs homeStackNameOrPath, pGoHow
-   -- check and set homeStackNameOrPath
-   set the itemdelimiter to slash
-   switch
-      case exists (stack homeStackNameOrPath) is true
-         put the effective filename of stack homeStackNameOrPath into homeStackPath
-         put the short name of stack homeStackNameOrPath into homeStackName
-         break
-      case the number of items of homeStackNameOrPath > 1
-         -- Assumes name, ie not handled yet?
-         put homeStackNameOrPath into homeStackPath
-         breakpoint
-         exit to top
-         break
-      default
-         -- let's search for it
-         put homeStackNameOrPath into homeStackName
-         put library_FetchProjectHomeStackPath (homeStackName) into homeStackPath
-         if exists (stack homeStackPath) is false then
-            put merge ("Cannot locate stack '[[homeStackName]]'") into someWarning
-            dispatch "lcw_AnswerSheet" to indexView with someWarning 
-            exit to top
-         end if
-   end switch
-   
-   -- let's find an existing indexView
-   put "Model and Libraries" into displayStackLabel
-   put the project_UsedStackNames of stack homeStackPath into stackNames
-   put display_FindView (displayStackLabel, homeStackName) into indexView
-   
-   if exists (indexView) is true then
-      _UpdateProjectLibsDisplay indexView, stackNames, homeStackName
-   else
-      _DisplayProjectLibs homeStackName, displayStackLabel, stackNames
-      put the result into indexView
-   end if
-   set the menu_Target of indexView to homeStackName
    --
-   _GoHomeStack homeStackPath, pGoHow
-   return indexView
-end display_ProjectLibs
+   display_Data activeUsedStackNames, "Active Libraries", "Environment"
+   put the result into displayView
+   display_SetInteractions displayView, menuBit, "mDouble_DisplayStackDeps"
+   return displayView
+end display_EnvironmentLibs
 
-command display_RefreshProjectLibs homeStackName
-   put "Model and Libraries" into displayStackLabel
-   put display_FindView (displayStackLabel, homeStackName) into indexView
-   if exists (indexView) is false then
-      breakpoint
-      return empty
+command display_LcwProjectList pProjectNames
+   if pProjectNames is empty then
+      put env_ListLocalProjects() into pProjectNames
    end if
+   put "List of Projects,Environment" into pStackTitle
    
-   put the project_UsedStackNames of stack homeStackName into projectLibNames
-   _UpdateProjectLibsDisplay indexView, projectLibNames, homeStackName
-   
-   -- now let's check to see if there is a "Git Status" view for the project
-   refresh_GitStatus projectName
-   
-   return indexView
-end display_RefreshProjectLibs
-
-private command _UpdateProjectLibsDisplay indexView, projectLibNames, homeStackName
-   set the view_Index of indexView to projectLibNames
-   go to stack homeStackName
-   -- could do some fancy checking and display here
-end _UpdateProjectLibsDisplay
-
-private command _DisplayProjectLibs projectName, displayStackLabel, stackNames
+   put "mDouble_DisplayProject" into mDoubleClick
    put empty into mUp
-   put merge ("[[projectName]],[[displayStackLabel]]") into someTitle
-   put project_DisplayMenuTitles (projectName) into projectMenuTitles
-   display_Index stackNames, someTitle, projectMenuTitles, "Global | Project | Line | Menu", mUp, "mDouble_DisplayStackDeps"
-   put the result into indexView
-   set the multiple_Hilites of indexView to false
-   return indexView
-end _DisplayProjectLibs
+   put empty into dragCommand
+   --
+   put "Global | Environment | Menu" into titleMenu
+   put "Global | Environment | Tree | Line | Menu" into lineMenu
+   
+   put display_FindView ("Environment") into displayView
+   if exists (displayView) is false then
+      -- local mUp
+      -- display_Index pProjectNames, pStackTitle, titleMenu, lineMenu, mUp, mDoubleClick, dragCommand, true
+      
+      display_Data pProjectNames, "Local Projects", "Environment"
+      put the result into displayView
+      --
+      set the title_Menu of displayView to titleMenu
+      set the line_Menu of displayView to lineMenu
+      --
+      set the field_Style of displayView to "click"
+      set the mouse_DoubleUp of displayView to mDoubleClick
+      set the drop_Command of displayView to dragCommand
+   else
+      --
+      lock screen
+      set the displayed_Index ["Local Projects"] of displayView to pProjectNames
+   end if
+   --
+   put env_ListStoppedProjects() into stoppedProjects
+   set the coloured_Lines ["red"] of displayView to stoppedProjects
+   unlock screen
+   --
+   return displayView
+end display_LcwProjectList
 
+
+--> Display | Project
+-
 command display_ProjectStacks homeStackName, pIndexView
    put project_ListStackPaths (homeStackName) into stackPaths
+   --
    put stack_PathsToNames (stackPaths) into stackNames
    
    put merge ("[[homeStackName]],Project Stacks") into someTitle
    put "Global | Project | Stacks | Tree | Menu" into mTitle
    put "Global | Project | Stacks | Tree | Line | Menu" into mLineTitle
+   --
    display_Index stackNames, someTitle, mTitle, mLineTitle, mUp, "mDouble_DisplayStack"
    put the result into indexView
+   --
    return indexView
 end display_ProjectStacks
 
+
+--> Display | Project | Libraries
+-
 command display_ProjectFrontScripts homeStackName, pIndexView
    put project_ListFrontScriptPaths (homeStackName) into stackPaths
    put stack_PathsToNames (stackPaths) into stackNames
@@ -254,21 +189,3 @@ end project_ConstructMenuTitle
 
 --> Private
 -
-private command _GoHomeStack homeStackPath, pGoHow
-   switch pGoHow
-      case "edit"
-         edit the script of stack homeStackPath
-         break
-      case "go"
-         go to stack homeStackPath
-         break
-      case "start"
-         project_Start homeStackName
-      default
-         if the scriptonly of stack homeStackPath is true then
-            -- edit the script of stack homeStackPath
-         else
-            go to stack homeStackPath
-         end if
-   end switch
-end _GoHomeStack

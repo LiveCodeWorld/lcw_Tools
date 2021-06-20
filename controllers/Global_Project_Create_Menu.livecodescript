@@ -3,76 +3,69 @@
 -
 license: GPLv3
 name: Global_Project_Create_Menu
-type: modules
+type: controller
 version: 0.2
 
+/*
+This controller is sometimes called by the Script Editor,
+and sometimes by a (project) displayView.
+*/
 
---. Menu | Props
+
+--. Menu | Init
 -
-getprop menu_CheckTarget [projectName]
-   put library_FetchProjectFolder (projectName) into projectFolder
-   if projectFolder is empty then
+local LocalArray
+
+getprop menu_Target [tObject]
+   put display_GetObject (tObject) into sObject
+   if sObject is empty then
+      -- should make more robust with a specific property?
+      put the title_Text of tObject into projectName
+   else
+      put sObject into LocalArray ["ScriptEditorObject"]
+      put the project_Name of sObject into projectName
+      return projectName
+   end if
+end menu_Target
+
+getprop disabled_CreateMenuFromScript [projectName]
+   if LocalArray ["ScriptEditorObject"] is empty then
+      return "delete"
+   else
+      return false
+   end if
+end disabled_CreateMenuFromScript
+
+getprop disabled_CreateProjectMenu [projectName]
+   if LocalArray ["ScriptEditorObject"] is empty then
       return false
    else
-      return true
+      return "delete"
    end if
-end menu_CheckTarget
+end disabled_CreateProjectMenu
 
 
 --> Global | Project | Create | Menu
 -
-on menu_CreateNewProject
-   project_AskCreate
-end menu_CreateNewProject
-
-on _
-end _
+on menu_CreateMenuFromScript projectName
+   put scriptEditor_GetSelectedText() into gMenuTitle
+   --
+   display_AskCreateMenu projectName, gMenuTitle
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateMenuFromScript
 
 on menu_CreateProjectMenu projectName
-   put _askMenuTitle (projectName) into gMenuTitle
-   put project_GetFolder (projectName) into projectFolder
-   project_CreateMenu projectFolder, gMenuTitle
+   display_AskCreateMenu projectName
    put the result into controllerStackObject
    edit the script of controllerStackObject
 end menu_CreateProjectMenu
-
-on menu_CreateRecentMenu projectName
-   put lcw_Ask ("What short name do you want for the Recent menu?", projectName) into shortName
-   put ide_ConstructMenuTitle (shortName, "Recent") into gMenuTitle
-   
-   put project_GetFolder (projectName) into projectFolder
-   project_CreateMenu projectFolder, gMenuTitle
-   put the result into controllerStackObject
-   edit the script of controllerStackObject
-end menu_CreateRecentMenu
-
-on menu_CreateHandlerMenu projectName
-   put lcw_Ask ("What short name do you want for the Handler menu?", projectName) into shortName
-   put ide_ConstructMenuTitle (shortName, "List") into gMenuTitle
-   
-   put project_GetFolder (projectName) into projectFolder
-   project_CreateMenu projectFolder, gMenuTitle
-   put the result into controllerStackObject
-   edit the script of controllerStackObject
-end menu_CreateHandlerMenu
 
 on _
 end _
 
 on menu_CreateProjectLibrary projectName
-   put "Choose a name for your script-only library stack...." into someQuestion
-   set the itemdelimiter to "_"
-   put "lib_" &  item -1 of projectName into suggestedAnswer 
-   put lcw_Ask (someQuestion, suggestedAnswer) into stackName
-   
-   put project_GetFolder (projectName) into projectFolder
-   project_CreateStack projectFolder, stackName, "libraries", "library"
-   put the result into homeStackPath
-   
-   start using stack stackName
-   lcw_Notify ("Stack" && kwote (stackName) && "is now known and used!")
-   edit the script of stack stackName
-   -- finder_Reveal projectFolder
+   display_AskCreateProjectLibrary projectName
 end menu_CreateProjectLibrary
 
 on menu_CreateProjectModel projectName
@@ -81,14 +74,36 @@ on menu_CreateProjectModel projectName
    project_CreateScriptOnlyStack "models", someQuestion, suggestedAnswer, projectName
 end menu_CreateProjectModel
 
+on _
+end _
+
+on menu_CreateNewProject
+   project_AskCreate
+end menu_CreateNewProject
+
+on menu_ExportMenusAndStackFiles projectName
+   put project_GetFolder (projectName) into projectFolder
+   project_ExportMenusAndStackFiles projectFolder
+   --
+   display_ProjectLibs projectName
+   display_GitRefreshProjectName projectName
+end menu_ExportMenusAndStackFiles
+
+on _
+end _
+
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Dev | Menu
+-
 on menu_CreateProjectBehavior projectName
    put "Choose a name for your script-only behavior stack...." into someQuestion
    put "behavior_XXX" into suggestedAnswer
    project_CreateScriptOnlyStack "behaviors", someQuestion, suggestedAnswer, projectName
 end menu_CreateProjectBehavior
-
-on _
-end _
 
 on menu_CreateModule homeStackName
    put "Choose a name for your new module...." into someQuestion
@@ -111,43 +126,24 @@ on menu_CreateModule homeStackName
    project_CreateModule moduleStackName, rootModuleFolder
 end menu_CreateModule
 
-on menu_CreateView projectName
-   breakpoint
-   template_ConstructStackFromObject scriptObject
-end menu_CreateView
-
 on _
 end _
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Global | Project | Create | Menu | Props
--
---> Global | Project | Create | Menu | Disabled
--
-
---> Dev | Menu
--
-on menu_TestProjectName homeStackName
-   put homeStackName
-end menu_TestProjectName
-
-
---> Private
--
-private function _askMenuTitle projectName
-   put line 1 of the clipboarddata ["text"] into maybeMenuTitle
-   if word -1 of maybeMenuTitle = "Menu" then
-      put maybeMenuTitle into suggestedAnswer
-   else
-      set the itemdelimiter to "_"
-      put "Global |" && item -1 of projectName && "| Menu" into suggestedAnswer
-   end if
+on menu_CreateRecentMenu projectName
+   put lcw_Ask ("What short name do you want for the Recent menu?", projectName) into shortName
+   put ide_ConstructMenuTitle ("Recent", shortName) into gMenuTitle
    
-   put "What is the name of your global menu...." into someQuestion
-   put lcw_Ask (someQuestion, suggestedAnswer) into gMenuTitle
-   return gMenuTitle
-end _askMenuTitle
+   display_AskCreateMenu projectName, gMenuTitle
+   put the result into controllerStackObject
+   --
+   edit the script of controllerStackObject
+end menu_CreateRecentMenu
+
+on menu_CreateHandlerMenu projectName
+   put lcw_Ask ("What short name do you want for the Handler menu?", projectName) into shortName
+   put ide_ConstructMenuTitle ("List", shortName) into gMenuTitle
+   
+   display_AskCreateMenu projectName, gMenuTitle
+   put the result into controllerStackObject
+   edit the script of controllerStackObject
+end menu_CreateHandlerMenu

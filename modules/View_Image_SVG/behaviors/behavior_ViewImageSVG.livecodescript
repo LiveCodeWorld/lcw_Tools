@@ -349,7 +349,7 @@ function svg_Get someHTML
    put revXMLRootNode (treeID) into rootNode
    put rootNode & "/body/svg" into svgNode
    put revXMLText (treeID, svgNode, true) into svgXML
-   revDeleteXMLTree treeID
+   revXMLDeleteTree treeID
    return svgXML
    
    local startChar, endChar
@@ -397,7 +397,7 @@ end svg_CreateXmlTree
 private command svg_DeleteXmlTree
    put LocalArray ["svgXmlTreeID"] into svgXmlTreeID
    if svgXmlTreeID is not a number then return svgXmlTreeID
-   revDeleteXMLTree svgXmlTreeID
+   revXMLDeleteTree svgXmlTreeID
    delete variable LocalArray ["svgXmlTreeID"]
    return svgXmlTreeID
 end svg_DeleteXmlTree
@@ -473,7 +473,6 @@ function svg_GetHTMLTemplate
    </body>
    </html>
    */
-   -- put script_GetCommentAboveMe() into htmlTemplate
    put "<!DOCTYPE html><html><head><title>[[svgTitle]]</title></head><body>[[svgXML]]</body></html>" into htmlTemplate
    return htmlTemplate
 end svg_GetHTMLTemplate

@@ -1,8 +1,8 @@
-﻿script "Global_Place_Menu"
+﻿script "Global | Place | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Place_Menu
+name: Global | Place | Menu
 type: controller
 version: 0.1
 

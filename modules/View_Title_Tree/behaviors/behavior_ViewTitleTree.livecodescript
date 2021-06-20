@@ -132,32 +132,6 @@ function menu_GetToolTitle viewObject
    return mToolTitle
 end menu_GetToolTitle
 
--- getprop menu_Target [mTitlePath]
-switch
-   case mTitlePath contains "Global | Icon | Menu"
-      put the title_View of me into titleView
-      if exists(titleView) is false then return empty
-      put the icon_View of titleView into iconView
-      return iconView
-   case mTitlePath contains "Global | Title | Icon | Menu"
-      put the title_View of me into titleView
-      if exists(titleView) is false then return empty
-      put the icon_View of titleView into iconView
-      return iconView
-   case mTitlePath contains "Global | Title |" -- Global | Title | Menu
-      put the title_View of me into titleView
-      if exists(titleView) is false then return empty
-      return titleView
-   default
-      -- allow an enclosing group to define the mTarget
-      pass menu_Target
-      
-      -- this is a default target (can be overridden at the mTopcontroller)
-      put the long owner of me into mTarget
-      return mTarget
-end switch
-end menu_Target
-     
 
 --> Icon
 -

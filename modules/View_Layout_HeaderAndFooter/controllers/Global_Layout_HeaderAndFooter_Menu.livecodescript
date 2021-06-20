@@ -1,10 +1,50 @@
-﻿script "Global_Layout_HeaderAndFooter_Menu"
+﻿script "Global | Layout | HeaderAndFooter | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Layout_HeaderAndFooter_Menu
+name: Global | Layout | HeaderAndFooter | Menu
 type: controller
-version: 0.1
+version: 0.2
+
+--> Menu | Props
+-
+getprop menu_Target [tObject]
+   put the title_Text of tObject into titleText
+   put the display_View of tObject into dView
+   if titleText = "View|Layout|HeaderAndFooter" then
+      put the displayed_ViewObject of dView into vObject 
+      -- put the displayed_ModuleFolder of dView into moduleFolder 
+      put the displayed_ModuleName of dView into moduleName
+      return vObject
+   else
+      pass menu_Target
+   end if
+end menu_Target
+
+getprop disabled_SwapFooter [layoutView]
+   put the view_IsTemplate of layoutView into isTemplate
+   return isTemplate
+end disabled_SwapFooter
+
+getprop editBehavior_Params
+   put the hkey_CaseConditions ["M menu_EditBehavior"] of me into cParams
+   return cParams
+end editBehavior_Params
+   
+getprop setOrientation_Params
+   return "portrait,landscape"
+end setOrientation_Params
+
+getprop setOrientation_Param [layoutView]
+   put the mobile_Orientation of layoutView into whichOrientation
+   return whichOrientation
+   
+   if the landscape_Layout of layoutView is true then
+      return "landscape"
+   else
+      return "portrait"
+   end if
+end setOrientation_Param
 
 
 --> Global | Layout | HeaderAndFooter | Menu
@@ -62,7 +102,7 @@ on menu_EditBehavior layoutView, whichBehavior
       edit the script of childView
    end if
 end menu_EditBehavior
-   
+
 on _
 end _
 
@@ -135,11 +175,6 @@ on menu_SwapFooter layoutView, whichView
    end switch
 end menu_SwapFooter
 
-getprop disabled_SwapFooter [layoutView]
-   put the view_IsTemplate of layoutView into isTemplate
-   return isTemplate
-end disabled_SwapFooter
-
 on _
 end _
 
@@ -151,24 +186,13 @@ on menu_SetOrientation layoutView, whichOrientation
    set the mobile_Orientation of layoutView to whichOrientation
 end menu_SetOrientation
 
-getprop which_Orientations
-   return "portrait,landscape"
-end which_Orientations
+on _
+end _
 
-getprop which_Orientation [layoutView]
-   put the mobile_Orientation of layoutView into whichOrientation
-   return whichOrientation
-   
-   if the landscape_Layout of layoutView is true then
-      return "landscape"
-   else
-      return "portrait"
-   end if
-end which_Orientation
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
 
 
---> Global | Layout | HeaderAndFooter | Menu | Props
--
-
---> Global | Layout | HeaderAndFooter | Menu | Disabled
+--> Dev | Menu
 -

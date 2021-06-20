@@ -1,16 +1,17 @@
-﻿script "Global_Image_SVG_Menu"
+﻿script "Global | Image | SVG | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Image_SVG_Menu
+name: Global | Image | SVG | Menu
 type: controller
+target: svgView
 version: 0.2
 
 
---> Menu | Props
+--> Menu | Init
 -
-getprop menu_Target
-   put menu_GetTargetObject() into tObject
+getprop menu_Target [tObject]
+   -- put menu_GetTargetObject() into tObject
    put the svg_View of tObject into svgView
    if exists(svgView) is false then
       put the displayed_Object of tObject into svgView
@@ -18,11 +19,66 @@ getprop menu_Target
    return svgView
 end menu_Target
 
+private function _DisplayedObject svgView
+   -- put the displayed_Object of svgView into hObject
+   put the stack_Name of svgView into stackName
+   put the label of stack stackName into hKey
+   hkey_Deconstruct hKey, hName, hType, hObject, hNum
+   return hObject
+end _DisplayedObject
+
+private function _ShortAssetFiles svgView
+   put _DisplayedObject (svgView) into hObject
+   --
+   put the project_Folder of hObject into projectFolder
+   put asset_ListFiles (projectFolder, empty, true) into shortAssetFiles
+   return shortAssetFiles
+end _ShortAssetFiles
+   
+getprop displayAsset_Params [svgView]
+   put _ShortAssetFiles (svgView) into shortAssetFiles
+   return shortAssetFiles
+end displayAsset_Params
+
+getprop fluidSvg_Param [svgView]
+   put the svg_IsFluid of svgView into someBoolean
+   return someBoolean
+end fluidSvg_Param
+
+getprop fluidSvg_Params
+   return "true,false"
+end fluidSvg_Params
+
+getprop deleteHeaderKey_Params [svgView]
+   -- strange bug trying to set this to header_Keys, or some_Keys
+   put the svg_HeaderArray of svgView into svgHeaderArray
+   return keys (svgHeaderArray)
+end deleteHeaderKey_Params
+
+getprop disabled_DownloadAssets [svgView]
+   put _ShortAssetFiles (svgView) into shortAssetFiles
+   if shortAssetFiles is empty then
+      return true
+   else
+      return false
+   end if
+end disabled_DownloadAssets
+
+getprop disabled_DisplayAsset [svgView]
+   put _ShortAssetFiles (svgView) into shortAssetFiles
+   if shortAssetFiles is empty then
+      return true
+   else
+      return false
+   end if
+end disabled_DisplayAsset
+
 
 --> Global | Image | SVG | Menu
--
-on menu_ObjectProcessedArray svgView
-   put the displayed_Object of svgView into hObject
+   -
+   on menu_ObjectProcessedArray svgView
+   put _DisplayedObject (svgView) into hObject
+   --
    put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  
    display_Array processedHkeyArray, "processedHkeyArray"
 end menu_ObjectProcessedArray
@@ -35,7 +91,6 @@ on menu_HandlerArray svgView
    hkey_Deconstruct hKey, hName, hType, hObject, hNum
    
    put hkey_SvgFile (hKey) into svgFile
-   
    
    put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  
    display_Array processedHkeyArray, "processedHkeyArray"
@@ -59,7 +114,7 @@ on menu_HandlerMetadataFolder svgView
 end menu_HandlerMetadataFolder
 
 on menu_ObjectMetadataFolder svgView
-   put the displayed_Object of svgView into hObject
+   put _DisplayedObject (svgView) into hObject
    --
    put the metadata_Folder of hObject into someFolder
    finder_Reveal someFolder
@@ -68,25 +123,20 @@ end menu_ObjectMetadataFolder
 on _
 end _
 
-on menu_DisplayObjectDepArray displayView
-   put the displayed_Object of displayView into hObject
-   display_ObjectDepArray hObject
-end menu_DisplayObjectDepArray
-
-on _
-end _
-
 on menu_SvgTools svgView
    display_Index svgIndex, "SVG Tools", "Global | Image | SVG | Menu"
    put the result into indexView
-   set the displayed_Object of indexView to svgView
+   --
+   put _DisplayedObject (svgView) into hObject
+   set the displayed_Object of indexView to hObject
 end menu_SvgTools
 
 on _
 end _
 
 on menu_DownloadAssets svgView
-   put the project_Folder of svgView into projectFolder
+   put _DisplayedObject (svgView) into scriptObject
+   put the project_Folder of scriptObject into projectFolder
    
    -- put "http://livecode.world/graphs/graph.html" into someUrl
    asset_DownloadHtml "http://livecode.world/graphs/graph.html", projectFolder
@@ -95,7 +145,9 @@ on menu_DownloadAssets svgView
 end menu_DownloadAssets
 
 on menu_DisplayAsset svgView, shortAssetFile
-   put the project_Folder of svgView into projectFolder
+   put _DisplayedObject (svgView) into scriptObject
+   put the project_Folder of scriptObject into projectFolder
+   --
    put asset_GetFile (projectFolder, shortAssetFile) into htmlFile
    put ("file:" & htmlFile) into someURL
    
@@ -113,34 +165,6 @@ end menu_DisplayAsset
 
 on _
 end _
-
-on menu_SetUrl svgView, whichUrl
-   switch whichUrl
-      case "Compound"
-         put "http://livecode.world/graphs/graph.html" into someUrl
-         break
-      case "Paths"
-         put "https://livecode.world/graphs/graphviz.html" into someUrl
-         -- put "http://js.cytoscape.org/demos/6c9907e7896f8ae23f9f/" into someUrl
-         break
-      case "Huge"
-         -- put "http://js.cytoscape.org/demos/57e7cc43342193d9d21a/" into someUrl
-         put "http://js.cytoscape.org/demos/f64e811fc3311414e083/" into someUrl
-         break
-      case "Cats"
-         put "http://js.cytoscape.org/demos/aedff159b0df05ccfaa5/" into someUrl
-         break
-      case "Wine"
-         put "http://js.cytoscape.org/demos/cde4db55e581d10405f5/" into someURL
-         break
-      default
-         answer file "Enter a url..."
-         if it is empty then exit to top
-         put it into someURL
-   end switch
-   -- put someURL
-   set the url of svgView to someURL
-end menu_SetUrl
 
 on menu_ExportSvg svgView
    put the htmltext of svgView into someHTML
@@ -181,28 +205,38 @@ on submenu_Dev
 end submenu_Dev
 
 
---> Global | Index | Simple | Menu | Props
--
-getprop short_AssetFiles [svgView]
-   put the project_Folder of svgView into projectFolder
-   put asset_ListFiles (projectFolder, empty, true) into shortAssetFiles
-   return shortAssetFiles
-end short_AssetFiles
-
-getprop fluid_Svg [svgView]
-   put the svg_IsFluid of svgView into someBoolean
-   return someBoolean
-end fluid_Svg
-
-
---> Global | Index | Simple | Menu | Disabled
--
-
-
 --> Dev | Menu
 -
+on menu_SetUrl svgView, whichUrl
+   breakpoint
+   switch whichUrl
+      case "Compound"
+         put "http://livecode.world/graphs/graph.html" into someUrl
+         break
+      case "Paths"
+         put "https://livecode.world/graphs/graphviz.html" into someUrl
+         -- put "http://js.cytoscape.org/demos/6c9907e7896f8ae23f9f/" into someUrl
+         break
+      case "Huge"
+         -- put "http://js.cytoscape.org/demos/57e7cc43342193d9d21a/" into someUrl
+         put "http://js.cytoscape.org/demos/f64e811fc3311414e083/" into someUrl
+         break
+      case "Cats"
+         put "http://js.cytoscape.org/demos/aedff159b0df05ccfaa5/" into someUrl
+         break
+      case "Wine"
+         put "http://js.cytoscape.org/demos/cde4db55e581d10405f5/" into someURL
+         break
+      default
+         answer file "Enter a url..."
+         if it is empty then exit to top
+         put it into someURL
+   end switch
+   -- put someURL
+   set the url of svgView to someURL
+end menu_SetUrl
+
 on menu_DisplaySvgPane svgView
-   put the displayed_Object of svgView into scriptObject
    put the svg_File of svgView into svgFile
    --
    display_SVG svgFile
@@ -266,32 +300,25 @@ on menu_RevealHkeyOverlayFolder svgView
 end menu_RevealHkeyOverlayFolder
 
 on menu_RevealProjectOverlayFolder svgView
-   put the displayed_Object of svgView into scriptObject
+   put _DisplayedObject (svgView) into scriptObject
+   --
    put the project_OverlayFolder of scriptObject into projectOverlayFolder
    put "the project_OverlayFolder:" && projectOverlayFolder
    finder_Reveal projectOverlayFolder
 end menu_RevealProjectOverlayFolder
 
 on menu_RevealStackOverlayFolder svgView
-   put the displayed_Object of svgView into scriptObject
+   put _DisplayedObject (svgView) into scriptObject
+   --
    put the overlay_Folder of scriptObject into overlayFolder
    put "the overlay_Folder:" && overlayFolder
    finder_Reveal overlayFolder
 end menu_RevealStackOverlayFolder
 
 on menu_RevealTextStackFolder svgView
-   put the displayed_Object of svgView into scriptObject
+   put _DisplayedObject (svgView) into scriptObject
+   --
    put the textStack_Folder of scriptObject into textStackFolder
    put "the textStack_Folder:" && textStackFolder
    finder_Reveal textStackFolder
 end menu_RevealTextStackFolder
-
-
-
---> Dev | Menu | Props
--
-getprop header_Types [svgView]
-   -- strange bug trying to set this to header_Keys, or some_Keys
-   put the svg_HeaderArray of svgView into svgHeaderArray
-   return keys (svgHeaderArray)
-end header_Types

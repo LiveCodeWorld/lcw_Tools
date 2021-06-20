@@ -1,8 +1,8 @@
-﻿script "Global_Project_Stacks_Tree_Menu"
+﻿script "Global | Project | Stacks | Tree | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Project_Stacks_Tree_Menu
+name: Global | Project | Stacks | Tree | Menu
 type: controller
 version: 0.1
 

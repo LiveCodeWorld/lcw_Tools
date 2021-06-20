@@ -121,7 +121,7 @@ getprop stack_Search [someProperty]
    -- indexes objects with the same property
    put item 2 to -1 of someProperty into controllerObject
    if controllerObject = "me" then
-      put script_CallingObject() into controllerObject
+      put debug_GetCallingObject() into controllerObject
    end if
    put item 1 of someProperty into someProperty
    put the stack_Object of the target into stackObject

@@ -61,7 +61,8 @@ getprop right_View
 end right_View
 
 getprop vertical_Divider
-    return the long id of control "_VerticalDivider View" of me
+   if exists (control "_VerticalDivider View" of me) is false then return empty
+   return the long id of control "_VerticalDivider View" of me
 end vertical_Divider
 
 

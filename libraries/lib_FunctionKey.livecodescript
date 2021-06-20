@@ -17,7 +17,6 @@ on functionKey keyNumber
          display_LcwProjectList
          break
       case 2
-         display_LcwLibs
          break
       case 3
          put the top_ViewObjects of topCard into topViewObjects

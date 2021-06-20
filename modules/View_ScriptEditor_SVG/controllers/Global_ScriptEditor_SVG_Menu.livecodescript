@@ -1,8 +1,8 @@
-﻿script "Global_ScriptEditor_SVG_Menu"
+﻿script "Global | ScriptEditor | SVG | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_ScriptEditor_SVG_Menu
+name: Global | ScriptEditor | SVG | Menu
 type: controller
 version: 0.1
 

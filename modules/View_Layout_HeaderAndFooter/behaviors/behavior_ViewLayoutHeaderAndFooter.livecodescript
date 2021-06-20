@@ -18,14 +18,25 @@ on preOpenControl
 end preOpenControl
 
 command fixBehaviors
-   _fixBehavior _headerView()
-   _fixBehavior _bodyView()
-   _fixBehavior _footerView()
+   local bObjectErrors
+   
+   _fixBehavior _headerView(), bObjectErrors
+   _fixBehavior _bodyView(), bObjectErrors
+   _fixBehavior _footerView(), bObjectErrors
+   --
+   if bObjectErrors is not empty then
+      put bObjectErrors
+      lcw_Answer "Some behaviors cannot be found!"
+   end if
 end fixBehaviors
 
-private command _fixBehavior someChild
-   get the behavior of someChild
-   set the behavior of someChild to it
+private command _fixBehavior someChild, @bObjectErrors
+   put the behavior of someChild into bObject
+   if exists (bObject) then
+      set the behavior of someChild to bObject
+   else
+      put bObject & CR after bObjectErrors
+   end if
 end _fixBehavior
 
 on resizeControl

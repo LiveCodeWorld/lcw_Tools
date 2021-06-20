@@ -1,10 +1,14 @@
-﻿script "Global_Environment_Menu"
+﻿script "Global | Environment | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Environment_Menu
+name: Global | Environment | Menu
 type: controller
-version: 0.6
+version: 0.3
+
+/*
+This menu needs tidying - removing the old stuff at the bottom.
+*/
 
 
 --> Variables
@@ -56,20 +60,8 @@ function textStack_ConstructDataFolder mainStackName, pStackName, pLongObjectID
    return dataFolder
 end textStack_ConstructDataFolder
 
-on mDoubleUp_SaveStack indexView, mStackName
-   put the bad_StackArray of indexView into testArray
-   put testArray ["bad path"][mStackName] into stackPath
-   switch
-      case there is a file stackPath
-         put "OK"
-         break
-      default
-         put "Missing:" && stackPath
-   end switch
-end mDoubleUp_SaveStack
 
-
---> Menu | Props
+--> Menu | Init
 -
 getprop menuStyle_Param
    return the menu_Style of stack "lib_MenuArray"
@@ -96,20 +88,103 @@ getprop display_Params
    return "List Projects,-,Libraries and Models,Libraries and Models,-,List All Modules,-,Controllers,List All Behaviors,Behaviors,Views"
 end display_Params
 
+getprop disabled_SaveEditedStacks
+   put stack_ListEditedNames() into editedStackNames
+   if editedStackNames is empty then
+      -- return true
+      return "delete"
+   else
+      return false
+   end if
+end disabled_SaveEditedStacks
+
 
 --> Global | Environment | Menu
 -
-on menu_DisplayRigControllers
-   display_RigControllers
-end menu_DisplayRigControllers
+on menu_SaveEditedStacks
+   stack_SaveEdited "all"
+end menu_SaveEditedStacks
 
-on menu_DisplayFederationServers
-   display_FederationServers
-end menu_DisplayFederationServers
+on submenu_TransportServer
+   return "Global | Transport | Model | Menu"
+end submenu_TransportServer
 
-on menu_DisplayAtopiaFolders
-   display_AtopiaDomains
-end menu_DisplayAtopiaFolders
+on _
+end _
+
+on menu_FindStack
+   display_SpotlightStacks
+end menu_FindStack
+
+on menu_FindPodcast
+   display_FindPodcast
+end menu_FindPodcast
+
+on _
+end _
+
+on menu_DisplayNewAtopiaFolders
+   display_AtopiaNewFolders
+end menu_DisplayNewAtopiaFolders
+
+on menu_DisplayAtopiaLogs
+   put "/var/log/upstart/wiki.log" into logPath
+   put atopia_FetchData (logPath) into logData
+   --
+   -- display_Text logData
+   atom_DisplayText logData
+end menu_DisplayAtopiaLogs
+
+on menu_DisplayTransporters
+   display_Transporters
+end menu_DisplayTransporters
+
+on menu_DisplayGithubProjects
+   display_GithubProjects
+end menu_DisplayGithubProjects
+
+on _
+end _
+
+on submenu_Projects
+   return "Global | LCW | Projects | Menu"
+end submenu_Projects
+
+on menu_EnvironmentLibs indexView
+   display_EnvironmentLibs indexView
+end menu_EnvironmentLibs
+
+on menu_EnvironmentMenus
+   display_EnvironmentMenus
+end menu_EnvironmentMenus
+
+on menu_EnvironmentViews
+   display_EnvironmentViews
+end menu_EnvironmentViews
+
+on menu_EnvironmentModules
+   display_ListModules
+end menu_EnvironmentModules
+
+on menu_EnvironmentOldViews
+   display_OldViewFiles
+end menu_EnvironmentOldViews
+
+on _
+end _
+
+on menu_GatherDataViews
+   put display_ListStackNames() into stackNames
+   repeat for each line stackName in stackNames
+      set the cursor to busy
+      set the loc of stack stackName to the screenloc
+      show stack stackName
+   end repeat
+end menu_GatherDataViews
+
+on menu_ListDataViews
+   display_ListDataViews
+end menu_ListDataViews
 
 on _
 end _
@@ -123,77 +198,59 @@ on menu_DisplayRecentExports mTarget, howLong
    display_RecentExports howLong
 end menu_DisplayRecentExports
 
-on _
-end _
-
-on menu_Display indexView, displayWhat
-   put displayWhat & comma & "Environment" into someTitle
-   switch displayWhat
-      case "List All Projects"
-         put library_ListProjectNames() into projectNames -- it's the default anyway
-         display_LcwProjectList projectNames
-         break
-      case "List Active Projects"
-         if the shiftKey is "Down" then
-            put env_ListProjects() into projectNames
-         else
-            put library_ListProjectNames() into projectNames
-         end if
-         display_LcwProjectList projectNames
-         break
-      case "-"
-      case "List All Libs"
-         if the shiftKey is "Down" then
-            display_LcwLibs
-         else
-            display_LcwLibs indexView
-         end if
-         break
-      case "List All Modules"
-         put library_ListProjectNames ("module") into projectNames
-         set the view_Index [displayWhat] of indexView to projectNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayModule"
-         break
-      case "List All Controllers"
-         if the shiftKey is "Down" then
-            display_Controllers
-         else
-            display_Controllers indexView
-         end if
-         break
-      case "List All Behaviors"
-         put env_ListBehaviorStackNames() into behaviorStackNames
-         set the view_Index [displayWhat] of indexView to behaviorStackNames
-         set the mouse_DoubleUpEvent of indexView to "mDouble_DisplayBehavior"
-         break
-         
-         if the shiftKey is "Down" then
-            display_ActiveBehaviors
-         else
-            display_ActiveBehaviors indexView
-         end if
-      case "-"
-      case "List LCW Views"
-         if the shiftKey is "Down" then
-            display_ActiveViews
-         else
-            display_ActiveViews indexView
-         end if
-         break
-   end switch
-end menu_Display
-
-on submenu_Create
-   return "Global | ScriptEditor | Create | Menu"
-end submenu_Create
+on menu_DisplayExportedScript indexView, mainStackName
+   --put textStack_ConstructDataFolder (mainStackName) into dataFolder
+   answer folder "Select a folder..."
+   put it into dataFolder
+   --
+   put script_ReconstructFromExported (dataFolder) into someScript
+   --
+   display_Text someScript
+   atom_DisplayText someScript
+end menu_DisplayExportedScript
 
 on _
 end _
+
+on menu_DisplayAtopiaAuthors
+   --  display_LocalAuthorNameData
+   display_AuthorData
+end menu_DisplayAtopiaAuthors
+
+on menu_DisplayFederationServers
+   display_FederationServers
+end menu_DisplayFederationServers
+
+on _
+end _
+
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Dev | Menu
+-
+on menu_Refresh
+   display_LcwProjectList
+end menu_Refresh
+
+on _
+end _
+
+on menu_DisplayDynadot
+   display_Dynadot
+end menu_DisplayDynadot
+
+on submenu_DisplayMore
+   return "Global | Environment | Display | Menu"
+end submenu_DisplayMore
 
 on menu_SetMenu mTarget, shortName
    ide_SetMenuTitle "Recent", shortName
    --
    put ide_GetMenuTitle ("Recent") into mTitle
+   --
    menu_Edit mTitle
    put mTitle
 end menu_SetMenu
@@ -202,267 +259,69 @@ on menu_MenuStyle indexView, mStyle
    set the menu_Style of stack "lib_MenuArray" to mStyle
 end menu_MenuStyle
 
-on _
-end _
-
-on submenu_Git
-   return "Global | GIT | Menu"
-end submenu_Git
-
-on menu_WatchEditingScripts indexView, someBoolean
-   if someBoolean is true then
-      ide_AddRevEditScriptStack "LCW"
-   else
-      ide_RemoveRevEditScriptStack "LCW"
+on menu_TestRecentMenu
+   put "Recent" into ideElement
+   put "Watch" into shortTitle
+   --
+   put ide_ConstructMenuController (ideElement, shortTitle) into mController
+   if exists (mController) is true then
+      menu_LoadFromScript mController
+      put the result into menuTitleArray
    end if
-end menu_WatchEditingScripts
+   --
+   ide_SetMenuTitle ideElement, shortTitle
+   put ide_GetMenuTitle (ideElement) into mTitle
+   --
+   put ide_GetMenuController (ideElement) into mController
+   put menu_GetGlobalController (mTitle) into mController
+   --
+   edit the script of mController
+end menu_TestRecentMenu
 
-
---> END
--
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Menu | Props | old
--
-getprop m_Styles
-   return "Array,Old"
-end m_Styles
-
-getprop m_Style
-   return the menu_Style of stack "lib_MenuArray"
-end m_Style
-
-getprop short_Name
-   return ide_ShortTitle ("Recent")
-end short_Name
-
-getprop short_Names
-   put ide_ListShortMenuTitles ("Recent") into shortNames
-   return shortNames
-end short_Names
-
-getprop how_Longs
-   return "5 min,10 min,20 min,30 min,300 min,-,ask"
-end how_Longs
-
-getprop from_Whichs
-   return "the used environment,-,the openstacks,the usedstacks"
-end from_Whichs
-
-getprop display_What [indexView]
-   put the title_Text of indexView into someTitle
-   return someTitle
-end display_What
-
-getprop display_Whats [indexView]
-   return "List Projects,List Active Projects,List All Projects,List Projects and Modules,-,Libraries and Models,Libraries and Models,-,List All Modules,Active Modules,-,Controllers,List All Behaviors,Behaviors,Views"
-end display_Whats
-
-getprop active_Projects
-   put env_ListProjects() into activeProjects
-end active_Projects
-
-
---> Global | Environment | Menu | Disabled
--
-command init_PlaceArray
-   -- ???
-   put script_FetchHkeyPlaceArray() into storedHkeyPlaceArray
-   put hkeyLine_GetPlaceArray() into hkeyPlaceArray
-   put hkeyPlaceArray is not storedHkeyPlaceArray into LocalArray ["storedIsDifferent"]
-   return storedHkeyPlaceArray
-end init_PlaceArray
-
-getprop disabled_LoadStoredPlaceArray
-   return LocalArray ["storedIsDifferent"] is false
-end disabled_LoadStoredPlaceArray
-
-getprop disabled_StoreActivePlaceArray
-   return LocalArray ["storedIsDifferent"] is false
-end disabled_StoreActivePlaceArray
-
-getprop watch_EditingScripts
-   put ide_GetRevEditScriptStack ("LCW") into someBoolean
-   return someBoolean
-end watch_EditingScripts
-
-
---> Dev | Menu
--
-on menu_IndicateStarted
-   display_LcwProjectList
-end menu_IndicateStarted
-
-on menu_SetWatchMenu mTarget
-   ide_SetScriptEditorTitles "Watch"
-end menu_SetWatchMenu
-
-on submenu_Project
-   return "Global | Library | Project | Model | Menu"
-end submenu_Project
-
-on submenu_Export
-   return "Global | Project | Export | Menu"
-end submenu_Export
+on menu_ReindexIdeMenu
+   ide_ReIndexMenus
+end menu_ReindexIdeMenu
 
 on _
 end _
 
-on menu_LivecodePluginArray
-   -- ide_AddRevEditScriptStack stackName
-   -- this adds the stack stackname to the list of stacks that receive the "revEditScript" command
-   -- send "revEditScript tObject" to this card of stack tPlugin
-   global gREVMessageDispatch
-   display_Array gREVMessageDispatch
-end  menu_LivecodePluginArray
+on menu_RevealLocalProjects indexView
+   put env_ListLocalProjects() into projectNames
+   put env_GetRepoFolder() into repoFolder
+   --
+   set the displayed_Index of indexView to projectNames
+   finder_Reveal repoFolder
+end menu_RevealLocalProjects
 
-on _
-end _
+on menu_DisplayGlobalMenus
+   display_EnvironmentMenus
+end menu_DisplayGlobalMenus
 
-on menu_ShrinkStacks indexView, shrinkWhat
-   switch shrinkWhat
-      case "me"
-         stack_Shrink indexView
-         break
-      case "display"
-         put ide_VisibleStackNames ("display") into stackNames
-         repeat for each line stackName in stackNames
-            put the scaleFactor of stack stackName into someFactor
-            if someFactor = 1 then
-               put the name of stack stackName into stackObject
-               stack_Shrink stackObject
-            end if
-         end repeat
-         break
-      case "shrink all"
-         put ide_VisibleStackNames ()
-         break
-      case "-"
-      case "restore"
-         put ide_VisibleStackNames () into stackNames
-         repeat for each line stackName in stackNames
-            put the scaleFactor of stack stackName into someFactor
-            if someFactor is not 1 then
-               -- set the scaleFactor of stack stackName to 1
-               put the name of stack stackName into stackObject
-               stack_Shrink stackObject, 1
-            end if
-         end repeat
-         break
-   end switch
-end menu_ShrinkStacks
-
-on _
-end _
-
-on menu_LibraryProjectData
-   put library_FetchProjectData() into libraryProjectData
-   display_Array libraryProjectData, "library_FetchProjectData()", "Global | Library | Project | Model | Menu", "Global | Library | Project | Model | Line | Menu"
-end menu_LibraryProjectData
-
-on _
-end _
-
-on menu_RecreateScriptOnlyStack
-   put lcw_UserMetadataFolder() into textStackRoot
-   put folder_ListShort (textStackRoot) into exportedScriptOnlyStacks
-   
-   local mTitle, mLineTitle, mUp, mDoubleUp
-   put "Script-only Stack Exports" into someTitle
-   put "doubleup_DisplayScriptOnlyfolder" into mDoubleUp
-   display_Index exportedScriptOnlyStacks, someTitle, mTitle, mLineTitle, mUp, mDoubleUp
-   -- put the exported_Script of stack "LCW"
-end menu_RecreateScriptOnlyStack
-
-on _
-end _
-
-on submenu_ProjectTools
-   return "Global | Project | Menu"
-end submenu_ProjectTools
-
-on submenu_Library
-   return "Global | Library | Menu"
-end submenu_Library
-
-on submenu_ManageLibrary
-   return "Global | Library | Manage | Menu"
-end submenu_ManageLibrary
-
-on submenu_Archive
-   return "Global | OPN | Save Count | Menu"
-end submenu_Archive
-
-on submenu_Mainstack
-   return "Global | Script | Mainstack | Menu"
-end submenu_Mainstack
-
-on _
-end _
-
-on submenu_Teamster
-   return "Global | Teamster | Menu"
-end submenu_Teamster
-
-on submenu_TextStack
-   return "Global | Object | Export | Test | Menu"
-end submenu_TextStack
-
-on _
-end _
-
-on submenu_Place
-   return "Global | Place | Menu"
-end submenu_Place
-
-on menu_LibraryProjectData
-   put library_FetchProjectData() into libraryProjectData
-   display_Array libraryProjectData, "library_FetchProjectData()", "Global | Library | Project | Model | Menu", "Global | Library | Project | Model | Line | Menu"
-end menu_LibraryProjectData
-
-on menu_ListLoadedStacks indexView
-   put revLoadedStacks ("all") into stackNames
-   filter stackNames with "rev*"
-   display_Stacks stackNames, indexView
-end menu_ListLoadedStacks
-
-on menu_ListIdeLibraryHandlers
-   -- put the revAvailablehandlers of stack "revIdeLibrary"
-   put the name of stack "revIdeLibrary" into scriptObject
-   
-   put the script_ShortHkeys of stack "revIdeLibrary" into hKeys
-   filter hKeys with "* rev*"
-   sort hKeys by word 2 of each
-   display_ScriptObject scriptObject, "revIdeLibrary", hKeys
-end menu_ListIdeLibraryHandlers
-
-on _
-end _
-
-on menu_TidyProjectLibrary
-   library_TidyProjectModel
-end menu_TidyProjectLibrary
-
-on _
-end _
-
-on menu_MultipleHilights treeView
-   put the multi_Hilites of treeView
-end menu_MultipleHilights
-
-
---> Deps
--
-function hkeyPlaceArray_ExtractDuplicates hkeyPlaceArray
-   local duplicatePlaceArray
-   repeat for each key hTableKey in hkeyPlaceArray
-      get hkeyPlaceArray [hTableKey]
-      if the number of lines of keys (it) > 1 then
-         put it into duplicatePlaceArray [hTableKey]
+on menu_ReIndexAllProjectMenus indexView
+   -- put the displayed_Index of indexView into projectNames
+   put env_ListLocalProjects() into projectNames
+   --
+   repeat for each line projectName in projectNames
+      set the cursor to busy
+      if exists (stack projectName) is false then
+         put empty into badArray [projectName]
+         next repeat
       end if
+      
+      put project_GetFolder (projectName) into projectFolder
+      --
+      project_ExportMenusAndStackFiles projectFolder
+      put the result into projectArray
+      --
+      put projectArray into goodArray [projectName]["projectArray"]
+      put projectFolder into goodArray [projectName]["projectFolder"]
    end repeat
-   return duplicatePlaceArray
-end hkeyPlaceArray_ExtractDuplicates
+   --
+   lcw_Answer "Indexed all these projects, and found these bad projects"
+   --
+   put keys (goodArray) into goodIndex
+   sort goodIndex
+   set the displayed_Index of indexView to goodIndex
+   --
+   display_BadProjectArray badArray
+end menu_ReIndexAllProjectMenus

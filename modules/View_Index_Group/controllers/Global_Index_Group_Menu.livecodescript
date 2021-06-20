@@ -1,10 +1,17 @@
-﻿script "Global_Index_Group_Menu"
+﻿script "Global | Index | Group | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Index_Group_Menu
+name: Global | Index | Group | Menu
 type: controller
-version: 0.1
+version: 0.2
+
+
+--> Menu | Init
+-
+getprop views_Params
+   return "placeholder"
+end views_Params
 
 
 --> Global | Index | Group | Menu
@@ -22,23 +29,12 @@ on menu_Views indexGroup, vName
    end repeat
 end menu_Views
 
-getprop v_Names
-   return "placeholder"
-end v_Names
-
 on _
 end _
 
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
-
-
---> Global | Index | Group | Menu | Props
--
-
---> Global | Index | Group | Menu | Disabled
--
 
 
 --> Dev | Menu

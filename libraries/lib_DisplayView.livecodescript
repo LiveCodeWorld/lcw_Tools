@@ -9,9 +9,66 @@ version: 0.3
 
 --> Working on
 -
+command display_Camera cameraDeviceName, sRect
+   -- put the stack_BelowRect of stack "Image 1" into sRect
+   --
+   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
+   put the result into displayView
+   -- display_SetMenu displayView, "Camera", "title_Menu"
+   --
+   return displayView
+end display_Camera
+
+command display_Browser someURL, sRect
+   -- put the stack_BelowRect of stack "Image 1" into sRect
+   --
+   display_Clone "View|Browser", "Browser", someURL, "browser_URL", sRect
+   put the result into displayView
+   display_SetMenu displayView, "Browser", "title_Menu"
+   --
+   return displayView
+end display_Browser
+
+function view_ConstructToolMenu viewObject, isaView
+   put the view_MenuTitle [true] of viewObject into mTitle
+   put view_MenuToolTitles (mTitle, isaView) into mTitles
+   return mTitles
+end view_ConstructToolMenu
+
+function view_MenuToolTitles mTitle, isaView
+   if mTitle is not empty then
+      put tab & "submenu" & CR & "-" after mTitle
+   end if
+   --
+   if isaView is not false then
+      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
+      put CR & "-" after mTitle
+      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
+      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+   else
+      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+   end if
+   return word 1 to -1 of mTitle
+end view_MenuToolTitles
+
 
 --> Display | Events
 -
+on mDouble_DisplayView indexView, viewName
+   switch
+      case exists (stack viewName) is false
+         answer merge("Could not find stack '[[viewName]]'.")
+         break
+      default
+         display_View viewName
+   end switch
+end mDouble_DisplayView
+
 on mDouble_DisplayStack indexView, stackName
    switch
       case exists (stack stackName) is false
@@ -61,25 +118,83 @@ command mDoubleUp_EditBehavior indexView, bObject
 end mDoubleUp_EditBehavior
 
 
---> Display | Project | Views
+--> Display | Clone
 -
-command display_ClonedView viewName, pInvisible, pCloneName, pDestroyBoolean
-   put view_GetTemplateObject (viewName) into viewTemplate
-   if pInvisible is true then
-      stack_CloneInvisible viewName, pCloneName, pDestroyBoolean
+command display_Clone viewName, pCloneName, pData, pDataProp, pStackRect
+   if pDataProp is empty then put "displayed_Data" into displayView
+   --
+   if exists (stack pCloneName) is true then
+      put the long id of control 1 of cd 1 of stack pCloneName into displayView
    else
-      stack_Clone viewName, pDestroyBoolean, pCloneName
+      stack_CloneInvisible viewName, pCloneName
+      put the result into pCloneName
+      put the long id of control 1 of cd 1 of stack pCloneName into displayView
    end if
+   --
+   set the pDataProp of displayView to pData
+   --
+   switch
+      case pStackRect is a rect
+         set the rect of stack pCloneName to pStackRect
+         break
+      default
+         revIDEEnsureOnscreen pCloneName
+   end switch
+   --
+   show stack pCloneName
+   return displayView
+end display_Clone
+
+command display_ClonedView viewName, pStackLabel, pCloneName, pDestroyBoolean
+   stack_Clone viewName, pStackLabel, pCloneName, pDestroyBoolean
    put the result into clonedStackName
    put the long id of control 1 of cd 1 of stack clonedStackName into clonedView
    return clonedView
 end display_ClonedView
 
+
+--> Display | View
+-
 command display_View viewName
-   put view_GetTemplateObject (viewName) into viewTemplate
-   object_GoTo viewTemplate
+   if exists (control 1 of cd 1 of stack viewName) is false then return merge ("error, cannot find view for stack [[viewName]]")
+   
+   go to stack viewName
+   put the long id of control 1 of cd 1 of stack viewName into viewObject   
+   --
+   put the view_Props of viewObject into viewProps
+   put the original_ModuleName of viewObject into moduleName
+   -- 
+   display_Data viewProps, viewName, "View Tools"
+   put the result into displayView
+   display_SetInteractions displayView, "View | Tree", "mDouble_EditProp"
+   --
+   put view_ConstructToolMenu (viewObject, true) into mTitles
+   put line 1 of mTitles into mTitle
+   if menu_GlobalControllerExists (mTitle) is false then
+      display_SetInteractions displayView, "View | Tree", "mDouble_EditProp"
+   else
+      set the title_Menu of displayView to mTitles
+      set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
+      set the mouse_DoubleUp of displayView to "mDouble_EditProp"
+   end if
+   --
+   -- set the multiple_Hilites of displayView to false
+   
+   set the itemdelimiter to slash
+   put the project_Name of stack viewName into projectName
+   put the project_Folder of stack viewName into projectFolder
+   --
+   -- set the displayed_ViewObject of displayView to viewObject
+   set the displayed_Object of displayView to viewObject
+   set the displayed_ProjectName of displayView to projectName
+   set the displayed_ProjectFolder of displayView to projectFolder
+   --
+   return displayView
 end display_View
 
+
+--> Display | Project | Views
+-
 command display_ViewIndex viewObject, pIndexView
    put the view_Props of viewObject into viewProps
    
@@ -92,18 +207,18 @@ command display_ViewIndex viewObject, pIndexView
    put view_ConstructToolMenu (viewObject, true) into mTitle  
    put "Global | Module | Tree | Line | Menu" into mLineTitle
    put empty into mUp
-   put "mDouble_EditProp" into mDoubleUp
+   put "mDouble_EditProp" into mDoubleClick
    put empty into pDragCommand
    
    if exists (pIndexView) is false then
-      display_Index viewProps, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp, pDragCommand, true
+      display_Index viewProps, stackTitle, mTitle, mLineTitle, mUp, mDoubleClick, pDragCommand, true
       put the result into indexView
       set the multiple_Hilites of indexView to false
    else
       lock screen
       set the view_Index of pIndexView to viewProps
       set the stack_Title of pIndexView to stackTitle
-      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
+      set the mouse_DoubleUp of pIndexView to mDoubleClick
       set the title_Menu of pIndexView to mTitle
       set the line_Menu of pIndexView to mLineTitle
       unlock screen
@@ -237,36 +352,22 @@ command display_ProjectViews projectName
    put merge ("[[projectName]],Views") into someTitle
    
    local mLineTitle, mUp
-   display_Index stackNames, someTitle, "Global | Views | Tree | Menu", mLineTitle, mUp, "mDouble_DisplayStack"
-   put the result into indexView
-   set the multiple_Hilites of indexView to false
+   display_Data stackNames, someTitle, "Views"
+   put the result into displayView
+   display_SetInteractions displayView, "Views | Tree", "mDouble_DisplayView"
+   return displayView
 end display_ProjectViews
 
-command display_ActiveViews pIndexView
+command display_EnvironmentViews
    put env_ListViewStackNames() into activeViewStackNames
-   
-   put "Active Views,Environment" into stackTitle
-   put "mDouble_DisplayStack" into mDoubleUp
-   
-   put empty into mUp
-   put "Global | Environment | Menu" into mTitle
-   put "Global | Project | Tree | Line | Menu" into mLineTitle
-   
-   if exists (pIndexView) is false then
-      display_Index activeViewStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp
-      put the result into displayView
-      return displayView
-   else
-      lock screen
-      set the view_Index of pIndexView to activeViewStackNames
-      set the stack_Title of pIndexView to stackTitle
-      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
-      set the title_Menu of pIndexView to mTitle
-      set the line_Menu of pIndexView to mLineTitle
-      unlock screen
-      return pIndexView
-   end if
-end display_ActiveViews
+   --
+   display_Data activeViewStackNames, "Views", "Environment"
+   put the result into displayView
+   --
+   display_SetInteractions displayView, "View | List", "mDouble_DisplayView"
+   --
+   return displayView
+end display_EnvironmentViews
 
 
 --> Private
@@ -314,25 +415,3 @@ private command _askMoveBehavior someComment, bObject, viewObject
          exit to top
    end switch
 end _askMoveBehavior
-
-
---> Deps
--
-function view_ConstructToolMenu viewObject, isaView
-   put the view_MenuTitle [true] of viewObject into mTitle
-   put CR & "-" after mTitle
-   if isaView is not false then
-      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
-      put CR & "-" after mTitle
-      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
-      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
-      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
-   else
-      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-   end if
-   return mTitle
-end view_ConstructToolMenu

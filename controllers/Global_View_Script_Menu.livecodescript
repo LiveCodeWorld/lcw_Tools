@@ -1,10 +1,11 @@
-﻿script "Global_View_Script_Menu"
+﻿script "Global | View | Script | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_View_Script_Menu
+name: Global | View | Script | Menu
 type: controller
 version: 0.2
+
 
 --> Variables
 -
@@ -15,8 +16,9 @@ local LocalArray
 -
 on menu_Init tObject
    put the index_View of tObject into indexView
-   put indexView into LocalArray ["indexView"]
+   if exists (indexView) is false then return false
    
+   put indexView into LocalArray ["indexView"]
    put the view_Index of indexView into LocalArray ["viewProps"]
    
    put the displayed_ProjectName of indexView into LocalArray ["projectName"]
@@ -26,19 +28,100 @@ on menu_Init tObject
    put the displayed_ModuleHomeStackPath of indexView into LocalArray ["moduleHomeStackPath"]   
 end menu_Init
 
+getprop disabled_EditCardScript [viewObject]
+   put the card_Object of viewObject into cardObject
+   put the revAvailableHandlers of cardObject into hTable
+   put hTable is empty into noHandlers
+   return noHandlers
+end disabled_EditCardScript
+
+getprop disabled_EditViewBehavior [viewObject]
+   put the behavior of viewObject into bObject
+   put exists (bObject) into bExists
+   if bExists is false then return true
+   
+   put the module_Behaviors of viewObject into moduleBehaviors
+   put the behavior_Objects of viewObject into bObjects
+   if bObjects = moduleBehaviors then return true
+   
+   return false
+end disabled_EditViewBehavior
+
+getprop disabled_SetViewCardBehavior [viewObject]
+   put the card_Object of viewObject into templateCardObject
+   put the behavior of templateCardObject into bObject
+   put bObject = the name of stack "behavior_ViewTemplateCard" into behaviorIsSet
+   return behaviorIsSet
+end disabled_SetViewCardBehavior
+
+getprop disabled_SetModuleBehavior [viewObject]
+   put the behavior_Objects of viewObject into bObjects
+   put the module_Behaviors of viewObject into mObjects
+   return bObjects = mObjects
+end disabled_SetModuleBehavior
+
+getprop disabled_GoToView [scriptObject]
+   put the object_MetaData ["type"] of scriptObject into mObectType
+   put mObectType contains "view" into viewOrViewBehavior
+   return viewOrViewBehavior is false
+end disabled_GoToView
+
+getprop disabled_EditViewBehavior [mTarget]
+   if exists(mTarget) is false then return true
+   if the behavior of mTarget is empty then
+      return "delete"
+   else
+      return false
+   end if
+end disabled_EditViewBehavior
+
+getprop disabled_EditViewScript [viewObject]
+   if the shiftkey is "Down" then return false
+   -- put the view_Template of viewObject into viewTemplate
+   put the revAvailableHandlers of viewObject into hTable
+   if hTable is empty then
+      return true
+   else
+      return false
+   end if
+end disabled_EditViewScript
+
+getprop disabled_SetMenuButtonScript [viewObject]
+   put view_GetMenuButton() into viewTemplate
+   put the menu_Button of viewObject into mButton
+   switch
+      case mButton is empty
+      case the long id of mButton = the long id of viewTemplate
+         return true
+         break
+      default
+         return false
+   end switch 
+end disabled_SetMenuButtonScript
+
+getprop disabled_SetViewMetadata [viewObject]
+   put the view_Name of viewObject into viewName
+   if viewName is empty then
+      return false
+   else
+      return "delete"
+   end if
+end disabled_SetViewMetadata
+
 
 --> Global | View | Script | Menu
 -
-on menu_ImportedBehaviors viewObject, someBoolean
-   -- this is a property of "behavior_ViewCardTemplate"
-   set the imported_ViewBehaviors of viewObject to someBoolean
-end menu_ImportedBehaviors
-
-on menu_ExportBehaviors viewObject
-   put the view_Name of viewObject into viewName
-   breakpoint
-   view_ExportTemplateBehaviorCardScripts viewName
-end menu_ExportBehaviors
+on menu_SetViewMetadata viewObject
+   get the view_Name of viewObject
+   put the stack_Name of viewObject into viewName
+   put metadata_ConstructArray (viewName, "view") into uRipArray
+   --
+   -- set the view_Name ["view"] of viewObject to viewName
+   set the script_MetaData of viewObject to uRipArray
+   put the result into uRipArray
+   --
+   edit the script of viewObject
+end menu_SetViewMetadata
 
 on _
 end _
@@ -49,7 +132,7 @@ end menu_DisplayViewBehaviors
 
 on _
 end _
-   
+
 on menu_EditViewScript viewObject
    edit the script of viewObject
 end menu_EditViewScript
@@ -93,6 +176,22 @@ end menu_EditModuleBehavior
 on _
 end _
 
+on menu_SetMenuButtonScript viewObject
+   put view_GetMenuButton() into viewTemplate
+   put the menu_Button of viewObject into mButton
+   --
+   set the script of mButton to the script of viewTemplate
+   edit the script of mButton
+end menu_SetMenuButtonScript
+
+on menu_EditMenuButtonTemplate viewObject
+   put view_GetMenuButton() into viewTemplate
+   edit the script of viewTemplate
+end menu_EditMenuButtonTemplate
+
+on _
+end _
+
 on menu_EditViewCardBehavior viewObject
    put the card_Object of viewObject into cardObject
    put the behavior of cardObject into bObject
@@ -127,75 +226,6 @@ end menu_GoToView
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
-
-
---> Global | Behavior | View | Menu | Props
--
-
---> Global | Behavior | View | Menu | Disabled
--
-getprop disabled_EditCardScript [viewObject]
-   put the card_Object of viewObject into cardObject
-   put the revAvailableHandlers of cardObject into hTable
-   put hTable is empty into noHandlers
-   return noHandlers
-end disabled_EditCardScript
-
-getprop disabled_EditViewBehavior [viewObject]
-   put the behavior of viewObject into bObject
-   put exists (bObject) into bExists
-   if bExists is true then
-      return false
-   else
-      return true
-   end if
-end disabled_EditViewBehavior
-
-getprop disabled_SetViewCardBehavior [viewObject]
-   put the card_Object of viewObject into templateCardObject
-   put the behavior of templateCardObject into bObject
-   put bObject = the name of stack "behavior_ViewTemplateCard" into behaviorIsSet
-   return behaviorIsSet
-end disabled_SetViewCardBehavior
-
-getprop disabled_SetModuleBehavior [viewObject]
-   put the behavior_Objects of viewObject into bObjects
-   put the module_Behaviors of viewObject into mObjects
-   return bObjects = mObjects
-end disabled_SetModuleBehavior
-
-getprop disabled_GoToView [scriptObject]
-   put the object_MetaData ["type"] of scriptObject into mObectType
-   put mObectType contains "view" into viewOrViewBehavior
-   return viewOrViewBehavior is false
-end disabled_GoToView
-
-
---> Global | View | Script | Menu | Props
--
-
-
---> Global | View | Script | Menu | Disabled
--
-getprop disabled_EditViewBehavior [mTarget]
-   if exists(mTarget) is false then return true
-   if the behavior of mTarget is empty then
-      return "delete"
-   else
-      return false
-   end if
-end disabled_EditViewBehavior
-
-getprop disabled_EditViewScript [viewObject]
-   if the shiftkey is "Down" then return false
-   -- put the view_Template of viewObject into viewTemplate
-   put the revAvailableHandlers of viewObject into hTable
-   if hTable is empty then
-      return true
-   else
-      return false
-   end if
-end disabled_EditViewScript
 
 
 --> Dev | Menu

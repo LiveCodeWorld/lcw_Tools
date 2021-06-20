@@ -1,10 +1,11 @@
-﻿script "Global_View_Behavior_Menu"
+﻿script "Global | View | Behavior | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_View_Behavior_Menu
+name: Global | View | Behavior | Menu
 type: controller
 version: 0.1
+
 
 --> Variables
 -
@@ -27,6 +28,99 @@ on menu_Init tObject
    put the displayed_ModuleHomeStackPath of indexView into LocalArray ["moduleHomeStackPath"]   
 end menu_Init
 
+getprop editMenu_Params [displayView]
+   put LocalArray ["viewObject"] into viewObject
+   --
+   if viewObject is empty then return empty
+   put the module_ControllerStackNames of viewObject into stackNames
+   return stackNames
+end editMenu_Params
+
+getprop module_Behavior [viewObject]
+   put the behavior_Objects of viewObject into bObjects
+   return bObjects
+end module_Behavior
+
+getprop module_Behaviors [viewObject]
+   --  put the module_Behaviors of templateView into moduleBehaviors
+   put the module_Behaviors of viewObject into moduleBehaviors
+   return moduleBehaviors
+end module_Behaviors
+
+getprop import_ScriptOnlyBehaviors [viewObject]
+   put the imported_ViewBehaviors of viewObject into alreadyImported
+   return alreadyImported
+end import_ScriptOnlyBehaviors
+
+getprop disabled_EditViewBehavior [viewObject]
+   put the behavior of viewObject into bObject
+   if exists (bObject) then
+      return false
+   else
+      return true
+   end if
+end disabled_EditViewBehavior
+
+getprop disabled_DeleteBehaviorGroup [viewObject]
+   put the view_BehaviorGroup of viewObject into viewBehaviorGroup
+   if exists (viewBehaviorGroup) then
+      return false
+   else
+      return true
+   end if
+end disabled_DeleteBehaviorGroup
+
+getprop disabled_DeleteBehaviorCard [viewObject]
+   put view_GetBehaviorCard (viewObject) into bCardObject
+   if exists (bCardObject) then
+      return false
+   else
+      return true
+   end if
+end disabled_DeleteBehaviorCard
+
+getprop disabled_MoveExternalBehaviors [viewObject]
+   put the module_ExternalBehaviors of viewObject into bObjects
+   if bObjects is empty then
+      return true
+   else
+      return false
+   end if
+end disabled_MoveExternalBehaviors
+
+getprop disabled_ModuleBehaviorFolder [viewObject]
+   put LocalArray ["moduleFolder"] into moduleFolder
+   put project_ConstructFolder ("behaviors", moduleFolder) into moduleBehaviorFolder
+   if there is a folder moduleBehaviorFolder then
+      return false
+   else
+      return true
+   end if
+end disabled_ModuleBehaviorFolder
+
+getprop disabled_ExportBehaviors [viewObject]
+   put the imported_ViewBehaviors of viewObject into someBoolean
+   if someBoolean is true then
+      return false
+   else
+      return true
+   end if
+end disabled_ExportBehaviors
+
+getprop disabled_ImportMobileBehavior [viewObject]
+   put the card_Object of viewObject into viewCardObject
+   
+   put the behavior_Objects of viewCardObject into bObjects
+   put the name of stack "behavior_ViewTemplateCard" into viewTemplateBehavior
+   line_Delete viewTemplateBehavior, bObjects
+   
+   if bObjects is empty then
+      return true
+   else
+      return false
+   end if
+end disabled_ImportMobileBehavior
+
 private command _refresh viewObject
    put LocalArray ["indexView"] into indexView
    display_ViewBehaviors viewObject, indexView
@@ -35,44 +129,14 @@ end _refresh
 
 --> Global | View | Behavior | Menu
 -
-on menu_SetModuleBehaviors viewObject, moduleBehavior
-   breakpoint
-end menu_SetModuleBehaviors
-
-on menu_ChooseViewBehavior viewObject
-   breakpoint
-   put LocalArray ["moduleFolder"] into moduleFolder
-   answer file "Select a behavior for this view..." with moduleFolder -- with type "LiveCode Stacks|rev|RSTK"
-   if it is empty then exit to top
-   put it into stackPath
-   put the name of stack stackPath into bObject
-   set the behavior of viewObject to bObject
-   
-   _refresh viewObject
-end menu_ChooseViewBehavior
+on menu_EditMenu displayView, mStackName
+   edit the script of stack mStackName
+end menu_EditMenu
 
 on menu_EditViewBehavior viewObject
    put the behavior of viewObject into bObject
    edit the script of bObject
 end menu_EditViewBehavior
-
-on _
-end _
-
-on menu_ImportScriptOnlyBehaviors viewObject, someBoolean
-   set the imported_ViewBehaviors [true] of viewObject to someBoolean
-end menu_ImportScriptOnlyBehaviors
-
-on _
-end _
-
-on menu_DeleteBehaviorGroup viewObject
-   view_DeleteBehaviorGroup viewObject
-end menu_DeleteBehaviorGroup
-
-on menu_DeleteBehaviorCard viewObject
-   view_DeleteBehaviorCard viewObject
-end menu_DeleteBehaviorCard
 
 on _
 end _
@@ -143,99 +207,42 @@ on submenu_Dev
 end submenu_Dev
 
 
---> Global | View | Behavior | Menu | Props
--
-getprop module_Behavior [viewObject]
-   put the behavior_Objects of viewObject into bObjects
-   return bObjects
-end module_Behavior
-
-getprop module_Behaviors [viewObject]
-   --  put the module_Behaviors of templateView into moduleBehaviors
-   put the module_Behaviors of viewObject into moduleBehaviors
-   return moduleBehaviors
-end module_Behaviors
-
-getprop import_ScriptOnlyBehaviors [viewObject]
-   put the imported_ViewBehaviors of viewObject into alreadyImported
-   return alreadyImported
-end import_ScriptOnlyBehaviors
-
-
---> Global | View | Behavior | Menu | Disabled
--
-getprop disabled_EditViewBehavior [viewObject]
-   put the behavior of viewObject into bObject
-   if exists (bObject) then
-      return false
-   else
-      return true
-   end if
-end disabled_EditViewBehavior
-
-getprop disabled_DeleteBehaviorGroup [viewObject]
-   put the view_BehaviorGroup of viewObject into viewBehaviorGroup
-   if exists (viewBehaviorGroup) then
-      return false
-   else
-      return true
-   end if
-end disabled_DeleteBehaviorGroup
-
-getprop disabled_DeleteBehaviorCard [viewObject]
-   put view_GetBehaviorCard (viewObject) into bCardObject
-   if exists (bCardObject) then
-      return false
-   else
-      return true
-   end if
-end disabled_DeleteBehaviorCard
-
-getprop disabled_MoveExternalBehaviors [viewObject]
-   put the module_ExternalBehaviors of viewObject into bObjects
-   if bObjects is empty then
-      return true
-   else
-      return false
-   end if
-end disabled_MoveExternalBehaviors
-
-getprop disabled_ModuleBehaviorFolder [viewObject]
-   put LocalArray ["moduleFolder"] into moduleFolder
-   put project_ConstructFolder ("behaviors", moduleFolder) into moduleBehaviorFolder
-   if there is a folder moduleBehaviorFolder then
-      return false
-   else
-      return true
-   end if
-end disabled_ModuleBehaviorFolder
-
-getprop disabled_ExportBehaviors [viewObject]
-   put the imported_ViewBehaviors of viewObject into someBoolean
-   if someBoolean is true then
-      return false
-   else
-      return true
-   end if
-end disabled_ExportBehaviors
-
-getprop disabled_ImportMobileBehavior [viewObject]
-   put the card_Object of viewObject into viewCardObject
-   
-   put the behavior_Objects of viewCardObject into bObjects
-   put the name of stack "behavior_ViewTemplateCard" into viewTemplateBehavior
-   line_Delete viewTemplateBehavior, bObjects
-   
-   if bObjects is empty then
-      return true
-   else
-      return false
-   end if
-end disabled_ImportMobileBehavior
-
-
 --> Dev | Menu
 -
+on menu_ImportScriptOnlyBehaviors viewObject, someBoolean
+   set the imported_ViewBehaviors [true] of viewObject to someBoolean
+end menu_ImportScriptOnlyBehaviors
+
+on menu_DeleteBehaviorGroup viewObject
+   view_DeleteBehaviorGroup viewObject
+end menu_DeleteBehaviorGroup
+
+on menu_DeleteBehaviorCard viewObject
+   view_DeleteBehaviorCard viewObject
+end menu_DeleteBehaviorCard
+
+on _
+end _
+
+on menu_SetModuleBehaviors viewObject, moduleBehavior
+   breakpoint
+end menu_SetModuleBehaviors
+
+on menu_ChooseViewBehavior viewObject
+   breakpoint
+   put LocalArray ["moduleFolder"] into moduleFolder
+   answer file "Select a behavior for this view..." with moduleFolder -- with type "LiveCode Stacks|rev|RSTK"
+   if it is empty then exit to top
+   put it into stackPath
+   put the name of stack stackPath into bObject
+   set the behavior of viewObject to bObject
+   
+   _refresh viewObject
+end menu_ChooseViewBehavior
+
+on _
+end _
+
 on menu_Refresh viewObject
    _refresh viewObject
 end menu_Refresh
@@ -305,7 +312,7 @@ on menu_ImportMobileBehavior viewObject, someBoolean
    if someBoolean is true then
       -- put the object_MetaData of viewCardObject into uRipArray
       put the view_Name of viewObject into vName
-      put metadata_ConstructUripArray (vName, "card") into uRipArray
+      put metadata_ConstructArray (vName, "card") into uRipArray
       
       -- should be empty
       put the script of viewCardObject into viewCardScript

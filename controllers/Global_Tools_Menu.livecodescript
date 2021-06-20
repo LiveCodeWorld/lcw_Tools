@@ -1,8 +1,8 @@
-﻿script "Global_Tools_Menu"
+﻿script "Global | Tools | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Tools_Menu
+name: Global | Tools | Menu
 type: controller
 version: 0.2
 
@@ -61,4 +61,3 @@ on menu_TestModel
    put the model_Array [modelStackName] of stack modelStackName into modelArray
    display_Array modelArray
 end menu_TestModel
-

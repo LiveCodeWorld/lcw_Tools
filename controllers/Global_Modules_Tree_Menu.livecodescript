@@ -1,19 +1,18 @@
-﻿script "Global_Modules_Tree_Menu"
+﻿script "Global | Modules | Tree | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Modules_Tree_Menu
+name: Global | Modules | Tree | Menu
 type: controller
 version: 0.1
 
 
 --> Menu | Props
 -
--- getprop menu_Target [tObject]
-put the index_View of tObject into indexView
-put the displayed_Object of indexView into viewObject
-return viewObject
-end menu_Target
+-- getprop checked_AnimationEngine
+   put animation_EngineIsOn() into isOn
+   return isOn
+end checked_AnimationEngine
 
 
 --> Global | Modules | Tree | Menu
@@ -31,29 +30,46 @@ on menu_CreateModule indexView
    
    put project_GetFolder (projectName) into projectFolder
    put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
+   --
    project_CreateModule moduleStackName, rootModuleFolder
 end menu_CreateModule
 
-on menu_ExportMenusAndStackFiles indexView
+on menu_ImportOldView
+   put view_ListOldPaths()
+end menu_ImportOldView
+
+on menu_ExportModuleMenusAndStackFiles indexView
    put the title_Text of indexView into projectName
-   put library_FetchProjectFolder (projectName) into projectFolder
+   --
    put the view_Index of indexView into moduleNames
    repeat for each line moduleName in moduleNames
-      put module_FolderNameFromTitle (moduleName) into moduleFolderName
-      put module_GetFolder (moduleFolderName, projectFolder) into moduleFolder
+      put module_ConstructFolder (moduleName, projectName) into moduleFolder
       if there is a folder moduleFolder then
          project_ExportMenusAndStackFiles moduleFolder
+         put the result into moduleProjectArray
       end if
    end repeat
-end menu_ExportMenusAndStackFiles
+   --
+   --
+   display_ProjectLibs projectName
+   display_GitRefreshProjectName projectName
+end menu_ExportModuleMenusAndStackFiles
 
 on _
 end _
 
 on menu_Refresh indexView
-   put the title_Text of indexView into projectHomeStackName
-   display_ProjectModules projectHomeStackName, indexView
+   put the title_Text of indexView into projectName
+   display_ProjectModules projectName, indexView
 end menu_Refresh
+
+on menu_RevealModulesFolder indexView
+   put the title_Text of indexView into projectName
+   put project_GetFolder (projectName) into projectFolder
+   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
+   --
+   finder_Reveal rootModuleFolder  
+end menu_RevealModulesFolder
 
 on menu_CheckModules indexView
    put the title_Text of indexView into projectName
@@ -66,8 +82,13 @@ on menu_CheckModules indexView
    end repeat
 end menu_CheckModules
 
---> Global | Modules | Tree | Menu | Props
--
-
---> Global | Modules | Tree | Menu | Disabled
--
+-- on menu_AnimationEngine
+   put menu_GetChecked (the params) into isChecked
+   put env_ConstructHomePath ("AnimationEngine") into homePath
+   if isChecked is true then
+      stop using stack homePath
+   else
+      start using stack homePath
+   end if
+   go to stack homePath
+end menu_AnimationEngine

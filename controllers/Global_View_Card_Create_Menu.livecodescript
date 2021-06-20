@@ -1,15 +1,69 @@
-﻿script "Global_View_Card_Create_Menu"
+﻿script "Global | View | Card | Create | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_View_Card_Create_Menu
+name: Global | View | Card | Create | Menu
 type: controller
 version: 0.1
 
 
+--> Menu | Porps
+-
+getprop menu_Target [tObject]
+   return the card_Object of tObject
+end menu_Target
+
+getprop disabled_MakeFirstControlAView [cardObject]
+   if exists (control 1 of cardObject) then
+      return false
+   else
+      return true
+   end if
+end disabled_MakeFirstControlAView
+
+getprop disabled_CreateViewGroup [cardObject]
+   if exists (control 1 of cardObject) then
+      return true
+   else
+      return false
+   end if
+end disabled_CreateViewGroup
+
+getprop disabled_ViewScript [cardObject]
+   if exists (control 1 of cardObject) then
+      return false
+   else
+      return true
+   end if
+end disabled_ViewScript
+
+getprop disabled_ViewBehavior [cardObject]
+   if exists (control 1 of cardObject) is false then return true
+   
+   put the behavior of control 1 of cardObject into bObject
+   if exists (bObject) then
+      return false
+   else
+      return true
+   end if
+end disabled_ViewBehavior
+
+getprop disabled_SetViewMetadata [cardObject]
+   if exists (control 1 of cardObject) is false then return true
+   
+   put the long id of control 1 of cardObject into viewObject
+   put the view_Name of viewObject into viewName
+   if viewName is empty then
+      return false
+   else
+      return false
+   end if
+end disabled_SetViewMetadata
+
+
 --> Global | View | Card | Create | Menu
 -
-on menu_CreateGroup cardObject
+on menu_CreateViewGroup cardObject
    put the stack_Name of cardObject into viewName
    go to stack viewName -- sets the topstack
    
@@ -20,7 +74,7 @@ on menu_CreateGroup cardObject
    
    dispatch "resizeStack" to createdObject
    
-   put metadata_ConstructUripArray (viewName, "view") into uripArray
+   put metadata_ConstructArray (viewName, "view") into uripArray
    set the object_Metadata of createdObject to uripArray
    
    put the module_Behaviors of createdObject into moduleBehaviors
@@ -30,38 +84,46 @@ on menu_CreateGroup cardObject
    set the showborder of createdObject to true
    object_Inspect createdObject
    edit the script of the behavior of createdObject
-end menu_CreateGroup
+end menu_CreateViewGroup
 
-on menu_MakeFirstControlAView firstControl
-   put the stack_Name of firstControl into viewName
-   put metadata_ConstructUripArray (viewName, "view") into uripArray
-   set the object_Metadata of firstControl to uripArray
+on menu_MakeFirstControlAView cardObject
+   -- menu_SetViewMetadata
+   put the long id of control 1 of cardObject into viewObject
+   put the stack_Name of cardObject into viewName
+   --
+   put metadata_ConstructArray (viewName, "view") into uripArray
+   -- set the view_Name ["view"] of viewObject to viewName
+   set the script_MetaData of viewObject to uRipArray
+   put the result into uRipArray
    
-   set the name of firstControl to viewName
-   put the module_Behaviors of firstControl into moduleBehaviors
-   set the behavior_Objects of firstControl to moduleBehaviors
+   set the name of viewObject to viewName
+   put the module_Behaviors of viewObject into moduleBehaviors
+   set the behavior_Objects of viewObject to moduleBehaviors
    
-   object_Inspect firstControl
-   edit the script of firstControl
+   object_Inspect viewObject
+   edit the script of viewObject
 end menu_MakeFirstControlAView
 
---> Global | View | Card | Create | Menu | Props
--
+on _
+end _
 
---> Global | View | Card | Create | Menu | Disabled
--
-getprop disabled_MakeFirstControlAView [cardObject]
-   if word 1 of cardObject = "card" then
-      return true
-   else
-      return false
-   end if
-end disabled_MakeFirstControlAView
+on menu_ViewScript cardObject
+   edit the script of control 1 of cardObject
+end menu_ViewScript
 
-getprop disabled_CreateGroup [cardObject]
-   if word 1 of cardObject = "group" then
-      return "delete"
-   else
-      return false
-   end if
-end disabled_CreateGroup
+on menu_ViewBehavior cardObject
+   put the behavior of control 1 of cardObject into bObject
+   edit the script of bObject
+end menu_ViewBehavior
+
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Dev | Menu
+-
+on menu_TemplateCardBehavior cardObject
+   put the behavior of cardObject into bObject
+   edit the script of bObject
+end menu_TemplateCardBehavior

@@ -9,7 +9,158 @@ version: 0.3
 
 --> Working on
 -
---> Module | Behavior
+on mDoubleUp_OldView displayView, shortFile
+   -- put the selected_Line of displayView into shortFile
+   put view_OldFolder() & shortFile into oldViewFile
+   --
+   put the short name of stack oldViewFile into oldName
+   delete stack oldName
+   --
+   go to stack oldViewFile
+end mDoubleUp_OldView
+
+command display_OldViewFiles
+   put view_ListOldShortPaths() into oldViewShortFiles
+   --
+   display_Data oldViewShortFiles, "Old Views", "Revolution"
+   put the result into displayView
+   display_SetInteractions displayView, "View | Old", "mDoubleUp_OldView"
+   return displayView
+end display_OldViewFiles
+
+function view_ListOldShortPaths
+   put view_OldFolder() into oldViewFolder
+   put files (oldViewFolder) into oldViewShortFiles
+   sort lines of oldViewShortFiles
+   return oldViewShortFiles
+end view_ListOldShortPaths
+
+function view_ListOldPaths
+   put view_OldFolder() into oldViewFolder
+   put file_ListLong (oldViewFolder) into oldViewFiles
+   return oldViewFiles
+end view_ListOldPaths
+
+function view_OldFolder
+   put the documents folder into oldViewFolder
+   put "/My Revolution Enterprise/Plugins/opn_Plugins/opn_Components/views/" after oldViewFolder
+   return oldViewFolder
+end view_OldFolder
+
+command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
+   text_AddTrailing rootModuleFolder, slash
+   if there is not a folder rootModuleFolder then
+      answer warning "Modules folder does not exist!"
+      breakpoint
+      put rootModuleFolder
+      exit to top
+   end if
+   
+   put project_NameToShortFolder (moduleStackName) into shortFolderName
+   put rootModuleFolder & shortFolderName & slash into moduleFolder
+   
+   switch
+      case exists (stack pViewStackPath)
+         -- let's move everything
+         breakpoint
+         put project_ConstructStandardFile (moduleStackName, rootModuleFolder, shortFolderName, "livecode") into moduleHomeStackPath
+         
+         folder_CreateNested moduleFolder
+         project_MoveStack pViewStackPath, moduleHomeStackPath
+         
+         project_CreateStandardFolders moduleFolder, "behaviors,controllers"
+         module_SetCardBehavior moduleStackName
+         module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
+         put the result into moduleBehaviorStackPath
+         module_MoveController moduleStackName, moduleFolder
+         put the result into moduleControllerStackPath
+         break
+      case pViewStackPath is not empty
+         put pViewStackPath
+         answer warning "Cannot locate view stack!"
+         breakpoint
+         exit to top
+         break
+      default
+         module_Create moduleFolder, moduleStackName, pScript
+         put the result into resultArray
+         put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
+         put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
+         put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
+   end switch
+   
+   edit the script of stack moduleHomeStackPath
+   edit the script of stack moduleBehaviorStackPath
+   edit the script of stack moduleControllerStackPath
+end project_CreateModule
+
+command module_Create moduleFolder, moduleStackName, pScript
+   template_StackAlreadyExists moduleStackName
+   --
+   module_DeleteStacks moduleStackName
+   --
+   project_CreateHomeStack moduleFolder, moduleStackName, pScript
+   put the result into resultArray ["moduleHomeStackPath"]
+   --
+   module_SetCardBehavior moduleStackName
+   --
+   project_CreateStandardFolders moduleFolder, "behaviors,controllers"
+   --
+   module_CreateBehavior moduleFolder
+   put the result into resultArray ["moduleBehaviorStackPath"]
+   --
+   module_CreateMenu moduleFolder
+   put the result into resultArray ["moduleControllerStackPath"]
+   --
+   return resultArray
+   --
+   put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
+   put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
+   put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
+end module_Create
+
+command module_DeleteStacks moduleStackName
+   if exists (stack moduleStackName) then delete stack moduleStackName
+   --
+   put module_ConstructGlobalMenuTitle (moduleStackName) into gMenuTitle
+   if exists (stack gMenuTitle) then delete stack gMenuTitle
+   --
+   put project_DefaultBehaviorName (moduleStackName) into bStackName
+   if exists (stack bStackName) then delete stack bStackName
+end module_DeleteStacks
+
+command module_CreateMenu moduleFolder, pGlobalMenuTitle
+   set the itemdelimiter to slash
+   put item -1 of moduleFolder into shortFolder
+   put shortFolder into moduleStackName
+   --
+   if pGlobalMenuTitle is empty then
+      put module_ConstructGlobalMenuTitle (moduleStackName, true) into gMenuTitle
+   else
+      put pGlobalMenuTitle into gMenuTitle
+   end if
+   put controller_ConstructMenuScript (gMenuTitle) into controllerScript
+   --
+   project_CreateMenu moduleFolder, gMenuTitle, controllerScript
+   put the result into controllerStackObject
+   --
+   module_UpdateToolsMenu moduleStackName
+   --
+   return controllerStackObject
+end module_CreateMenu
+
+command module_UpdateToolsMenu moduleStackName
+   set the itemdelimiter to slash
+   put item -1 of moduleFolder into moduleFolder
+   put display_FindView ("Module Tools", moduleStackName) into displayView
+   if exists (displayView) is false then return false
+   --
+   put the displayed_Object of displayView into viewObject
+   --  put the displayed_ModuleFolder of displayView into moduleFolder
+   --
+   put view_ConstructToolMenu (viewObject) into mTitles
+   set the title_Menu of displayView to mTitles
+end module_UpdateToolsMenu
 
 command module_CreateBehavior moduleFolder, pBehaviorStackName, pBehaviorScript
    if pBehaviorStackName is empty then
@@ -17,11 +168,89 @@ command module_CreateBehavior moduleFolder, pBehaviorStackName, pBehaviorScript
       put item -1 of moduleFolder into shortFolderName
       put project_DefaultBehaviorName (shortFolderName) into pBehaviorStackName
    end if
+   if pBehaviorScript is emppty then
+      put module_ConstructBehaviorScript (pBehaviorStackName) into pBehaviorScript
+   end if
+   --
    project_CreateStack moduleFolder, pBehaviorStackName, "behaviors", "behavior", pBehaviorScript
    put the result into moduleBehaviorStackPath
    return moduleBehaviorStackPath
 end module_CreateBehavior
 
+function module_ConstructBehaviorScript bName
+   put scaffold_GetTemplate ("View Behavior Template") into tScript
+   put lcw_GetAuthor() into authorName
+   put merge (tScript) into behaviorScript
+   return behaviorScript
+end module_ConstructBehaviorScript
+
+function controller_ConstructMenuScript mTitle
+   put scaffold_GetTemplate ("Global Menu Template") into menuScriptTemplate
+   put mTitle into controllerName
+   put lcw_GetAuthor() into authorName
+   put merge (menuScriptTemplate) into controllerScript
+   return controllerScript
+end controller_ConstructMenuScript
+
+function module_ConstructBehaviorShortFile moduleStackName
+   _CleanModuleStackName moduleStackName
+   put "behavior_" & moduleStackName & ".livecodescript" into shortFile
+   return shortFile
+end module_ConstructBehaviorShortFile
+
+function project_DefaultBehaviorName moduleStackName
+   _CleanModuleStackName moduleStackName
+   replace "_" with empty in moduleStackName
+   --
+   put "behavior_" & moduleStackName into behaviorStackName
+   return behaviorStackName
+end project_DefaultBehaviorName
+
+private command _CleanModuleStackName @moduleStackName
+   view_NormalizePiped moduleStackName -- just in case
+   replace "|" with empty in moduleStackName
+end _CleanModuleStackName
+
+function controller_FolderNameFromTitle gMenuTitle
+   return gMenuTitle
+   
+   -- not sure I want to use this any more
+   view_NormalizePiped gMenuTitle
+   replace "|" with "_" in gMenuTitle
+   return gMenuTitle
+end controller_FolderNameFromTitle
+
+
+--> Module | Author
+-
+function module_ConstructBehaviorPath moduleName, moduleFolder, pShortFile
+   if pShortFile is empty then
+      put module_ConstructBehaviorShortFile (moduleName) into pShortFile
+   end if
+   put project_ConstructFolder ("behaviors", moduleFolder) into moduleControllerFolder
+   put moduleControllerFolder & pShortFile into moduleControllerPath
+   return moduleControllerPath
+end module_ConstructBehaviorPath
+
+function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
+   breakpoint
+   if pShortFile is empty then
+      put controller_FolderNameFromTitle (moduleName) & ".livecodescript" into pShortFile
+   end if
+   put project_ConstructFolder ("controllers", moduleFolder) into moduleControllerFolder
+   put pShortFile & pShortFile into moduleControllerPath
+   return moduleControllerPath
+end module_ConstructControllerPath
+
+function module_GetControllerStackPath controllerStackName, rootModuleFolder
+   put controllerStackName & ".livecodescript" into shortControllerPath
+   put rootModuleFolder & "controllers/" & shortControllerPath into moduleControllerStackPath
+   return moduleControllerStackPath
+end module_GetControllerStackPath
+
+
+--> Module | Behavior
+-
 command module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
    put view_GetTemplateObject (moduleStackName) into templateView
    if exists (templateView) is false then
@@ -69,29 +298,6 @@ command module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
    end if
 end module_MoveBehavior
 
-function module_ConstructBehaviorPath moduleName, moduleFolder, pShortFile
-   if pShortFile is empty then
-      put module_ConstructBehaviorShortFile (moduleName) into pShortFile
-   end if
-   put project_ConstructFolder ("behaviors", moduleFolder) into moduleControllerFolder
-   put moduleControllerFolder & pShortFile into moduleControllerPath
-   return moduleControllerPath
-end module_ConstructBehaviorPath
-
-function module_ConstructBehaviorShortFile moduleStackName
-   breakpoint
-   view_NormalizePiped moduleStackName -- just in case
-   replace "|" with empty in moduleStackName
-   put moduleStackName & ".livecodescript" into shortFile
-   return shortFile
-end module_ConstructBehaviorShortFile
-
-function project_DefaultBehaviorName shortFolderName
-   replace "_" with empty in shortFolderName
-   put "behavior_" & shortFolderName into behaviorStackName
-   return behaviorStackName
-end project_DefaultBehaviorName
-
 function module_GetBehaviorStackPath behaviorStackName, rootModuleFolder
    put behaviorStackName & ".livecodescript" into shortBehaviorPath
    put rootModuleFolder & "behaviors/" & shortBehaviorPath into moduleBehaviorStackPath
@@ -115,45 +321,6 @@ end module_SetCardBehavior
 /*
 A lcw controller is also know less formally as a "menu".
 */
-
-command module_CreateMenu moduleFolder, pGlobalMenuTitle, pControllerScript
-   folder_CreateNested moduleFolder
-   project_CreateMenu moduleFolder, pGlobalMenuTitle, pControllerScript   
-   put the result into controllerStackObject
-   return controllerStackObject
-end module_CreateMenu
-
-command project_CreateMenu moduleOrProjectFolder, pGlobalMenuTitle, pControllerScript
-   if there is not a folder moduleOrProjectFolder then
-      put moduleOrProjectFolder
-      answer warning "Project or module folder does not exists!"
-      breakpoint
-      exit to top
-   end if
-   
-   if pGlobalMenuTitle is empty then
-      set the itemdelimiter to slash
-      put item -1 of moduleOrProjectFolder into stackName
-      put module_ConstructGlobalMenuTitle (stackName) into pGlobalMenuTitle 
-   end if
-   put module_FolderNameFromTitle (pGlobalMenuTitle) into controllerStackName
-   
-   if pControllerScript is empty then
-      put controller_ConstructMenuScript (pGlobalMenuTitle) into pControllerScript
-   end if
-   
-   project_CreateStack moduleOrProjectFolder, controllerStackName, "controllers", "controller", pControllerScript
-   put the result into controllerStackPath
-   set the menu_Update of stack controllerStackPath to true
-   put the name of stack controllerStackPath into controllerStackObject
-   return controllerStackObject
-end project_CreateMenu
-
-function controller_ConstructMenuScript mTitle
-   put scaffold_GetTemplate ("Default Menu Script") into menuScriptTemplate
-   put merge (menuScriptTemplate) into controllerScript
-   return controllerScript
-end controller_ConstructMenuScript
 
 command module_ReIndexMenus templateView
    local moduleMenuTitleArray
@@ -191,62 +358,6 @@ command project_CreateView viewName, pViewFilePath
    end if
 end project_CreateView
 
-command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
-   text_AddTrailing rootModuleFolder, slash
-   if there is not a folder rootModuleFolder then
-      answer warning "Modules folder does not exist!"
-      breakpoint
-      put rootModuleFolder
-      exit to top
-   end if
-   
-   put project_NameToShortFolder (moduleStackName) into shortFolderName
-   put rootModuleFolder & shortFolderName & slash into moduleFolder
-   
-   switch
-      case exists (stack pViewStackPath)
-         -- let's move everything
-         put project_ConstructStandardFile (moduleStackName, rootModuleFolder, shortFolderName, "livecode") into moduleHomeStackPath
-         
-         folder_CreateNested moduleFolder
-         project_MoveStack pViewStackPath, moduleHomeStackPath
-         
-         project_CreateStandardFolders moduleFolder, "behaviors,controllers"
-         module_SetCardBehavior moduleStackName
-         module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
-         put the result into moduleBehaviorStackPath
-         module_MoveController moduleStackName, moduleFolder
-         put the result into moduleControllerStackPath
-         break
-      case pViewStackPath is not empty
-         put pViewStackPath
-         answer warning "Cannot locate view stack!"
-         breakpoint
-         exit to top
-         break
-      default
-         -- projectFolder, pStackName, pShortFolder, pLibType, pScript, pNotScriptOnly
-         put project_NameToShortFolder (moduleStackName) into shortFolder
-         put "home" into pLibType
-         project_CreateStack rootModuleFolder, moduleStackName, shortFolder, "home", pScript, true
-         put the result into moduleHomeStackPath
-         save stack moduleHomeStackPath
-         
-         project_CreateStandardFolders moduleFolder, "behaviors,controllers"
-         
-         module_SetCardBehavior moduleStackName
-         module_CreateBehavior moduleFolder
-         put the result into moduleBehaviorStackPath
-         
-         module_CreateMenu moduleFolder
-         put the result into moduleControllerStackPath
-   end switch
-   
-   edit the script of stack moduleHomeStackPath
-   edit the script of stack moduleBehaviorStackPath
-   edit the script of stack moduleControllerStackPath
-end project_CreateModule
-
 command module_MoveController moduleStackName, moduleFolder
    put module_ConstructGlobalMenuTitle (moduleStackName) into globalMenuTitle
    put menu_GetGlobalController (globalMenuTitle) into mController
@@ -272,18 +383,23 @@ command module_MoveController moduleStackName, moduleFolder
    end if
 end module_MoveController
 
-function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
-   breakpoint
-   if pShortFile is empty then
-      put module_FolderNameFromTitle (moduleName) & ".livecodescript" into pShortFile
-   end if
-   put project_ConstructFolder ("controllers", moduleFolder) into moduleControllerFolder
-   put pShortFile & pShortFile into moduleControllerPath
-   return moduleControllerPath
-end module_ConstructControllerPath
 
-function module_GetControllerStackPath controllerStackName, rootModuleFolder
-   put controllerStackName & ".livecodescript" into shortControllerPath
-   put rootModuleFolder & "controllers/" & shortControllerPath into moduleControllerStackPath
-   return moduleControllerStackPath
-end module_GetControllerStackPath
+--> Private
+-
+command template_StackAlreadyExists viewName, pDontExit
+   switch
+      case there is a stack viewName
+      case viewName is among the lines of env_ListViewStackNames()
+         put "There is already a view template stack" && kwote (viewName) & "!" into someComment
+         answer warning someComment
+         show stack viewName
+         go to stack viewName
+         if pDontExit is true then
+            return true
+         else
+            exit to top
+         end if
+      default
+         return false
+   end switch
+end template_StackAlreadyExists

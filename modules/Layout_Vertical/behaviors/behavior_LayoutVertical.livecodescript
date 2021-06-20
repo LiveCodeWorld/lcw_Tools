@@ -18,8 +18,15 @@ local LocalArray
 
 --> Work in Progress
 -
-setprop view_Insert viewNames
+setprop module_Add moduleName
+   put module_GetTemplateObject (moduleName) into templateObject
+   put templateObject
+end module_Add
+
+setprop view_Add viewNames
+   -- was "View_Insert"
    replace comma with CR in viewNames
+   --
    lock screen
    repeat for each line viewName in viewNames
       put view_GetTemplateObject (viewName) into templateObject
@@ -29,9 +36,72 @@ setprop view_Insert viewNames
    end repeat
    LayoutControl
    unlock screen
+   --
    delete char -1 of createdObjects 
    return createdObjects
-end view_Insert
+end view_Add
+
+
+--> Events | Drag
+-
+on dragEnter
+   set the drag_Hilite of me to true
+   pass dragEnter
+end dragEnter
+
+on dragLeave
+   set the drag_Hilite of me to false
+   pass dragLeave
+end dragLeave
+
+setprop drag_Hilite someBoolean
+   if someBoolean is true then
+      put the backgroundcolor of me into LocalArray ["originalColour"]
+      set the dragAction to "link"
+      set the backgroundcolor of me to "red"
+   else
+      set the backgroundcolor of me to LocalArray ["originalColour"]
+      set the dragAction to "none"
+   end if
+end drag_Hilite
+
+
+--> Props
+-
+getprop layout_Views
+   put _GetViewNames() into vNames
+   return vNames
+end layout_Views
+
+setprop layout_Views viewNames
+   replace comma with CR in viewNames
+   put the rect of me into oRect
+   --
+   lock screen
+   _SetViewNames viewNames
+   put the result into copiedObjects
+   LayoutControl oRect
+   unlock screen
+   --
+   return copiedObjects
+end layout_Views
+
+getprop layout_Objects
+   -- useful?
+   put _GetObjects() into objectIndex
+   return objectIndex
+end layout_Objects
+
+setprop layout_Objects objectIndex
+   -- useful?
+   replace comma with CR in viewNames
+   put the rect of me into oRect
+   --
+   lock screen
+   _SetObjects objectIndex
+   Layoutcontrol oRect
+   unlock screen
+end layout_Objects
 
 getprop row_Number
    put the childControlIDs of me into someIDs
@@ -71,34 +141,66 @@ setprop row_Number [cloneObject] rowNum
 end row_Number
 
 
---> Layout
+--> Private
 -
-getprop layout_ViewNames
-   put the childControlIDs of me into someIDs
-   repeat for each line someID in someIDs
-      put the long id of control id someID into topObject
-      put the view_Name of topObject into vName
-      if vName is not empty then
-         put vName & CR after vNames
-      end if
-   end repeat
-   delete last char of vNames
-   return vNames
-end layout_ViewNames
-
-setprop layout_ViewNames vNames
-   -- could be faster
-   replace comma with CR in vNames
-   lock screen
-   set the row_Number of me to 0
+private command _AddViewNames vNames
    repeat for each line vName in vNames
       put view_GetTemplateObject (vName) into templateObject
       if exists (templateObject) is false then next repeat
       copy templateObject to me
    end repeat
-   Layoutcontrol
-   unlock screen
-end layout_ViewNames
+end _AddViewNames
+
+private function _GetViewNames
+   put the childControlIDs of me into someIDs
+   repeat for each line someID in someIDs
+      put the view_Name of control id someID into vName
+      put vName & CR after viewNames
+   end repeat
+   delete char -1 of viewNames
+   return viewNames
+end _GetViewNames
+
+private command _SetViewNames viewNames
+   _DeleteAllObjects
+   --
+   repeat for each line vName in viewNames
+      put view_GetTemplateObject (vName) into someObject
+      copy someObject to me
+      put it & CR after copiedObjects
+   end repeat
+   delete char -1 of copiedObjects
+   return copiedObjects
+end _SetViewNames
+
+private function _GetObjects
+   put the childControlIDs of me into someIDs
+   repeat for each line someID in someIDs
+      put the long id of control id someID into topLayoutObject
+      put topLayoutObject & CR after topLayoutObjects
+   end repeat
+   delete char -1 of topLayoutObjects
+   return topLayoutObjects
+end _GetObjects
+
+private command _SetObjects objectIndex
+   _DeleteAllObjects
+   --
+   repeat for each line someObject in objectIndex
+      copy someObject to me
+      put it & CR after copiedObjects
+   end repeat
+   delete char -1 of copiedObjects
+   return copiedObjects
+end _SetObjects
+
+private command _DeleteAllObjects
+   put the childControlIDs of me into someIDs
+   repeat for each line someID in someIDs
+      put the long id of control id someID into oldRecord
+      delete oldRecord
+   end repeat
+end _DeleteAllObjects
 
 
 --> Objects

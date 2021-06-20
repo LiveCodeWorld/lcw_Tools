@@ -1,14 +1,26 @@
-﻿script "Global_View_Update_Menu"
+﻿script "Global | View | Update | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_View_Update_Menu
+name: Global | View | Update | Menu
 type: controller
 version: 0.1
+
 
 --> Variables
 -
 local ViewIsObject, ViewIsOld
+
+
+--> Display | Menus | Old
+-
+command display_ActiveMenuArray
+   global gLCW
+   
+   put gLCW ["activeMenuArray"] into activeMenuArray
+   -- put "Recursion:" && pMenuTitle & ",menu_CheckRecursionOnExtract" into someTitle
+   display_Array activeMenuArray, "gLCW ['activeMenuArray']"
+end display_ActiveMenuArray
 
 
 --> Global | View | Update | Menu
@@ -78,19 +90,6 @@ end menu_UpdateLibraryView
 on menu_UpdateToLibraryView mTarget
    view_AskUpdate mTarget
 end menu_UpdateToLibraryView
-
--- on menu_ChildViewBehavior viewChildAlternative
-menu_SetChoice viewChildAlternative, shortName, viewAlternative
-put ChildViewArray [viewAlternative] into childView
-put the behavior of childView into childViewBehavior
-edit the script of childViewBehavior
-end menu_ChildViewBehavior
-
---on menu_SwapChildView viewChildAlternative
-menu_SetChoice viewChildAlternative, shortName, viewAlternative
-put ChildViewArray [viewAlternative] into childView
-set the view_Swap [false] of childView to viewAlternative
-end menu_SwapChildView
 
 on _
 end _
@@ -193,10 +192,6 @@ end disabled_FixBrokenBehaviors
 
 --> Global | View | Update | Menu | Disabled
 -
--- getprop disabled_DisplayViewOutline [mTarget]
-return _isNotTemplate (mTarget) is false
-end disabled_DisplayViewOutline
-
 getprop disabled_GoAndCheckVersion [mTarget]
    return _isNotTemplate (mTarget) is false
 end disabled_GoAndCheckVersion
@@ -230,18 +225,6 @@ getprop disabled_UpdateLibraryView [menuButtonObject]
         end if
     end if
 end disabled_UpdateLibraryView
-
--- getprop disabled_View [mTarget]
-    return exists(mTarget) is false
-end disabled_View
-
--- getprop disabled_ViewOutline [mTarget]
-   if the object_IsView of mTarget is true then
-      return false
-   else
-      return "delete"
-   end if
-end disabled_ViewOutline
 
 getprop disabled_ViewTools
    put menu_GetTarget("Global | Script | Editor | Menu") into someView
@@ -284,6 +267,8 @@ end library_AskNewViewName
 
 private function _isNotTemplate viewObject
    -- this would disable the entire menu if the mTarget was not a view.
+   if exists (viewObject)is false then return true
+   
    put the view_Name of viewObject into vName
    if vName = empty then
       return false

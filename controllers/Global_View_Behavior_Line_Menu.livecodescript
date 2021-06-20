@@ -1,10 +1,11 @@
-﻿script "Global_View_Behavior_Line_Menu"
+﻿script "Global | View | Behavior | Line | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_View_Behavior_Line_Menu
+name: Global | View | Behavior | Line | Menu
 type: controller
 version: 0.1
+
 
 --> Variables
 -

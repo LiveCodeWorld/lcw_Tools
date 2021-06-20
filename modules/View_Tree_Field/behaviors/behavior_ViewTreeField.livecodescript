@@ -14,6 +14,30 @@ A basic tree field.
 
 local LocalDataArray
 
+
+--> Working on
+-
+getprop top_Array [vLineNum]
+   if vLineNum is empty then  put the top_VNum of me into vLineNum
+   put the selected_ArrayValue [vLineNum] of me into topArray 
+   return topArray
+end top_Array
+
+getprop top_Data
+   -- returns the topKey and not just the contents of the array
+   
+   put _treeWidget() into treeWidget
+   put the arrayData of treeWidget into aData
+   put the hilitedElement of treeWidget into commaPath
+   --
+   put item 1 of commaPath into topKey
+   put aData [topKey] into topData [topKey]
+   return topData
+end top_Data
+
+
+--> Objects
+-
 getprop view_Object
    return the long id of me
 end view_Object
@@ -32,55 +56,6 @@ getprop view_Alternatives
    return viewNames
 end view_Alternatives
 
-
---> Menu | Props
--
-/*
-These defaults allow you to set and get the menu_Title and even menu_DefaultTitle,
-but also generate automatic defaults based on searching for the mTitles in sensible places.
-
-The long and short of it is that you can move default "Tree | Field | Menu" around,
-in the script hierarchy and if the menu is there it will be found and the menu_Controller and menu_Title set, else 
-it falls back to the global "Global | Tree | Field | Menu".
-*/
-
-/*
-getprop menu_Title
-   put the view_Value ["menu_Title"] of me into mTitle
-   -- put the uOPN ["menu_Title"] of me into mTitle
-   
-   if mTitle is not empty then
-      if the menu_ControllerExists [mTitle] of me is true then return mTitle
-      set the menu_HierarchyTitle of me to mTitle
-      if the result is true then return mTitle
-   end if
-   put the menu_DefaultTitle of me into mTitle
-   return mTitle
-end menu_Title
-
-setprop menu_Title mTitle
-   set the view_Value ["menu_Title"] of me to mTitle
-   -- set the uOPN ["menu_Title"] of me to mTitle
-end menu_Title
-
-getprop menu_ToolTitle
-   put the view_Value ["menu_ToolTitle"] of the target into mTitle
-   if mTitle is not empty then return mTitle
-   
-   put the menu_DefaultToolTitle of me into globalMenuTitle
-   -- menu_SearchGlobalObjectHierarchy globalMenuTitle, testController
-   return globalMenuTitle
-end menu_ToolTitle
-
-setprop menu_ToolTitle mTitle
-   set the view_Value ["menu_ToolTitle"] of me to mTitle
-   -- set the uOPN ["menu_ToolTitle"] of me to mTitle
-end menu_ToolTitle
-
-getprop menu_DefaultToolTitle
-   return "Global | Tree | Field | Menu"
-end menu_DefaultToolTitle
-*/
 
 --> Menu | Props
 -
@@ -361,12 +336,6 @@ getprop top_ParentLine
    put item 1 of the selected_Path of me into topParentLine
    return topParentLine
 end top_ParentLine
-
-getprop top_Array [vLineNum]
-   if vLineNum is empty then  put the top_VNum of me into vLineNum
-   put the selected_ArrayValue [vLineNum] of me into topArray 
-   return topArray
-end top_Array
 
 getprop top_CNum
    put the top_ParentLine of me into somePath
@@ -1917,19 +1886,25 @@ function object_ReferenceToControl objectReference, targetObject
     end if
 end object_ReferenceToControl
 
+getprop mobile_Name
+    put the long name of the target into mobileObject
+    object_SetShortStackName mobileObject, mainStackStart, mainStackEnd
+    return mobileObject
+end mobile_Name
+
 command object_SetShortStackName @someObject, @mainStackStart, @mainStackEnd
-    -- was "set_ShortStackBit"
-    object_StackNameOffsets someObject, mainStackStart, mainStackEnd, substackStart, substackEnd
-    put char mainStackStart to mainStackEnd of someObject into longStackName
-     
-    if exists(stack longStackName) is false then
-        return empty
-    else
-        put the short name of stack longStackName into shortStackName
-        put char mainStackStart to mainStackEnd of someObject into stackPath
-        put shortStackName into char mainStackStart to mainStackEnd of someObject
-        return stackPath
-    end if
+   -- was "set_ShortStackBit"
+   object_StackNameOffsets someObject, mainStackStart, mainStackEnd, substackStart, substackEnd
+   put char mainStackStart to mainStackEnd of someObject into longStackName
+   
+   if exists(stack longStackName) is false then
+      return empty
+   else
+      put the short name of stack longStackName into shortStackName
+      put char mainStackStart to mainStackEnd of someObject into stackPath
+      put shortStackName into char mainStackStart to mainStackEnd of someObject
+      return stackPath
+   end if
 end object_SetShortStackName
 
 command object_StackNameOffsets someObject, @mainStackStart, @mainStackEnd, @substackStart, @substackEnd
@@ -2256,6 +2231,24 @@ getprop view_DefaultMessage [eventName]
    return messageName
 end view_DefaultMessage
 
+function view_PathIndex includeStem
+   put view_ShortFiles() into shortFiles
+   
+   put empty into viewPaths
+   repeat for each line someFile in shortFiles
+      put view_FileToPath (someFile, includeStem) into viewPath
+      put viewPath & CR after viewPaths
+   end repeat
+   delete last char of viewPaths
+   return viewPaths
+end view_PathIndex
+
+function view_ShortFiles
+   put library_ViewFolder() into someFolder
+   put folder_ShortFiles(someFolder) into shortFiles
+   return shortFiles
+end view_ShortFiles
+
 function view_FileToPath someFile, includeStem
    set the itemdelimiter to "/"
    put last item of someFile into viewPath
@@ -2325,24 +2318,6 @@ command view_NormalizeName @viewPath
    if item 1 of viewPath is not "View" then put "View|" before viewPath
    return viewPath
 end view_NormalizeName
-
-function view_PathIndex includeStem
-   put view_ShortFiles() into shortFiles
-   
-   put empty into viewPaths
-   repeat for each line someFile in shortFiles
-      put view_FileToPath (someFile, includeStem) into viewPath
-      put viewPath & CR after viewPaths
-   end repeat
-   delete last char of viewPaths
-   return viewPaths
-end view_PathIndex
-
-function view_ShortFiles
-   put library_ViewFolder() into someFolder
-   put folder_ShortFiles(someFolder) into shortFiles
-   return shortFiles
-end view_ShortFiles
 
 getprop view_Value [propName]
    put the view_DataArray of the target into viewDataArray

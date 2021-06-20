@@ -4,16 +4,71 @@
 license: GPLv3
 name: lib_DisplayModule
 type: library
-version: 0.2
+version: 0.3
+
+
+--> Working on
+-
+command module_CloseStackAndTools moduleStackName
+   put display_FindView ("Module Tools", moduleStackName) into displayView
+   put the stack_Name of displayView into displayStackName
+   --
+   -- delete stack moduleStackName
+   -- delete stack displayStackName
+   send ("delete stack" && kwote (moduleStackName)) to me in 2 ticks
+   send ("delete stack" && kwote (displayStackName)) to me in 2 ticks
+   --
+   return displayView
+end module_CloseStackAndTools
+
+
+--> Display | Events
+-
+on mDouble_DisplayModule indexView, moduleName
+   put the title_Text of indexView into projectName
+   --
+   if projectName is "Modules" then
+      -- Environment
+      put module_FindFolder (moduleName) into moduleFolder
+   else
+      put module_ViewNameToShortFolder (moduleName) into moduleFolderName
+      put project_GetModuleFolder (moduleFolderName, projectName) into moduleFolder
+   end if
+   --
+   display_Module moduleFolder
+end mDouble_DisplayModule
+
+on mDouble_EditProp indexView, hName
+   put the displayed_Object of indexView into viewObject
+   put the behavior of viewObject into viewBehavior
+   
+   -- put revRuggedID (hObject) into hObject
+   put "G" && hName into shortHkeyLine
+   put hKeyLine_AddObject (shortHkeyLine, viewBehavior) into hkeyLine
+   
+   hkey_Edit hkeyLine
+end mDouble_EditProp
+
+
+--> Display | Modules
+-
+command display_ListModules pProjectNames
+   put env_ListModuleNames (pProjectNames) into moduleNames
+   --
+   display_Data moduleNames, "Modules", "Environment"
+   put the result into displayView
+   --
+   display_SetInteractions displayView, "Module | List", "mDouble_DisplayModule"
+   -- set the env_ModuleArray of displayView to adfs
+   --
+   return displayView
+end display_ListModules
 
 
 --> Display | Module
 -
 command display_ModuleFromName moduleName, projectName
-   put module_ViewNameToShortFolder (moduleName) into moduleFolderName 
-   put library_FetchProjectFolder (projectName) into projectFolder
-   put module_GetFolder (moduleFolderName, projectFolder) into moduleFolder
-   
+   put module_ConstructFolder (moduleName, projectName) into moduleFolder
    display_Module moduleFolder
 end display_ModuleFromName
 
@@ -25,154 +80,88 @@ command display_Module moduleFolder
       exit to top
    end if
    
-   set the itemdelimiter to slash
-   put project_GetHomeStackName (moduleFolder) into moduleFolderName
-   put item 1 to -3 of moduleFolder & slash into projectFolder
-   put project_GetHomeStackName (projectFolder) into projectName
-   put merge ("[[moduleFolderName]],[[projectName]] Module") into someTitle
-   
+   put project_GetHomeStackName (moduleFolder) into moduleName
    go to stack moduleHomeStackPath
-   
-   if exists (control 1 of cd 1 of stack moduleHomeStackPath) is true then
-      put the long id of control 1 of cd 1 of stack moduleHomeStackPath into displayedObject
-      if the view_Name of displayedObject is empty then
-         put false into isaView
-         put "Not a view" into viewProps
-         put the name of stack moduleHomeStackPath into viewObject
-      else
-         put true into isaView
-         put the view_Props of displayedObject into viewProps
-      end if
-   else
-      -- the stack exists but there is no viewObject
-      put false into isaView
-      put the long id of cd 1 of stack moduleHomeStackPath into displayedObject
-      put empty into viewProps
-      put the short name of stack moduleHomeStackPath into viewTitle
-   end if
-   
-   put view_ConstructToolMenu (displayedObject, isaView) into mTitles
-   put line 1 of mTitles into mTitle
-   if menu_Exists (mTitle) is false then
-      put "Global | Module | Tree | Menu" into mTitle
-   end if
-   put "Global | Module | Tree | Line | Menu" into mLineTitle
-   put empty into mUp
-   
-   display_Index viewProps, someTitle, mTitles, mLineTitle, mUp, "mDouble_EditProp"
-   put the result into indexView
-   set the multiple_Hilites of indexView to false
-   
-   set the displayed_Object of indexView to displayedObject
-   set the displayed_ModuleFolder of indexView to moduleFolder
-   set the displayed_ModuleName of indexView to moduleFolderName
-   set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
-   
-   set the displayed_ProjectName of indexView to projectName
-   set the displayed_ProjectFolder of indexView to projectFolder
-   
-   put the script of cd 1 of stack moduleHomeStackPath into cardScript
-   if cardScript is not empty then
-      edit the script of cd 1 of stack moduleHomeStackPath
-   end if
-   module_EditToolScripts moduleHomeStackPath, projectName
+   --
+   display_ModuleTools moduleName, false
+   --
+   return the result
 end display_Module
 
-
---> Display | Modules
--
-command display_ActiveModules pIndexView
-   put env_ListModuleHomeStackNames() into activeModuleHomeStackNames
-   
-   put "Active Modules,Environment" into stackTitle
-   put "mDouble_DisplayModule" into mDoubleUp  
-   
-   put empty into mUp
-   put "Global | Environment | Menu" into mTitle
-   put "Global | Project | Tree | Line | Menu" into mLineTitle
-   
-   if exists (pIndexView) is false then
-      display_Index activeModuleHomeStackNames, stackTitle, mTitle, mLineTitle, mUp, mDoubleUp
-      put the result into displayView
-      return displayView
+command display_ModuleTools stackName, pEditScripts
+   if exists (control 1 of cd 1 of stack stackName) is true then
+      put the long id of control 1 of cd 1 of stack stackName into viewObject   
+      put the view_Props of viewObject into viewProps
+      put view_ConstructToolMenu (viewObject, true) into mTitles
    else
-      lock screen
-      set the view_Index of pIndexView to activeModuleHomeStackNames
-      set the stack_Title of pIndexView to stackTitle
-      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
-      set the title_Menu of pIndexView to mTitle
-      set the line_Menu of pIndexView to mLineTitle
-      unlock screen
-      return pIndexView
-   end if
-end display_ActiveModules
-
-
---> Display | Events
--
-on mDouble_DisplayModule indexView, moduleStackName
-   if exists (stack moduleStackName) is false then
-      answer merge("Could not find stack '[[moduleStackName]]'.")
-      exit to top
+      put empty into viewObject
+      put "View does not exist!" into viewProps
+      put empty into mTitles
    end if
    
-   put the module_Folder of stack moduleStackName into moduleFolder
-   display_Module moduleFolder
-end mDouble_DisplayModule
-
-on mDouble_EditProp indexView, hName
-   -- put the title_Text of indexView into moduleFolderName
-   put the displayed_Object of indexView into viewObject
-   put the behavior of viewObject into viewBehavior
+   put the module_Folder of stack stackName into moduleFolder
+   put the original_ModuleName of stack stackName into moduleName
+   if moduleName is empty then put stackName into moduleName
+   -- 
+   display_Data viewProps, stackName, "Module Tools"
+   put the result into displayView
+   --
+   set the itemdelimiter to tab
+   put item 1 of line 1 of mTitles into mTitle
+   if menu_GlobalControllerExists (mTitle) is false then
+      put "Global | Module | Tree | Menu" into line 1 of mTitles
+      display_SetInteractions displayView, "Module | Tree", "mDouble_EditProp"
+   else
+      set the title_Menu of displayView to mTitles
+      set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
+      set the mouse_DoubleUp of displayView to "mDouble_EditProp"
+   end if
+   --
+   set the multiple_Hilites of displayView to false
    
-   -- put revRuggedID (hObject) into hObject
-   put "G" && hName into shortHkeyLine
-   put hKeyLine_Construct (shortHkeyLine, viewBehavior) into hkeyLine
-   
-   hkey_Edit hkeyLine
-end mDouble_EditProp
+   set the itemdelimiter to slash
+   put item 1 to -3 of moduleFolder & slash into projectFolder
+   put project_GetHomeStackName (projectFolder) into projectName
+   --
+   -- set the displayed_ViewObject of displayView to viewObject
+   set the displayed_Object of displayView to viewObject
+   set the displayed_ModuleFolder of displayView to moduleFolder
+   set the displayed_ModuleName of displayView to moduleName
+   set the displayed_ProjectName of displayView to projectName
+   set the displayed_ProjectFolder of displayView to projectFolder
+   --
+   if pEditScripts is true then
+      put the script of cd 1 of stack moduleName into cardScript
+      if cardScript is not empty then
+         edit the script of cd 1 of stack moduleName
+      end if
+      display_ModuleToolScripts moduleName, projectName
+   end if
+   return displayView
+end display_ModuleTools
 
 
 --> Display | Project | Modules
 -
-command display_ProjectModules homeNameOrPath, pIndexView
-   put the short name of stack homeNameOrPath into projectHomeStackName
-   
-   put project_ListModuleHomeStackNames (projectHomeStackName) into moduleStackNames
-   
-   put empty into mUp
-   put "mDouble_DisplayModule" into mDoubleUp
-   put "Modules" into stackTitle
-   put projectHomeStackName & comma & stackTitle into someTitle
-   
-   put "Global | Modules | Tree | Menu" into mTitle
-   put "Global | Modules | Tree | Line | Menu" into mLineTitle
-   
-   if exists (pIndexView) is false then
-      display_Index moduleStackNames, someTitle,mTitle, mLineTitle, mUp, mDoubleUp
-      put the result into pIndexView
-      set the multiple_Hilites of pIndexView to false
-   else
-      lock screen
-      set the view_Index of pIndexView to moduleStackNames
-      set the stack_Title of pIndexView to someTitle
-      set the mouse_DoubleUpEvent of pIndexView to mDoubleUp
-      set the title_Menu of pIndexView to mTitle
-      set the line_Menu of pIndexView to mLineTitle
-      unlock screen
-   end if
-   
-   put library_FetchProjectFolder (projectHomeStackName) into projectFolder
-   set the displayed_ProjectFolder of pIndexView to projectFolder
-   set the displayed_HomeStackName of pIndexView to projectHomeStackName
-   return pIndexView
+command display_ProjectModules projectName
+   put project_ListModules (projectName) into moduleStackNames
+   --
+   display_Data moduleStackNames, projectName, "Modules"
+   put the result into displayView
+   --
+   display_SetInteractions displayView, "Modules | Tree", "mDouble_DisplayModule"
+   --
+   put env_ConstructProjectFolder (projectName) into pProjectFolder
+   --
+   set the displayed_ProjectFolder of displayView to projectFolder
+   set the displayed_ProjectName of displayView to projectName
+   return displayView
 end display_ProjectModules
 
-
---> Deps
--
-command module_EditToolScripts moduleName, projectName
-   put library_FetchProjectFolder (projectName) into projectFolder
+command display_ModuleToolScripts moduleName, projectName
+   -- put library_FetchProjectFolder (projectName) into projectFolder
+   put env_ConstructProjectFolder (projectName) into projectFolder
+   --
    put module_ListBehaviorStackNames (moduleName, projectFolder) into behaviorStackNames
    repeat for each line behaviorStackName in behaviorStackNames
       edit the script of stack behaviorStackName
@@ -181,4 +170,4 @@ command module_EditToolScripts moduleName, projectName
    repeat for each line controllerStackName in controllerStackNames
       edit the script of stack controllerStackName
    end repeat
-end module_EditToolScripts
+end display_ModuleToolScripts
