@@ -29,33 +29,6 @@ command display_Browser someURL, sRect
    return displayView
 end display_Browser
 
-function view_ConstructToolMenu viewObject, isaView
-   put the view_MenuTitle [true] of viewObject into mTitle
-   put view_MenuToolTitles (mTitle, isaView) into mTitles
-   return mTitles
-end view_ConstructToolMenu
-
-function view_MenuToolTitles mTitle, isaView
-   if mTitle is not empty then
-      put tab & "submenu" & CR & "-" after mTitle
-   end if
-   --
-   if isaView is not false then
-      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
-      put CR & "-" after mTitle
-      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
-      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
-      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
-   else
-      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-   end if
-   return word 1 to -1 of mTitle
-end view_MenuToolTitles
-
 
 --> Display | Events
 -
@@ -118,21 +91,79 @@ command mDoubleUp_EditBehavior indexView, bObject
 end mDoubleUp_EditBehavior
 
 
---> Display | Clone
+--> Display | View
+-
+command palette_View viewName, pCardMargin, pStackRect, pHidden
+   stack_CreateWithView viewName, pCardMargin, pStackRect, pStackStyle, pHidden
+   put the result into createdView
+   return createdView
+end palette_View
+
+command display_View viewName, pData, pCloneName, pStackRect
+   -- utility to make it easy to creeate new stacks
+   put "displayed_Data" into pDataProp
+   --
+   put view_GetTemplateObject (viewName) into viewObject
+   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
+   --
+   if pCloneName is empty then
+      -- lazy
+      put viewName into stackLabel
+      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect
+   else
+      -- clean neew stack to play with
+      display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect
+   end if
+   put the result into viewObject
+   --
+   -- display_ViewTools viewName
+   return viewObject
+end display_View
+
+command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
+   if pCloneName is empty then put stack_ConstructNewCloneName (viewName) into pCloneName
+   
+   stack_Create pCloneName, viewName, "", pStackRect, "", true, pStackStyle
+   put the result into viewObject
+   --
+   _SetAndShow viewObject, pCloneName, pData, pDataProp
+   --
+   return viewObject
+end display_NewViewStack
+
+
+--> Display | View | Clone
 -
 command display_Clone viewName, pCloneName, pData, pDataProp, pStackRect
-   if pDataProp is empty then put "displayed_Data" into displayView
    --
    if exists (stack pCloneName) is true then
-      put the long id of control 1 of cd 1 of stack pCloneName into displayView
+      -- already exists (lets use it)
+      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
    else
-      stack_CloneInvisible viewName, pCloneName
+      if pCloneName is empty then
+         put viewName into stackLabel
+      else
+         put pCloneName into stackLabel
+      end if
+      _CreateInvisibleClone viewName, pCloneName, stackLabel
       put the result into pCloneName
-      put the long id of control 1 of cd 1 of stack pCloneName into displayView
+      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
    end if
    --
-   set the pDataProp of displayView to pData
+   _PositionStack pCloneName, pStackRect
+   _SetAndShow viewObject, pCloneName, pData, pDataProp
    --
+   return viewObject
+end display_Clone
+
+private command _SetAndShow viewObject, pCloneName, pData, pDataProp
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   --
+   set the pDataProp of viewObject to pData
+   show stack pCloneName
+end _SetAndShow
+
+private command _PositionStack pCloneName, pStackRect
    switch
       case pStackRect is a rect
          set the rect of stack pCloneName to pStackRect
@@ -140,33 +171,73 @@ command display_Clone viewName, pCloneName, pData, pDataProp, pStackRect
       default
          revIDEEnsureOnscreen pCloneName
    end switch
-   --
-   show stack pCloneName
-   return displayView
-end display_Clone
+end _PositionStack
 
-command display_ClonedView viewName, pStackLabel, pCloneName, pDestroyBoolean
-   stack_Clone viewName, pStackLabel, pCloneName, pDestroyBoolean
-   put the result into clonedStackName
-   put the long id of control 1 of cd 1 of stack clonedStackName into clonedView
-   return clonedView
-end display_ClonedView
+private command _CreateInvisibleClone viewName, pCloneName, pStackLabel
+   stack_CloneInvisible viewName, pCloneName
+   put the result into pCloneName
+   set the label of stack pCloneName to pStackLabel
+   return pCloneName
+end _CreateInvisibleClone
 
 
 --> Display | View
 -
-command display_View viewName
+command display_ViewTemplate viewName, pRepoFolder
+   /*
    if exists (control 1 of cd 1 of stack viewName) is false then return merge ("error, cannot find view for stack [[viewName]]")
-   
    go to stack viewName
-   put the long id of control 1 of cd 1 of stack viewName into viewObject   
+   put the long id of control 1 of cd 1 of stack viewName into viewObject
+   */ 
+   
+   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
+   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
+   --
+   object_GoTo viewObject
+end display_ViewTemplate
+
+
+--> Display | View | ToolMenus
+-
+function view_ConstructToolMenu viewObject, isaView
+   put the view_MenuTitle [true] of viewObject into mTitle
+   put view_MenuToolTitles (mTitle, isaView) into mTitles
+   return mTitles
+end view_ConstructToolMenu
+
+function view_MenuToolTitles mTitle, isaView
+   if mTitle is not empty then
+      put tab & "submenu" & CR & "-" after mTitle
+   end if
+   --
+   if isaView is not false then
+      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
+      put CR & "-" after mTitle
+      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
+      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+   else
+      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+   end if
+   return word 1 to -1 of mTitle
+end view_MenuToolTitles
+
+
+--> Display | View | Tools
+-
+command display_ViewTools viewName, pRepoFolder
+   -- see display_ModuleTools
+   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
+   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
    --
    put the view_Props of viewObject into viewProps
-   put the original_ModuleName of viewObject into moduleName
-   -- 
+   
    display_Data viewProps, viewName, "View Tools"
    put the result into displayView
-   display_SetInteractions displayView, "View | Tree", "mDouble_EditProp"
    --
    put view_ConstructToolMenu (viewObject, true) into mTitles
    put line 1 of mTitles into mTitle
@@ -183,14 +254,15 @@ command display_View viewName
    set the itemdelimiter to slash
    put the project_Name of stack viewName into projectName
    put the project_Folder of stack viewName into projectFolder
-   --
+   -- put the original_ModuleName of viewObject into moduleName
+   
    -- set the displayed_ViewObject of displayView to viewObject
    set the displayed_Object of displayView to viewObject
    set the displayed_ProjectName of displayView to projectName
    set the displayed_ProjectFolder of displayView to projectFolder
    --
    return displayView
-end display_View
+end display_ViewTools
 
 
 --> Display | Project | Views

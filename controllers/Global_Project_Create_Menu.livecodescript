@@ -28,13 +28,13 @@ getprop menu_Target [tObject]
    end if
 end menu_Target
 
-getprop disabled_CreateMenuFromScript [projectName]
+getprop disabled_CreateMenu [projectName]
    if LocalArray ["ScriptEditorObject"] is empty then
       return "delete"
    else
       return false
    end if
-end disabled_CreateMenuFromScript
+end disabled_CreateMenu
 
 getprop disabled_CreateProjectMenu [projectName]
    if LocalArray ["ScriptEditorObject"] is empty then
@@ -47,13 +47,13 @@ end disabled_CreateProjectMenu
 
 --> Global | Project | Create | Menu
 -
-on menu_CreateMenuFromScript projectName
+on menu_CreateMenu projectName
    put scriptEditor_GetSelectedText() into gMenuTitle
    --
    display_AskCreateMenu projectName, gMenuTitle
    put the result into controllerStackObject
    edit the script of controllerStackObject
-end menu_CreateMenuFromScript
+end menu_CreateMenu
 
 on menu_CreateProjectMenu projectName
    display_AskCreateMenu projectName
@@ -63,6 +63,11 @@ end menu_CreateProjectMenu
 
 on _
 end _
+
+on menu_CreateModule projectName
+   put lcw_Ask ("What name would you like for this module?", "View|Something") into moduleName
+   module_CreateWithObject moduleName, projectName
+end menu_CreateModule
 
 on menu_CreateProjectLibrary projectName
    display_AskCreateProjectLibrary projectName

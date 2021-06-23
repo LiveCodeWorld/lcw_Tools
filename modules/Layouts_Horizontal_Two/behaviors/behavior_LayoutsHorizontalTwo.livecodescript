@@ -23,15 +23,22 @@ local LeftView, RightView
 --> Initialisation
 -
 command view_IndexChildren
+   put the childcontrolids of me into childIDs
    put word 3 of the vertical_Divider of me into verticalDividerID
    
-   put the childcontrolids of me into childIDs
    set the wholematches to true
    put lineOffset (verticalDividerID, childIDs) into lineNum
    delete line lineNum of childIDs
    
-   put the long id of control id (line 1 of childIDs) into LeftView
-   put the long id of control id (line 2 of childIDs) into RightView
+   put line 1 of childIDs into firstChildID
+   put line 2 of childIDs into secondChildID
+   
+   if exists (control id firstChildID of me) then
+      put the long id of control id firstChildID of me into LeftView
+   end if
+   if exists (control id secondChildID of me) then
+      put the long id of control id secondChildID of me into RightView
+   end if
    return LeftView & CR & RightView
 end view_IndexChildren
 

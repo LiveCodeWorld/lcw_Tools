@@ -183,8 +183,8 @@ getprop svg_URL svgURL
 end svg_URL
 
 setprop svg_URL [isFluid] svgURL
-   put url svgURL into someHTML
-   put svg_Get (someHTML) into svgXML
+   put url svgURL into svgXML
+   -- put svg_Get (svgXML) into svgXML
    if isFluid is true then
       svg_SetDimensions svgXML, "100%", "100%"
    end if

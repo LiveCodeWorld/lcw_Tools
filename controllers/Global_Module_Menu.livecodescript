@@ -24,13 +24,13 @@ on menu_Init tObject
    put viewObject into LocalArray ["viewObject"]
 end menu_Init
 
-getprop disabled_CreateModuleMenu [displayView]
-   put _GetModuleMenuTitle (displayView) into gMenuTitle
-   if menu_Exists (gMenuTitle) then
-      return true
-   else
-      return false
-   end if
+-- getprop disabled_CreateModuleMenu [displayView]
+put _GetModuleMenuTitle (displayView) into gMenuTitle
+if menu_Exists (gMenuTitle) then
+   return true
+else
+   return false
+end if
 end disabled_CreateModuleMenu
 
 getprop disabled_EditMenu [viewObject]
@@ -116,6 +116,20 @@ on menu_CreateModuleMenu
    --
    edit the script of controllerStackObject
 end menu_CreateModuleMenu
+
+on menu_RemoveModuleMenu displayView
+   put _GetModuleMenuTitle() into gMenuTitle
+   lcw_Answer merge ("Are you sure you want to remove the default menu '[[gMenuTitle]]' for this module from the global database?"), gMenuTitle
+   --
+   menu_RemoveGlobalController gMenuTitle
+   put the result into mController
+   if exists (mController) then
+      get the script of mController
+      if gMenuTitle is among the lines of it then
+         edit the script of mController
+      end if
+   end if
+end menu_RemoveModuleMenu
 
 on menu_EditModuleMenu displayView
    put _GetModuleMenuTitle (displayView) into gMenuTitle

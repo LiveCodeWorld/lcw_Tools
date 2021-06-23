@@ -29,12 +29,13 @@ end _DisplayedObject
 
 private function _ShortAssetFiles svgView
    put _DisplayedObject (svgView) into hObject
+   if exists (hObject) is false then return empty
    --
    put the project_Folder of hObject into projectFolder
    put asset_ListFiles (projectFolder, empty, true) into shortAssetFiles
    return shortAssetFiles
 end _ShortAssetFiles
-   
+
 getprop displayAsset_Params [svgView]
    put _ShortAssetFiles (svgView) into shortAssetFiles
    return shortAssetFiles
@@ -75,8 +76,15 @@ end disabled_DisplayAsset
 
 
 --> Global | Image | SVG | Menu
-   -
-   on menu_ObjectProcessedArray svgView
+-
+on menu_DisplaySvgs
+   display_HtmlSvgLinks "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/"
+end menu_DisplaySvgs
+
+on _
+end _
+
+on menu_ObjectProcessedArray svgView
    put _DisplayedObject (svgView) into hObject
    --
    put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  

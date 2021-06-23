@@ -113,6 +113,7 @@ getprop disabled_DeselectModule
    end if
 end disabled_DeselectModule
 
+
 --> Global | Module | Tree | Menu
 -
 on submenu_Module
@@ -125,7 +126,7 @@ end _
 on menu_SelectModule viewObject
    select viewObject
 end menu_SelectModule
-   
+
 on menu_DeselectModule viewObject
    select empty
 end menu_DeselectModule
@@ -156,13 +157,23 @@ end menu_ModuleStackTools
 on _
 end _
 
+on menu_ExportMenusAndStackFiles viewObject
+   put the module_Folder of viewObject into moduleFolder
+   --
+   project_ExportMenusAndStackFiles moduleFolder
+   put the result into projectArray
+   --
+   put the view_Name of viewObject into moduleName
+   display_Data projectArray, moduleName, "Module Array"  
+end menu_ExportMenusAndStackFiles
+
 on menu_RefreshProps viewObject
    put LocalArray ["displayView"] into displayView
    --
    put the view_Props of viewObject into viewProps
    set the displayed_Data of displayView to viewProps
 end menu_RefreshProps
-   
+
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
@@ -191,8 +202,8 @@ on menu_EditViewMenuFunction
       edit the script of stack "lib_DisplayView"
    end if
 end menu_EditViewMenuFunction
-   
-   on menu_EditDisplayModuleTools
+
+on menu_EditDisplayModuleTools
    hkey_Edit "M display_ModuleTools"
    --
    if the result is empty then 

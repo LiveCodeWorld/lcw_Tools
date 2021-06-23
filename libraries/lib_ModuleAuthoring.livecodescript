@@ -47,6 +47,31 @@ function view_OldFolder
    return oldViewFolder
 end view_OldFolder
 
+command module_CreateWithObject moduleName, pProjectName, pObject, pDisplayView
+   -- not implemented "pObject" yeet
+   -- defaults to creating a module in the "lcw_Forms" project
+   if pProjectName is empty then put "lcw_Forms" into pProjectName
+   
+   put view_GetTemplateObject (moduleName) into rowTemplate
+   if exists (rowTemplate) then
+      lcw_AnswerWarning  "A view or module called '[[moduleName]]' already exists!", pDisplayView, moduleName
+   end if
+   --
+   put module_ConstructFolder (moduleName, pProjectName) into moduleFolder
+   module_Create moduleFolder, moduleName
+   put the result into resultArray
+   --
+   go to stack moduleName
+   save stack moduleName
+   display_ModuleTools moduleName, true
+   --
+   return resultArray
+   --
+   put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
+   put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
+   put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
+end module_CreateWithObject
+
 command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
    text_AddTrailing rootModuleFolder, slash
    if there is not a folder rootModuleFolder then
