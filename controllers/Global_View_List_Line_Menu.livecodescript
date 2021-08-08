@@ -25,40 +25,22 @@ getprop menu_Target [tObject]
    return displayView
 end menu_Target
 
-getprop menu_CheckTarget [mTarget]
-   -- use to do initialisation
-   pass menu_CheckTarget
-end menu_CheckTarget
-
-getprop test_Param [displayView]
-  return "b"
-end test_Param
-
-getprop test_Params [displayView]
-   return "a,b,c"
-end test_Params
-
-getprop checked_TestChecked
-   return true
-end checked_TestChecked
-
-getprop disabled_Test
-  return false -- true, "delete"
-end disabled_Test
-
 
 --> Global | View | List | Line | Menu
 -
-on menu_Test displayView, abc
-   put displayView & CR & abc
-end menu_Test
-
-on menu_TestChecked
-  put menu_GetChecked (the params)
-end menu_TestChecked
+on menu_Go dView
+   put the selected_Line of dView into vName
+   put view_GetTemplateObject (vName) into tObject
+   object_GoTo tObject
+end menu_Go
 
 on _
 end _
+
+on menu_ViewTools dView
+   put the selected_Line of dView into vName
+   display_ViewTools vName
+end menu_ViewTools
 
 on submenu_Dev
    return "Dev | Menu"
@@ -70,7 +52,3 @@ end submenu_Dev
 on menu_Experiment displayView
    put displayView
 end menu_Experiment
-
-
---> Deps
--

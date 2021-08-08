@@ -12,34 +12,31 @@ version: 0.2
 -
 local LocalArray
 
-on menu_Init tObject
+getprop menu_Target [tObject]
    put the display_View of tObject into displayView
    --
    put the displayed_Object of displayView into viewObject
-   put the displayed_ModuleFolder of displayView into moduleFolder
-   put the displayed_ModuleName of displayView into moduleStackName
-   put the displayed_ProjectName of displayView into projectName
-   put the displayed_ProjectFolder of displayView into projectFolder
    --
-   put the title_Text of tObject into moduleName -- only sometimes the same as viewName
-   if there is not a stack moduleStackName then return empty
+   put the displayed_ModuleName of displayView into moduleName
+   put the title_Text of displayView into moduleName
    
-   put moduleStackName into LocalArray ["moduleName"]
-   --
-   if exists (control 1 of cd 1 of stack moduleStackName) is false then return false
-   
-   put the long id of control 1 of cd 1 of stack moduleStackName into testViewObject
+   # Some Tests
+   if there is not a stack moduleName then return empty
+   if exists (control 1 of cd 1 of stack moduleName) is false then return empty
+   put the long id of control 1 of cd 1 of stack moduleName into testViewObject
    if testViewObject is not viewObject then
       breakpoint
+      return empty
    end if
-   
+   --
+   put moduleName into LocalArray ["moduleName"]
+   put the displayed_ModuleFolder of displayView into moduleFolder
+   put displayView into LocalArray ["displayView"]
    put _GetClonedStackNames (viewObject) into clonedStackNames
    put clonedStackNames into LocalArray ["clonedStackNames"]
    --
-   put displayView into LocalArray ["displayView"]
-   put moduleStackName into LocalArray ["moduleStackName"]
-   put viewObject into LocalArray ["viewObject"]
-end menu_Init
+   return viewObject
+end menu_Target
 
 getprop disabled_CloseModuleStack
    if LocalArray ["clonedStackNames"] is empty then
@@ -120,19 +117,15 @@ on submenu_Module
    return "Global | Module | Menu"
 end submenu_Module
 
-on _
-end _
+on menu_ModuleStackTools viewObject, moduleStackName
+   replace ":" with "|" in moduleStackName
+   --
+   display_ModuleTools moduleStackName
+end menu_ModuleStackTools
 
-on menu_SelectModule viewObject
-   select viewObject
-end menu_SelectModule
-
-on menu_DeselectModule viewObject
-   select empty
-end menu_DeselectModule
-
-on menu_CloneModule
+on menu_CloneModule viewObject
    put LocalArray ["moduleName"] into moduleName
+   if exists (stack moduleName) is false then lcw_AnswerWarning "No such stack!"
    --
    stack_Clone moduleName
    put the result into clonedStack
@@ -148,31 +141,58 @@ on menu_CloseModuleStack viewObject, moduleStackName
    module_CloseStackAndTools moduleStackName
 end menu_CloseModuleStack
 
-on menu_ModuleStackTools viewObject, moduleStackName
-   replace ":" with "|" in moduleStackName
+on menu_CreateModuleMenu viewObject
+   put LocalArray ["moduleName"] into moduleName
+   put LocalArray ["displayView"] into displayView
    --
-   display_ModuleTools moduleStackName
-end menu_ModuleStackTools
+   ask_CreateModuleMenu moduleName, displayView
+end menu_CreateModuleMenu
 
 on _
 end _
 
-on menu_ExportMenusAndStackFiles viewObject
-   put the module_Folder of viewObject into moduleFolder
+on menu_RememberModuleStacks viewObject
+   set the cursor to watch
    --
-   project_ExportMenusAndStackFiles moduleFolder
+   put the module_Name of viewObject into shortModuleFolder
+   put the view_Name of viewObject into moduleStackName
+   if exists (stack moduleStackName) is false then
+      put LocalArray ["displayView"] into displayView
+      lcw_AnswerWarning "Cannot local module stack '[[moduleStackName]]!", displayView, moduleName
+   end if
+   put the module_Folder of viewObject into moduleFolder
+   
+   # Set module stackfiles
+   put the folder_StackFileArray of viewObject into stackFileArray
+   set the stackFile_Array of viewObject to stackFileArray
+   save stack moduleStackName
+   --
+   module_ExportMenusAndStackFiles moduleFolder
+   put the result into moduleArray
+   
+   # Check
+   put project_FetchArray (moduleFolder) into moduleArray
+   display_Data moduleArray, moduleStackName, "Module Array"  
+end menu_RememberModuleStacks
+
+on menu_RememberProjectStacks viewObject
+   put the project_Name of viewObject into projectName
+   put project_GetFolder (projectName) into projectFolder
+   if there is not a folder projectFolder then
+      lcw_AnswerWarning "Cannot find a project folder for project:" && projectName
+   end if
+   --
+   project_ExportMenusAndStackFiles projectFolder
    put the result into projectArray
    --
-   put the view_Name of viewObject into moduleName
-   display_Data projectArray, moduleName, "Module Array"  
-end menu_ExportMenusAndStackFiles
+   display_ProjectLibs projectName
+   display_GitRefreshProjectName projectName
+end menu_RememberProjectStacks
 
-on menu_RefreshProps viewObject
-   put LocalArray ["displayView"] into displayView
-   --
-   put the view_Props of viewObject into viewProps
-   set the displayed_Data of displayView to viewProps
-end menu_RefreshProps
+on menu_Refresh viewObject
+   put the view_Name of viewObject into moduleStackName
+   display_ModuleTools moduleStackName
+end menu_Refresh
 
 on submenu_Dev
    return "Dev | Menu"
@@ -181,19 +201,26 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_ModuleInfo viewObject
+on _SelectModule viewObject
+   select viewObject
+end _SelectModule
+
+on _DeselectModule viewObject
+   select empty
+end _DeselectModule
+
+on _ModuleInfo viewObject
    put the module_Array of viewObject into moduleArray
    put moduleArray ["moduleName"] into moduleName
    put merge ("[[moduleName]],Module Array") into someTitle
    display_Array moduleArray, someTitle
-end menu_ModuleInfo
+end _ModuleInfo
 
-on menu_DisplayToolMenuTitles viewObject
-   put LocalArray ["viewObject"] into viewObject
+on _DisplayToolMenuTitles viewObject
    put view_ConstructToolMenu (viewObject)
-end menu_DisplayToolMenuTitles
+end _DisplayToolMenuTitles
 
-on menu_EditViewMenuFunction
+on _EditViewMenuFunction
    -- find the function that creates the menu table for the tree
    
    hkey_Edit "F view_ConstructToolMenu"
@@ -201,35 +228,30 @@ on menu_EditViewMenuFunction
    if the result is empty then 
       edit the script of stack "lib_DisplayView"
    end if
-end menu_EditViewMenuFunction
+end _EditViewMenuFunction
 
-on menu_EditDisplayModuleTools
+on _EditDisplayModuleTools
    hkey_Edit "M display_ModuleTools"
    --
    if the result is empty then 
       edit the script of stack "lib_DisplayModule"
    end if
-end menu_EditDisplayModuleTools
+end _EditDisplayModuleTools
 
 on _
 end _
 
-on menu_EditMenus
-   menu_Edit "Global | View | Card | Tools | Menu"
-   menu_Edit "Global | View | Card | Create | Menu"
-end menu_EditMenus
-
-on menu_ResetMenus viewObject
+on _ResetMenus viewObject
    put LocalArray ["displayView"] into displayView
    --
    put view_ConstructToolMenu (viewObject) into mTitles
    set the title_Menu of displayView to mTitles
-end menu_ResetMenus
+end _ResetMenus
 
 on _
 end _
 
-on menu_CreateStandAlone viewObject
+on _CreateStandAlone viewObject
    put LocalArray ["displayView"] into displayView
    --
    put the view_Name of viewObject into vName
@@ -253,4 +275,4 @@ on menu_CreateStandAlone viewObject
    -- set the behavior of clonedTemplateCard to empty
    
    display_ViewBehaviors clonedView, empty, clonedStack
-end menu_CreateStandAlone
+end _CreateStandAlone

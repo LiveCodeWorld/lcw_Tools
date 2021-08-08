@@ -11,7 +11,7 @@ version: 0.2
 -
 local LocalArray
 
-on menu_Init tObject
+getprop menu_Target [tObject]
    put the display_View of tObject into displayView
    put the title_Text of displayView into moduleStackName
    --
@@ -22,16 +22,9 @@ on menu_Init tObject
    put displayView into LocalArray ["displayView"]
    put moduleStackName into LocalArray ["moduleStackName"]
    put viewObject into LocalArray ["viewObject"]
-end menu_Init
-
--- getprop disabled_CreateModuleMenu [displayView]
-put _GetModuleMenuTitle (displayView) into gMenuTitle
-if menu_Exists (gMenuTitle) then
-   return true
-else
-   return false
-end if
-end disabled_CreateModuleMenu
+   --
+   return displayView
+end menu_Target
 
 getprop disabled_EditMenu [viewObject]
    put _GetModuleMenuTitle() into gMenuTitle
@@ -60,6 +53,30 @@ getprop disabled_CreateModuleBehavior [viewObject]
    end if
 end disabled_CreateModuleBehavior
 
+getprop disabled_CreateModuleMenu [displayView]
+   return _DisableCreateMenu()
+end disabled_CreateModuleMenu
+
+private function _DisableCreateMenu
+   put _GetModuleMenuTitle() into gMenuTitle
+   put menu_GetGlobalController (gMenuTitle) into mController
+   if exists (mController) then
+      return true
+   else
+      if exists (stack gMenuTitle) is true then
+         -- needs indexing so lets do that and save the array
+         set the menu_Update of stack gMenuTitle to true
+         put the result into projectArray
+         return true
+      else
+         -- could try and find from path
+         -- put LocalArray ["viewObject"] into viewObject
+         -- put the module_Folder of viewObject into moduleFolder
+         return false
+      end if
+   end if
+end _DisableCreateMenu
+
 private function _GetModuleBehaviorName
    put LocalArray ["moduleStackName"] into moduleStackName
    put project_DefaultBehaviorName (moduleStackName) into bStackName
@@ -72,74 +89,15 @@ private function _GetModuleMenuTitle
    return gMenuTitle
 end _GetModuleMenuTitle
 
-private function _askMenuTitle moduleStackName, projectName
-   put line 1 of the clipboarddata ["text"] into maybeMenuTitle
-   if word -1 of maybeMenuTitle = "Menu" then
-      put maybeMenuTitle into gMenuTitle
-   else
-      put module_ConstructGlobalMenuTitle (moduleStackName) into gMenuTitle
-   end if
-   put "What is the name of your global menu...." into someQuestion
-   put lcw_Ask (someQuestion, gMenuTitle) into gMenuTitle
-   return gMenuTitle
-end _askMenuTitle
-
 
 --> Global | Module | Menu
 -
-on menu_OpenModule
-   put LocalArray ["moduleStackName"] into moduleStackName
-   --
-   go to stack moduleStackName
-end menu_OpenModule
+on menu_EditModuleBehavior
+   put _GetModuleBehaviorName() into bStackName
+   edit the script of stack bStackName
+end menu_EditModuleBehavior
 
-on menu_CloseModuleStack
-   put LocalArray ["moduleStackName"] into moduleStackName
-   --
-   module_CloseStackAndTools moduleStackName
-end menu_CloseModuleStack
-
-on _
-end _
-
-on menu_CreateModuleMenu
-   put LocalArray ["moduleStackName"] into moduleStackName
-   --
-   put _askMenuTitle (moduleStackName) into gMenuTitle
-   if menu_Exists (gMenuTitle) then
-      lcw_AnswerWarning "Menu [[gMenuTitle]] already exists!", displayView, gMenuTitle
-   end if
-   --
-   put the module_Folder of stack moduleStackName into moduleFolder
-   module_CreateMenu moduleFolder, gMenuTitle
-   put the result into controllerStackObject
-   --
-   edit the script of controllerStackObject
-end menu_CreateModuleMenu
-
-on menu_RemoveModuleMenu displayView
-   put _GetModuleMenuTitle() into gMenuTitle
-   lcw_Answer merge ("Are you sure you want to remove the default menu '[[gMenuTitle]]' for this module from the global database?"), gMenuTitle
-   --
-   menu_RemoveGlobalController gMenuTitle
-   put the result into mController
-   if exists (mController) then
-      get the script of mController
-      if gMenuTitle is among the lines of it then
-         edit the script of mController
-      end if
-   end if
-end menu_RemoveModuleMenu
-
-on menu_EditModuleMenu displayView
-   put _GetModuleMenuTitle (displayView) into gMenuTitle
-   edit the script of stack gMenuTitle
-end menu_EditModuleMenu
-
-on _
-end _
-
-on menu_CreateModuleBehavior viewObject
+on menu_CreateModuleBehavior
    put LocalArray ["moduleStackName"] into moduleStackName
    put project_DefaultBehaviorName (moduleStackName) into maybeBehaviorStackName
    put the module_Folder of stack moduleStackName into moduleFolder
@@ -152,13 +110,36 @@ on menu_CreateModuleBehavior viewObject
    edit the script of stack moduleBehaviorStackPath
 end menu_CreateModuleBehavior
 
-on menu_EditModuleBehavior displayView
-   put _GetModuleBehaviorName (displayView) into bStackName
-   edit the script of stack bStackName
-end menu_EditModuleBehavior
+on menu_RenameModule
+   put LocalArray ["moduleStackName"] into oldModuleName
+   --
+   put the project_Folder of stack oldModuleName into projectFolder
+   put the project_Name of stack oldModuleName into projectName
+   put lcw_Ask ("Give this module a new name...", oldModuleName) into newModuleName
+   --
+   module_Rename oldModuleName, newModuleName, projectName
+   --
+   display_ProjectLibs projectName
+end menu_RenameModule
 
 on _
 end _
+
+on menu_CreateModuleMenu displayView
+   put LocalArray ["moduleStackName"] into moduleStackName
+   --
+   ask_CreateModuleMenu moduleStackName, displayView
+   put the result into mController
+   --
+   if exists (mController) then
+      edit the script of controllerStackObject
+   end if
+end menu_CreateModuleMenu
+
+on menu_EditModuleMenu displayView
+   put _GetModuleMenuTitle() into gMenuTitle
+   menu_Edit gMenuTitle
+end menu_EditModuleMenu
 
 on submenu_Dev
    return "Dev | Menu"
@@ -167,12 +148,52 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_EditModuleToolMenu displayView
+on _RemoveModuleMenu displayView
+   put _GetModuleMenuTitle() into gMenuTitle
+   lcw_Answer merge ("Are you sure you want to remove the default menu '[[gMenuTitle]]' for this module from the global database?"), gMenuTitle
+   --
+   menu_RemoveGlobalController gMenuTitle
+   put the result into mController
+   if exists (mController) then
+      get the script of mController
+      if gMenuTitle is among the lines of it then
+         edit the script of mController
+      end if
+   end if
+end _RemoveModuleMenu
+
+on _RevealModuleFolder
+   put LocalArray ["moduleStackName"] into moduleStackName
+   --
+   put the module_Folder of stack moduleStackName into moduleFolder
+   --
+   finder_Reveal moduleFolder
+end _RevealModuleFolder
+
+on _
+end _
+
+on _OpenModule
+   put LocalArray ["moduleStackName"] into moduleStackName
+   --
+   go to stack moduleStackName
+end _OpenModule
+
+on _CloseModuleStack
+   put LocalArray ["moduleStackName"] into moduleStackName
+   --
+   module_CloseStackAndTools moduleStackName
+end _CloseModuleStack
+
+on _
+end _
+
+on _EditModuleToolMenu
    menu_Edit "Global | Module | Tree | Menu"
    menu_Edit "Global | Module | Menu"
-end menu_EditModuleToolMenu
+end _EditModuleToolMenu
 
-on menu_SetModuleBehavior
+on _SetModuleBehavior
    put LocalArray ["moduleStackName"] into moduleStackName
    --
    put the module_Folder of stack moduleStackName into moduleFolder
@@ -185,23 +206,15 @@ on menu_SetModuleBehavior
       put the behavior of viewObject into bObject
       edit the script of bObject
    end if
-end menu_SetModuleBehavior
+end _SetModuleBehavior
 
 on _
 end _
 
-on menu_RevealModuleFolder
-   put LocalArray ["moduleStackName"] into moduleStackName
-   --
-   put the module_Folder of stack moduleStackName into moduleFolder
-   --
-   finder_Reveal moduleFolder
-end menu_RevealModuleFolder
-
-on menu_ResetMenus
+on _ResetMenus
    put LocalArray ["viewObject"] into viewObject
    put LocalArray ["displayView"] into displayView
    --
    put view_ConstructToolMenu (viewObject) into mTitles
    set the title_Menu of displayView to mTitles
-end menu_ResetMenus
+end _ResetMenus

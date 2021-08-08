@@ -29,7 +29,7 @@ on menu_CreateModule indexView
    put lcw_Ask (someQuestion, suggestedAnswer) into moduleStackName
    
    put project_GetFolder (projectName) into projectFolder
-   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
+   put folder_AddShort (projectFolder, "modules") into rootModuleFolder
    --
    project_CreateModule moduleStackName, rootModuleFolder
 end menu_CreateModule
@@ -66,7 +66,7 @@ end menu_Refresh
 on menu_RevealModulesFolder indexView
    put the title_Text of indexView into projectName
    put project_GetFolder (projectName) into projectFolder
-   put project_ConstructFolder ("modules", projectFolder) into rootModuleFolder
+   put folder_AddShort (projectFolder, "modules") into rootModuleFolder
    --
    finder_Reveal rootModuleFolder  
 end menu_RevealModulesFolder

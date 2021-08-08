@@ -33,10 +33,9 @@ command display_BrokenBehaviors viewObject, pDisplayArray
    put the behavior_BrokenArray of viewObject into testArray
    
    if pDisplayArray is true then
-      put "Views with behaviors,Fixed behaviors" into someTitle
-      put comma & the name of viewObject after someTitle
-      display_Array testArray, someTitle, "Global | Display | Behaviors | Menu", "Global | Display | Behaviors | Line | Menu"
+      display_Array testArray, the name of viewObject, "Views with behaviors"
       put the result into displayView
+      display_SetInteractions displayView, "Display | Behaviors", pDoubleUp
       set the displayed_Object of displayView to viewObject
    end if
    return testArray

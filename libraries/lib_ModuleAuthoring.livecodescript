@@ -7,8 +7,69 @@ type: library
 version: 0.3
 
 
+--> To Trash?
+-
+function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
+   breakpoint
+   if pShortFile is empty then
+      put moduleName & ".livecodescript" into pShortFile
+   end if
+   put folder_AddShort (moduleFolder, "controllers") into moduleControllerFolder
+   put pShortFile & pShortFile into moduleControllerPath
+   return moduleControllerPath
+end module_ConstructControllerPath
+
+
 --> Working on
 -
+command module_MoveRenameBehavior oldBehaviorStackPath, newModuleStackName, pModuleFolder
+   set the itemdelimiter to slash
+   put item -1 of oldBehaviorStackPath into shortFile
+   if pModuleFolder is empty then
+      put the module_Folder of stack stackPath into pModuleFolder
+   end if
+   --
+   get module_ConstructBehaviorShortFile (moduleStackName)
+   put project_DefaultBehaviorName (newModuleStackName) into newModuleStackName
+   put module_ConstructBehaviorPath (newModuleStackName, pModuleFolder) into newBehaviorStackPath
+   --
+   breakpoint
+   module_RenameBehavior oldBehaviorStackPath, newBehaviorName
+   project_MoveStack oldBehaviorStackPath, newBehaviorStackPath
+   --
+   get the result
+   return newBehaviorStackPath
+end module_MoveRenameBehavior
+
+command module_RenameBehavior stackPath, newBehaviorName
+   put the name of stack stackPath into oldScriptObject
+   scriptEditor_CloseTab oldScriptObject
+   --
+   set the script_Name of stack stackPath to newBehaviorName
+   set the name of stack stackPath to newBehaviorName
+   save stack stackPath
+   --
+   return newBehaviorName
+end module_RenameBehavior
+
+function module_GetHomePath moduleName, pProjectName
+   if pProjectName is empty then
+      put project_NameToShortFolder (moduleName) into moduleFolderName
+      put env_GetModuleHomePath (moduleFolderName) into homeStackPath
+   else
+      put project_GetFolder (pProjectName) into projectFolder
+      if projectFolder is empty then return empty
+      put module_ConstructHomeStackPath (moduleName, projectFolder) into homeStackPath
+   end if
+   
+   # Return if it exists
+   if exists (stack homeStackPath) then
+      return homeStackPath
+   else
+      return empty
+   end if
+end module_GetHomePath
+
 on mDoubleUp_OldView displayView, shortFile
    -- put the selected_Line of displayView into shortFile
    put view_OldFolder() & shortFile into oldViewFile
@@ -134,7 +195,7 @@ command module_Create moduleFolder, moduleStackName, pScript
    module_CreateBehavior moduleFolder
    put the result into resultArray ["moduleBehaviorStackPath"]
    --
-   module_CreateMenu moduleFolder
+   module_CreateMenuFromFolder moduleFolder
    put the result into resultArray ["moduleControllerStackPath"]
    --
    return resultArray
@@ -153,26 +214,6 @@ command module_DeleteStacks moduleStackName
    put project_DefaultBehaviorName (moduleStackName) into bStackName
    if exists (stack bStackName) then delete stack bStackName
 end module_DeleteStacks
-
-command module_CreateMenu moduleFolder, pGlobalMenuTitle
-   set the itemdelimiter to slash
-   put item -1 of moduleFolder into shortFolder
-   put shortFolder into moduleStackName
-   --
-   if pGlobalMenuTitle is empty then
-      put module_ConstructGlobalMenuTitle (moduleStackName, true) into gMenuTitle
-   else
-      put pGlobalMenuTitle into gMenuTitle
-   end if
-   put controller_ConstructMenuScript (gMenuTitle) into controllerScript
-   --
-   project_CreateMenu moduleFolder, gMenuTitle, controllerScript
-   put the result into controllerStackObject
-   --
-   module_UpdateToolsMenu moduleStackName
-   --
-   return controllerStackObject
-end module_CreateMenu
 
 command module_UpdateToolsMenu moduleStackName
    set the itemdelimiter to slash
@@ -236,15 +277,6 @@ private command _CleanModuleStackName @moduleStackName
    replace "|" with empty in moduleStackName
 end _CleanModuleStackName
 
-function controller_FolderNameFromTitle gMenuTitle
-   return gMenuTitle
-   
-   -- not sure I want to use this any more
-   view_NormalizePiped gMenuTitle
-   replace "|" with "_" in gMenuTitle
-   return gMenuTitle
-end controller_FolderNameFromTitle
-
 
 --> Module | Author
 -
@@ -252,20 +284,10 @@ function module_ConstructBehaviorPath moduleName, moduleFolder, pShortFile
    if pShortFile is empty then
       put module_ConstructBehaviorShortFile (moduleName) into pShortFile
    end if
-   put project_ConstructFolder ("behaviors", moduleFolder) into moduleControllerFolder
+   put folder_AddShort (moduleFolder, "behaviors") into moduleControllerFolder
    put moduleControllerFolder & pShortFile into moduleControllerPath
    return moduleControllerPath
 end module_ConstructBehaviorPath
-
-function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
-   breakpoint
-   if pShortFile is empty then
-      put controller_FolderNameFromTitle (moduleName) & ".livecodescript" into pShortFile
-   end if
-   put project_ConstructFolder ("controllers", moduleFolder) into moduleControllerFolder
-   put pShortFile & pShortFile into moduleControllerPath
-   return moduleControllerPath
-end module_ConstructControllerPath
 
 function module_GetControllerStackPath controllerStackName, rootModuleFolder
    put controllerStackName & ".livecodescript" into shortControllerPath
@@ -302,10 +324,7 @@ command module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
    
    if word 1 of bObject is "stack" then
       put the filename of bObject into oldBehaviorStackPath 
-      set the itemdelimiter to slash
-      put item -1 of oldBehaviorStackPath into shortFile
-      put module_ConstructBehaviorPath (moduleStackName, moduleFolder, shortFile) into moduleBehaviorStackPath
-      project_MoveStack oldBehaviorStackPath, moduleBehaviorStackPath
+      module_MoveRenameBehavior oldBehaviorStackPath, moduleStackName, moduleFolder
       return moduleBehaviorStackPath
    else
       answer warning "Behavior is not a stack. Move manually!"
@@ -402,7 +421,7 @@ command module_MoveController moduleStackName, moduleFolder
          return empty
       end if
    else
-      module_CreateMenu moduleFolder -- ,moduleStackName
+      module_CreateMenuFromFolder moduleFolder -- ,moduleStackName
       put the result into newModuleBehaviorStackPath
       return newModuleBehaviorStackPath
    end if

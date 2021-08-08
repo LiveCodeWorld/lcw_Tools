@@ -26,7 +26,7 @@ getprop menu_Target [tObject]
       case the view_Name of tObject is not empty
          return tObject
       default
-         put the card_Object of viewObject into cardObject
+         put the card_Object of tObject into cardObject
          if exists (control 1 of cardObject) then
             return the long id of control 1 of cardObject
          else

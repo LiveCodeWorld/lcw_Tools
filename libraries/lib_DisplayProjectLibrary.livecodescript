@@ -1,7 +1,7 @@
 ﻿script "lib_DisplayProjectLibrary"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: lib_DisplayProjectLibrary
 type: library
@@ -14,35 +14,15 @@ Should rename it to "lib_DisplayProjectLibrary"
 Key handler =  "project_CreateStack"
 */
 
-getprop dep_StackNames
-   return "lib_Project"
-end dep_StackNames
-
 
 --> Working on
 -
-function lcw_GetAuthor
-   put pref_GetValue ("userName") into authorName
-   if authorName is empty then put "Anonymous" into authorName
-   return authorName
-end lcw_GetAuthor
-
-command lcw_SetAuthor authorName
-   pref_SetValue "userName", authorName
-end lcw_SetAuthor
-
-command display_AskCreateProjectLibrary projectName
+command ask_CreateProjectLibrary projectName
    put lcw_GetAuthor() into authorName
    --
    put merge ("Create a new library in project '[[projectName]]'?") into someQuestion
    replace "'" with quote in someQuestion
-   --
-   put the clipboardData ["text"] into suggestedAnswer
-   if the number of words of suggestedAnswer > 1 or the number of chars of suggestedAnswer > 20 then
-      set the itemdelimiter to "_"
-      put "lib_" &  item -1 of projectName into suggestedAnswer 
-   end if
-   put lcw_Ask (someQuestion, suggestedAnswer) into libStackName
+   put lcw_Ask (someQuestion, "lib_XXX") into libStackName
    
    put project_GetFolder (projectName) into projectFolder
    put scaffold_GetTemplate ("LCW Library") into libTemplateScript
@@ -57,10 +37,139 @@ command display_AskCreateProjectLibrary projectName
    lcw_Notify ("Stack" && kwote (libStackName) && "is now known and used!")
    edit the script of stack libStackName
    --
-   display_ProjectLibs projectName
+   display_Project projectName
    -- finder_Reveal projectFolder
-end display_AskCreateProjectLibrary
+end ask_CreateProjectLibrary
 
+
+--> Display | Project
+-
+command display_Project projectName, pExpandedItems, pRepoFolder
+   local foldedArray
+   if pExpandedItems is empty then put "Modules" into pExpandedItems
+   put project_GetStackNameArray (projectName, pRepoFolder) into stackNameArray
+   --
+   -- if pExpandedItems is empty then put "modules" into pExpandedItems
+   -- put project_GetFolderArray (projectName, pRepoFolder) into stackNameArray
+   -- 
+   put display_ConstructFoldState (pExpandedItems) into foldedArray
+   display_Array stackNameArray, projectName, "Project", foldedArray
+   put the result into displayView
+   --
+   put project_DisplayMenuTitles (projectName) into titleMenuTable
+   set the title_Menu of displayView to titleMenuTable
+   --
+   set the line_Menu of displayView to "Global | Project | Line | Menu"
+   set the mouse_DoubleUp of displayView to "mDouble_DisplayProjectTree"
+   --
+   return displayView
+end display_Project
+
+command display_ProjectArray projectName, pConstruct
+   put project_GetFolder (projectName) into projectFolder
+   if pConstruct is true then
+      put project_ConstructArray (projectFolder) into projectArray
+      display_Data projectArray, projectName, "Constructed Project Array"
+   else
+      put project_FetchArray (projectFolder) into projectArray
+      display_Data projectArray, projectName, "Project Array"
+   end if
+   put the result into displayView
+   --
+   return displayView
+end display_ProjectArray
+
+function display_FindProjectView projectName
+   -- this is the new array based view
+   put display_FindView ("Project", projectName) into displayView
+   return displayView
+end display_FindProjectView
+
+on mDouble_DisplayProjectTree displayView, stackName
+   if the optionkey is "Down" then breakpoint
+   --
+   if the scriptonly of stack stackName is true then
+      edit the script of stack stackName
+   else
+      go to stack stackName
+   end if
+   --
+   if the shiftKey is "Down" then
+      put the name of stack stackName into stackObject
+      display_StackDeps stackObject
+   end if
+end mDouble_DisplayProjectTree
+
+function project_GetFolderArray projectName, pRepoFolder
+   put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
+   put directory_NestedArray (projectFolder) into stackNameArray
+   
+   # Should export here
+   return stackNameArray
+end project_GetFolderArray
+
+function project_GetStackNameArray projectName, pRepoFolder
+   put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
+   --
+   repeat for each item shortFolder in "libraries,models,controllers,views,behaviors"
+      put folder_AddShort (projectFolder, shortFolder) into sFolder
+      get folder_GetStackNameArray (sFolder)
+      if it is an array then
+         put text_InitialCaps (shortFolder) into shortLabel
+         put it into stackNameArray [shortLabel]
+      end if
+   end repeat
+   --
+   put project_ListModuleFolders (projectName) into moduleFolders
+   repeat for each line moduleFolder in moduleFolders
+      put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+      if exists (stack moduleHomeStackPath) is false then next repeat
+      
+      put the short name of stack moduleHomeStackPath into stackName
+      put empty into stackNameArray ["Modules"][stackName]
+   end repeat
+   
+   return stackNameArray
+end project_GetStackNameArray
+
+command display_ProjectLibs projectName, pRefreshOnly
+   display_Project projectName
+   put the result into displayView
+   if pRefreshOnly is true and exists (display_FindView (projectName, "Model and Libraries")) then
+      return displayView
+   end if
+   
+   put the project_UsedStackNames of stack projectName into projectLibNames
+   display_Data projectLibNames, projectName, "Model and Libraries"
+   put the result into displayView
+   
+   put project_DisplayMenuTitles (projectName) into titleMenuTable
+   set the title_Menu of displayView to titleMenuTable
+   --   
+   set the field_Style of displayView to "click"
+   set the line_Menu of displayView to "Global | Project | Line | Menu"
+   set the mouse_DoubleUp of displayView to "mDouble_DisplayStackDeps"
+   --
+   _SafeStartProject projectName
+   --
+   return displayView
+end display_ProjectLibs
+
+private command _SafeStartProject projectName
+   if exists (stack projectName) is false then
+      project_Start projectName, true
+      put the result into homeStackObject
+      if homeStackObject is empty then
+         put merge ("Cannot find home stack for project '[[projectName]]'") into someComment
+         lcw_AnswerWarning someComment
+      end if
+   end if
+   return homeStackObject
+end _SafeStartProject
+
+
+--> Display
+-
 command display_AskProjectTrashStack stackObject
    if exists (stackObject) is false then
       display_DebugHistory pDisplayTitle, pAlsoArray
@@ -101,45 +210,6 @@ end _DefaultScriptSectionTitle
 
 --> Display | Library
 -
-command display_ProjectLibs projectName
-   if exists (stack projectName) is false then
-      project_Start projectName, true
-      put the result into homeStackObject
-      if homeStackObject is empty then
-         put merge ("Cannot find home stack for project '[[projectName]]'") into someComment
-         lcw_AnswerWarning someComment
-      end if
-   end if
-   --
-   put the project_UsedStackNames of stack projectName into projectLibNames
-   put "Model and Libraries" into stackLabel
-   put display_FindView (stackLabel, projectName) into displayView
-   
-   if exists (displayView) is true then
-      set the view_Index of displayView to projectLibNames
-      go to stack projectName
-   else
-      put "mDouble_DisplayStackDeps" into mDoubleUp
-      --
-      put project_DisplayMenuTitles (projectName) into titleMenuTable
-      put "Global | Project | Line | Menu" into lineMenu
-      --   
-      display_Data projectLibNames, projectName, stackLabel
-      put the result into displayView
-      --
-      set the field_Style of displayView to "click"
-      --
-      set the title_Menu of displayView to titleMenuTable
-      set the line_Menu of displayView to lineMenu
-      set the mouse_DoubleUp of displayView to mDoubleUp
-   end if
-   --
-   put the stack_Name of displayView into stackName
-   go to stack projectName
-   --
-   return displayView
-end display_ProjectLibs
-
 function project_DisplayMenuTitles projectName
    put project_ConstructMenuTitle (projectName) & tab & "submenu" after projectMenuTitles
    --

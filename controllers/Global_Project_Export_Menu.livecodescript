@@ -1,8 +1,8 @@
-﻿script "Global_Project_Export_Menu"
+﻿script "Global | Project | Export | Menu"
 --> MetaData
 -
 license: GPLv3
-name: Global_Project_Export_Menu
+name: Global | Project | Export | Menu
 type: controller
 version: 0.1
 
@@ -11,27 +11,21 @@ version: 0.1
 -
 local LocalArray
 
-on menu_Init tObject
-   put the tree_View of tObject into LocalArray ["tree_View"]
-end menu_Init
+getprop menu_Target [tObject]
+   put the title_Text of tObject into projectName
+   if exists (stack projectName) is false then return empty
+   return the namme of stack projectName
+end menu_Target
 
 
 --> Global | Project | Export | Menu
 -
 on menu_ExportScriptObject stackObject
-   breakpoint
-   put LocalArray ["tree_View"] into treeView
-   
-   put the displayed_Object of treeView into stackObject
    script_ExportHandlersAndCalls stackObject, true
 end menu_ExportScriptObject
 
 on menu_ExportAndIndexProject stackObject
-   breakpoint
-   put LocalArray ["tree_View"] into treeView
-   
-   put the stack_Object of treeView into stackObject
-   put the label of stackObject into projectName
+   put the project_Name of stackObject into projectName
    
    env_ExportAndIndexProject projectName
    put the result into hkeyPlaceArray

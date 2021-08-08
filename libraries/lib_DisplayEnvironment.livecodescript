@@ -13,84 +13,8 @@ see "lib_FunctionKey"
 
 --> Working on
 -
-command project_AskCreate
-   put the stack_Folder of stack "LCW" into rootFolder
-   set the itemdelimiter to slash
-   delete item -1 of rootFolder
-   
-   set the itemdelimiter to comma
-   answer folder "Select a root folder for your new project.." with rootFolder
-   if it is empty then exit to top   
-   
-   put lcw_Ask ("What name do you want to give the new project?", "lcw_XXX") into newProjectName
-   put library_ListProjectNames() into existingProjectNames
-   if newProjectName is among the lines of existingProjectNames then
-      answer warning merge ("You already have a project named '[[newProjectName]]'!")
-      exit to top
-   end if
-   
-   if exists (stack newProjectName) is true then
-      answer warning merge ("There is already a stack named '[[newProjectName]]'!")
-      exit to top
-   end if
-   
-   text_AddTrailing rootFolder, slash
-   put rootFolder & newProjectName & slash into newProjectFolder
-   if there is a folder newProjectFolder then
-      answer warning merge ("There is already a folder named '[[newProjectName]]' in this location!")
-      exit to top
-   end if
-   
-   project_Create newProjectFolder
-   put the result into homeStackPath
-   edit the script of stack homeStackPath
-   --
-   display_LcwProjectList
-end project_AskCreate
-
-
---> Display | Events
--
-on mDouble_DisplayProject displayView, projectName
-   if the optionkey is "Down" then breakpoint
-   
-   display_ProjectLibs projectName
-end mDouble_DisplayProject
-
-on mDouble_DisplayStackDeps displayView, stackName
-   if the optionkey is "Down" then breakpoint
-   
-   put the name of stack stackName into stackObject
-   if the shiftKey is "Down" then
-      display_StackDeps stackObject
-   end if
-   edit the script of stackObject
-   return true
-end mDouble_DisplayStackDeps
-
-command mDouble_DisplayBehavior displayView, stackName
-   if the optionkey is "Down" then breakpoint
-   
-   mDouble_DisplayStack displayView, stackName
-end mDouble_DisplayBehavior
-
-
---> Display | LCW
--
-command display_EnvironmentLibs
-   put env_ListUsedStackNames() into activeUsedStackNames
-   sort activeUsedStackNames
-   
-   put "Global | Environment | Menu" into mTitle
-   put "Global | Project | Tree | Line | Menu" into mLineTitle
-   --
-   display_Data activeUsedStackNames, "Active Libraries", "Environment"
-   put the result into displayView
-   display_SetInteractions displayView, menuBit, "mDouble_DisplayStackDeps"
-   return displayView
-end display_EnvironmentLibs
-
-command display_LcwProjectList pProjectNames
+command display_Environment pProjectNames
+   -- was "display_LcwProjectList"
    if pProjectNames is empty then
       put env_ListLocalProjects() into pProjectNames
    end if
@@ -128,7 +52,95 @@ command display_LcwProjectList pProjectNames
    unlock screen
    --
    return displayView
-end display_LcwProjectList
+end display_Environment
+
+command project_AskCreate
+   put the stack_Folder of stack "LCW" into rootFolder
+   set the itemdelimiter to slash
+   delete item -1 of rootFolder
+   
+   set the itemdelimiter to comma
+   answer folder "Select a root folder for your new project.." with rootFolder
+   if it is empty then exit to top   
+   
+   put lcw_Ask ("What name do you want to give the new project?", "lcw_XXX") into newProjectName
+   --
+   put library_ListProjectNames() into existingProjectNames
+   if newProjectName is among the lines of existingProjectNames then
+      answer warning merge ("You already have a project named '[[newProjectName]]'!")
+      exit to top
+   end if
+   
+   if exists (stack newProjectName) is true then
+      answer warning merge ("There is already a stack named '[[newProjectName]]'!")
+      exit to top
+   end if
+   
+   text_AddTrailing rootFolder, slash
+   put rootFolder & newProjectName & slash into newProjectFolder
+   if there is a folder newProjectFolder then
+      answer warning merge ("There is already a folder named '[[newProjectName]]' in this location!")
+      exit to top
+   end if
+   
+   project_Create newProjectFolder
+   put the result into homeStackPath
+   edit the script of stack homeStackPath
+   --
+   display_Environment
+   return newProjectName
+end project_AskCreate
+
+
+--> Display | Events
+-
+on mDouble_DisplayProject displayView, projectName
+   if the optionkey is "Down" then breakpoint
+   
+   -- display_ProjectLibs projectName
+   display_Project projectName
+end mDouble_DisplayProject
+
+on mDouble_DisplayStackDeps displayView, stackName
+   if the optionkey is "Down" then breakpoint
+   
+   put the name of stack stackName into stackObject
+   if the shiftKey is "Down" then
+      display_StackDeps stackObject
+   end if
+   edit the script of stackObject
+   return true
+end mDouble_DisplayStackDeps
+
+command mDouble_DisplayBehavior displayView, stackName
+   if the optionkey is "Down" then breakpoint
+   
+   mDouble_DisplayStack displayView, stackName
+end mDouble_DisplayBehavior
+
+on mDouble_DisplayLib displayView, stackName
+   mDouble_DisplayStackDeps displayView, stackName
+end mDouble_DisplayLib
+
+
+--> Display | LCW
+-
+command display_EnvironmentLibs pFilterItems, pDisplayView
+   -- put "Global | Project | Tree | Line | Menu" into mLineTitle
+   
+   put env_ListUsedStackNames() into modelsAndLibs
+   if pFilterItems is empty then
+      put "Active Libraries" into sTitle
+   else
+      put "Filtered Libraries" into sTitle
+      index_Filter modelsAndLibs, pFilterItems
+   end if
+   --
+   display_Data modelsAndLibs, sTitle, "Environment", pDisplayView
+   put the result into displayView
+   display_SetInteractions displayView, "Environment | Lib", "mDouble_DisplayLib"
+   return displayView
+end display_EnvironmentLibs
 
 
 --> Display | Project

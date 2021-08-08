@@ -9,25 +9,41 @@ version: 0.3
 
 --> Working on
 -
-command display_Camera cameraDeviceName, sRect
-   -- put the stack_BelowRect of stack "Image 1" into sRect
-   --
-   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
-   put the result into displayView
-   -- display_SetMenu displayView, "Camera", "title_Menu"
-   --
-   return displayView
-end display_Camera
 
-command display_Browser someURL, sRect
-   -- put the stack_BelowRect of stack "Image 1" into sRect
+--> Display | View | Clone
+-
+command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
+   if pStackStyle is empty then put "palette" into pStackStyle
    --
-   display_Clone "View|Browser", "Browser", someURL, "browser_URL", sRect
-   put the result into displayView
-   display_SetMenu displayView, "Browser", "title_Menu"
+   if exists (stack pCloneName) is true then
+      -- already exists (lets use it)
+      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+   else
+      if pCloneName is empty then
+         put viewName into stackLabel
+      else
+         put pCloneName into stackLabel
+      end if
+      --
+      stack_CloneInvisible viewName, pCloneName
+      put the result into pCloneName
+      --
+      if exists (control 1 of cd 1 of stack pCloneName) then
+         put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+      else
+         -- problem copying view?
+         show stack pCloneName
+         return the name of stack pCloneName
+      end if
+   end if
    --
-   return displayView
-end display_Browser
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   set the pDataProp of viewObject to pData
+   --
+   stack_ShowAndGo viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect
+   --
+   return viewObject
+end display_Clone
 
 
 --> Display | Events
@@ -91,6 +107,19 @@ command mDoubleUp_EditBehavior indexView, bObject
 end mDoubleUp_EditBehavior
 
 
+--> Display
+-
+command display_Camera cameraDeviceName, sRect
+   -- put the stack_BelowRect of stack "Image 1" into sRect
+   --
+   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
+   put the result into displayView
+   -- display_SetMenu displayView, "Camera", "title_Menu"
+   --
+   return displayView
+end display_Camera
+
+
 --> Display | View
 -
 command palette_View viewName, pCardMargin, pStackRect, pHidden
@@ -132,55 +161,6 @@ command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect,
 end display_NewViewStack
 
 
---> Display | View | Clone
--
-command display_Clone viewName, pCloneName, pData, pDataProp, pStackRect
-   --
-   if exists (stack pCloneName) is true then
-      -- already exists (lets use it)
-      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-   else
-      if pCloneName is empty then
-         put viewName into stackLabel
-      else
-         put pCloneName into stackLabel
-      end if
-      _CreateInvisibleClone viewName, pCloneName, stackLabel
-      put the result into pCloneName
-      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-   end if
-   --
-   _PositionStack pCloneName, pStackRect
-   _SetAndShow viewObject, pCloneName, pData, pDataProp
-   --
-   return viewObject
-end display_Clone
-
-private command _SetAndShow viewObject, pCloneName, pData, pDataProp
-   if pDataProp is empty then put "displayed_Data" into pDataProp
-   --
-   set the pDataProp of viewObject to pData
-   show stack pCloneName
-end _SetAndShow
-
-private command _PositionStack pCloneName, pStackRect
-   switch
-      case pStackRect is a rect
-         set the rect of stack pCloneName to pStackRect
-         break
-      default
-         revIDEEnsureOnscreen pCloneName
-   end switch
-end _PositionStack
-
-private command _CreateInvisibleClone viewName, pCloneName, pStackLabel
-   stack_CloneInvisible viewName, pCloneName
-   put the result into pCloneName
-   set the label of stack pCloneName to pStackLabel
-   return pCloneName
-end _CreateInvisibleClone
-
-
 --> Display | View
 -
 command display_ViewTemplate viewName, pRepoFolder
@@ -206,7 +186,7 @@ function view_ConstructToolMenu viewObject, isaView
 end view_ConstructToolMenu
 
 function view_MenuToolTitles mTitle, isaView
-   if mTitle is not empty then
+   if menu_GlobalControllerExists (mTitle) is true then
       put tab & "submenu" & CR & "-" after mTitle
    end if
    --
@@ -225,44 +205,6 @@ function view_MenuToolTitles mTitle, isaView
    end if
    return word 1 to -1 of mTitle
 end view_MenuToolTitles
-
-
---> Display | View | Tools
--
-command display_ViewTools viewName, pRepoFolder
-   -- see display_ModuleTools
-   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
-   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
-   --
-   put the view_Props of viewObject into viewProps
-   
-   display_Data viewProps, viewName, "View Tools"
-   put the result into displayView
-   --
-   put view_ConstructToolMenu (viewObject, true) into mTitles
-   put line 1 of mTitles into mTitle
-   if menu_GlobalControllerExists (mTitle) is false then
-      display_SetInteractions displayView, "View | Tree", "mDouble_EditProp"
-   else
-      set the title_Menu of displayView to mTitles
-      set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
-      set the mouse_DoubleUp of displayView to "mDouble_EditProp"
-   end if
-   --
-   -- set the multiple_Hilites of displayView to false
-   
-   set the itemdelimiter to slash
-   put the project_Name of stack viewName into projectName
-   put the project_Folder of stack viewName into projectFolder
-   -- put the original_ModuleName of viewObject into moduleName
-   
-   -- set the displayed_ViewObject of displayView to viewObject
-   set the displayed_Object of displayView to viewObject
-   set the displayed_ProjectName of displayView to projectName
-   set the displayed_ProjectFolder of displayView to projectFolder
-   --
-   return displayView
-end display_ViewTools
 
 
 --> Display | Project | Views
@@ -465,11 +407,11 @@ private command _askMoveBehavior someComment, bObject, viewObject
                exit to top
             case "Project"
                put the project_Folder of viewObject into projectFolder
-               put project_ConstructFolder ("behaviors", projectFolder) into newBehaviorFolder
+               put folder_AddShort (projectFolder, "behaviors") into newBehaviorFolder
                break
             case "Module"
                put the module_Folder of viewObject into moduleFolder
-               put project_ConstructFolder ("behaviors", moduleFolder) into newBehaviorFolder
+               put folder_AddShort (moduleFolder, "behaviors") into newBehaviorFolder
                break
          end switch
          folder_CreateNested newBehaviorFolder

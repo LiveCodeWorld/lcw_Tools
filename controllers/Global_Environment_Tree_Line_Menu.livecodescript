@@ -18,7 +18,7 @@ local LocalArray
 
 --> Menu | Init
 -
-on menu_Init tObject
+getprop menu_Target [tObject]
    put the selected_Line of tObject into projectName
    put the hilited_Line of tObject into lineNum
    put the line_Colour [lineNum] of tObject into LocalArray ["oColour"]
@@ -27,9 +27,7 @@ on menu_Init tObject
    if isClean is true then
       set the line_Colour [lineNum] of tObject to "green"
    end if
-end menu_Init
-
-getprop menu_Target [tObject]
+   --
    put the display_View of tObject into LocalArray ["displayView"]
    put the selected_Line of tObject into projectName
    return projectName
@@ -51,19 +49,70 @@ getprop disabled_StopProject [pName]
    end if
 end disabled_StopProject
 
+getprop disabled_ScriptOnly [projectName]
+   if exists (stack projectName) is true then
+      return false
+   else
+      return true
+   end if
+end disabled_ScriptOnly
+
+getprop checked_ScriptOnly [projectName]
+   put the scriptonly of stack projectName into isScriptOnly
+   return isScriptOnly
+end checked_ScriptOnly
+
+getprop disabled_DisplayProject [projectName]
+   if exists (stack projectName) is true then
+      return false
+   else
+      return true
+   end if
+end disabled_DisplayProject
+
+getprop disabled_DisplayGitStatus [projectName]
+   if exists (stack projectName) is true then
+      return false
+   else
+      return true
+   end if
+end disabled_DisplayGitStatus
+
+getprop disabled_RevealProjectFolder [projectName]
+   if exists (stack projectName) is true then
+      return false
+   else
+      return true
+   end if
+end disabled_RevealProjectFolder
+
 
 --> Global | Environment | Tree | Line | Menu
 -
 on menu_DisplayProject projectName
-   display_ProjectLibs projectName
+   display_Project projectName
 end menu_DisplayProject
+
+on menu_DisplayProjectLibs projectName
+   display_ProjectLibs projectName
+end menu_DisplayProjectLibs
 
 on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
+on menu_RevealProjectFolder projectName
+   put the project_Folder of stack projectName into projectFolder
+   finder_Reveal projectFolder
+end menu_RevealProjectFolder
+
 on _
 end _
+
+on menu_ScriptOnly projectName
+   put the scriptonly of stack projectName into isScriptOnly
+   set the scriptonly of stack projectName to isScriptOnly is false
+end menu_ScriptOnly
 
 on menu_StartProject projectName
    project_Start projectName, true
@@ -76,11 +125,6 @@ end menu_StopProject
 on _
 end _
 
-on menu_OpenProjectHome projectName
-   go to stack projectName
-   show stack projectName
-end menu_OpenProjectHome
-
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
@@ -88,33 +132,7 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-getprop checked_AddProjectToLibrary [projectName]
-   put project_IsActive (projectName) into someBoolean
-   return someBoolean
-end checked_AddProjectToLibrary
-
-on menu_AddProjectToLibrary projectName
-   -- put project_GetFolder (projectName) into projectFolder
-   -- put the project_Folder of stack projectName into projectFolder
-   put env_GetProjectFolder (projectName) into projectFolder
-   if projectFolder is empty then
-      -- put LocalArray ["displayView"] into displayView
-      -- lcw_AnswerWarning someQuestion, displayView, pQVar, pQVar2, pQVar3
-      answer folder "Select the project folder..."
-      put it into projectFolder
-      if projectFolder is empty then exit to top
-   end if
-   
-   library_StoreProjectFolder projectName, projectFolder
-   --
-   finder_Reveal projectFolder
-end menu_AddProjectToLibrary
-
-on menu_TestByColouring projectName
-   put git_ProjectIsClean (projectName) -- into isClean
-   if isClean is true then
-      
-   end if
-end menu_TestByColouring
-
-
+on _TestFolderArray projectName
+   put the project_StackNameArray of stack projectName into sData
+   display_Data sData, "Test Data"
+end _TestFolderArray

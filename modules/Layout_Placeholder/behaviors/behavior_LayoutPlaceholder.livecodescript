@@ -162,10 +162,6 @@ getprop placeHolder_Button
    return the long id of me
 end placeHolder_Button
 
-getprop view_Name
-   return "View|Layout|Placeholder"
-end view_Name
-
 getprop view_Object
    return the long id of me
 end view_Object

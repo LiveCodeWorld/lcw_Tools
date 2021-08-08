@@ -1,7 +1,7 @@
 ﻿script "Global | Module | List | Line | Menu"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: Global | Module | List | Line | Menu
 type: controller
@@ -18,44 +18,33 @@ local LocalArray
 --> Menu | Props
 -
 getprop menu_Target [tObject]
-   -- called first
-   put the display_View of tObject into displayView
-   put the displayed_Data of displayView into LocalArray ["dataArray"]
+   put the display_View of tObject into LocalArray ["displayView"]
+   put the selected_Line of tObject into shortModuleFolder
    --
-   return displayView
+   return shortModuleFolder
 end menu_Target
-
-getprop menu_CheckTarget [mTarget]
-   -- use to do initialisation
-   pass menu_CheckTarget
-end menu_CheckTarget
-
-getprop test_Param [displayView]
-  return "b"
-end test_Param
-
-getprop test_Params [displayView]
-   return "a,b,c"
-end test_Params
-
-getprop checked_TestChecked
-   return true
-end checked_TestChecked
-
-getprop disabled_Test
-  return false -- true, "delete"
-end disabled_Test
 
 
 --> Global | Module | List | Line | Menu
 -
-on menu_Test displayView, abc
-   put displayView & CR & abc
-end menu_Test
+on menu_DisplayModule shortModuleFolder
+   display_ModuleFromShortModuleFolder shortModuleFolder
+end menu_DisplayModule
 
-on menu_TestChecked
-  put menu_GetChecked (the params)
-end menu_TestChecked
+on menu_ModuleTools shortModuleFolder
+   put env_GetModuleHomePath (shortModuleFolder) into moduleStackPath
+end menu_ModuleTools
+
+on menu_ShowModule shortModuleFolder
+   put env_GetModuleHomePath (shortModuleFolder) into moduleStackPath
+   -- 
+   toplevel stack moduleStackPath
+   show stack moduleStackPath
+   --
+   put LocalArray ["displayView"] into displayView
+   put globalLoc (the loc of displayView) into gLoc
+   set the loc of stack moduleStackPath to gLoc
+end menu_ShowModule
 
 on _
 end _
@@ -67,10 +56,6 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_Experiment displayView
+on _Experiment displayView
    put displayView
-end menu_Experiment
-
-
---> Deps
--
+end _Experiment

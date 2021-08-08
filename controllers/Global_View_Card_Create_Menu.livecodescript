@@ -60,9 +60,36 @@ getprop disabled_SetViewMetadata [cardObject]
    end if
 end disabled_SetViewMetadata
 
+private command _TestLayoutControl viewObject
+   dispatch "LayoutControl" to viewObject
+   switch it
+      case "unhandled"
+         put the behavior_Objects of viewObject
+         lcw_Answer "Behaviors still nto fixed!"
+         break
+   end switch
+end _TestLayoutControl
 
 --> Global | View | Card | Create | Menu
 -
+on menu_FixBehaviorObjects cardObject
+   put the long id of control 1 of cardObject into viewObject
+   --
+   get the behavior_Objects of viewObject
+   set the behavior_Objects of viewObject to it
+   --
+   _TestLayoutControl viewObject
+end menu_FixBehaviorObjects
+
+on menu_SetModuleBehavior cardObject
+   put the long id of control 1 of cardObject into viewObject
+   --
+   put the module_Behaviors of viewObject into moduleBehaviors
+   set the behavior_Objects of viewObject to moduleBehaviors
+   --
+   _TestLayoutControl viewObject
+end menu_SetModuleBehavior
+
 on menu_CreateViewGroup cardObject
    put the stack_Name of cardObject into viewName
    go to stack viewName -- sets the topstack
@@ -82,7 +109,7 @@ on menu_CreateViewGroup cardObject
    
    set the lockloc of createdObject to true
    set the showborder of createdObject to true
-   object_Inspect createdObject
+   display_ObjectProperties createdObject
    edit the script of the behavior of createdObject
 end menu_CreateViewGroup
 
@@ -100,7 +127,7 @@ on menu_MakeFirstControlAView cardObject
    put the module_Behaviors of viewObject into moduleBehaviors
    set the behavior_Objects of viewObject to moduleBehaviors
    
-   object_Inspect viewObject
+   display_ObjectProperties viewObject
    edit the script of viewObject
 end menu_MakeFirstControlAView
 

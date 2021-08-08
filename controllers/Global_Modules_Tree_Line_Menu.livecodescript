@@ -76,6 +76,17 @@ end menu_DisplayModuleTools
 on _
 end _
 
+on menu_RenameModule oldModuleName
+   put the project_Folder of stack oldModuleName into projectFolder
+   put the project_Name of stack oldModuleName into projectName
+   put lcw_Ask ("Give this module a new name...", oldModuleName) into newModuleName
+   --
+   module_Rename oldModuleName, newModuleName, projectName
+   --
+   display_ProjectLibs projectName
+   display_ProjectModules projectName
+end menu_RenameModule
+
 on menu_RevealModuleFolder moduleName
    put LocalArray ["moduleFolder"] into moduleFolder
    if moduleFolder is empty then

@@ -33,30 +33,32 @@ getprop disabled_Show [displayView]
    end if
 end disabled_Show
 
+private function _GetSelectedStackName displayView
+   put _GetSelectedView (displayView) into sView
+   put the stack_Name of sView into stackName
+   return stackName
+end _GetSelectedStackName
+
+private function _GetSelectedView displayView
+   put the selected_Value of displayView into sView
+   return sView
+end _GetSelectedView
+
 
 --> Global | Display | View | Line | Menu
 -
 on menu_Show displayView
-   put the selected_Value of displayView into sDisplayView
+   put _GetSelectedStackName (displayView) into stackName
    --
-   put the stack_Name of sDisplayView into dStackName
-   show stack dStackName
+   show stack stackName
 end menu_Show
 
 on _
 end _
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_Experiment mTarget
-   put mTarget
-end menu_Experiment
-
-
---> Deps
--
+on menu_Gather displayView
+   put _GetSelectedStackName (displayView) into stackName
+   --
+   set the loc of stack stackName to the screenMouseLoc
+   show stack stackName
+end menu_Gather

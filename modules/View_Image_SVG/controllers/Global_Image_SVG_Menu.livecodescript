@@ -11,13 +11,21 @@ version: 0.2
 --> Menu | Init
 -
 getprop menu_Target [tObject]
-   -- put menu_GetTargetObject() into tObject
    put the svg_View of tObject into svgView
    if exists(svgView) is false then
+      -- could be a index tool palette
       put the displayed_Object of tObject into svgView
    end if
    return svgView
 end menu_Target
+
+getprop menu_CheckTarget [mTarget]
+   if exists (mTarget) is true then
+      return true
+   else
+      return false
+   end if
+end menu_CheckTarget
 
 private function _DisplayedObject svgView
    -- put the displayed_Object of svgView into hObject
@@ -77,22 +85,62 @@ end disabled_DisplayAsset
 
 --> Global | Image | SVG | Menu
 -
-on menu_DisplaySvgs
-   display_HtmlSvgLinks "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/"
-end menu_DisplaySvgs
+on submenu_Library
+   return "Global | Svg | Library | Menu"
+end submenu_Library
 
 on _
 end _
 
+on menu_DisplaySvgPathText svgView
+   put the svg_XML of svgView into svgXML
+   put svg_GetPathText (svgXML)
+end menu_DisplaySvgPathText
+
+on menu_SvgTools svgView
+   put the view_Props of svgView into svgIndex
+   put the stack_Name of svgView into pTitle
+   --
+   display_Data svgIndex, pTitle, "SVG Tools"
+   put the result into displayView
+   display_SetInteractions displayView, "Image | SVG", "mDoubleUp_SvgProp"
+   --
+   set the displayed_Object of displayView to svgView
+   -- put _DisplayedObject (svgView) into hObject
+end menu_SvgTools
+
+on mDoubleUp_SvgProp
+   breakpoint
+end mDoubleUp_SvgProp
+
+on menu_FluidSvg svgView, someBoolean
+   set the svg_IsFluid of svgView to someBoolean
+end menu_FluidSvg
+
+on _
+end _
+
+on submenu_Assets
+   return "Global | Svg | Assets | Menu"
+end submenu_Assets
+
+on submenu_Handler
+   return "Handler | Menu"
+end submenu_Handler
+
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Handler | Menu
+-
 on menu_ObjectProcessedArray svgView
    put _DisplayedObject (svgView) into hObject
    --
    put the projectOverlay_Array ["processedHkey.array"] of hObject into processedHkeyArray  
    display_Array processedHkeyArray, "processedHkeyArray"
 end menu_ObjectProcessedArray
-
-on _
-end _
 
 on menu_HandlerArray svgView
    put the displayed_Hkey of svgView into hKey
@@ -127,90 +175,6 @@ on menu_ObjectMetadataFolder svgView
    put the metadata_Folder of hObject into someFolder
    finder_Reveal someFolder
 end menu_ObjectMetadataFolder
-
-on _
-end _
-
-on menu_SvgTools svgView
-   display_Index svgIndex, "SVG Tools", "Global | Image | SVG | Menu"
-   put the result into indexView
-   --
-   put _DisplayedObject (svgView) into hObject
-   set the displayed_Object of indexView to hObject
-end menu_SvgTools
-
-on _
-end _
-
-on menu_DownloadAssets svgView
-   put _DisplayedObject (svgView) into scriptObject
-   put the project_Folder of scriptObject into projectFolder
-   
-   -- put "http://livecode.world/graphs/graph.html" into someUrl
-   asset_DownloadHtml "http://livecode.world/graphs/graph.html", projectFolder
-   asset_DownloadHtml "https://livecode.world/graphs/graphviz.html", projectFolder
-   asset_DownloadHtml "http://js.cytoscape.org/demos/aedff159b0df05ccfaa5/", projectFolder, "cats.html"
-end menu_DownloadAssets
-
-on menu_DisplayAsset svgView, shortAssetFile
-   put _DisplayedObject (svgView) into scriptObject
-   put the project_Folder of scriptObject into projectFolder
-   --
-   put asset_GetFile (projectFolder, shortAssetFile) into htmlFile
-   put ("file:" & htmlFile) into someURL
-   
-   put the long id of control 1 of cd 1 of stack "View|Image|SVG" into svgView
-   put url someURL into someHtml
-   
-   -- set the htmltext of svgView to someHtml
-   set the url of svgView to htmlFile
-   
-   if the shiftKey is "Down" then
-      put the htmltext of svgView
-      display_Index someHtml
-   end if
-end menu_DisplayAsset
-
-on _
-end _
-
-on menu_ExportSvg svgView
-   put the htmltext of svgView into someHTML
-   put the svg_XML of svgView into someSVG
-   put the svg_URL of svgView into svgURL
-   
-   answer folder "Choose a folder to export the html and svg..."
-   if it is empty then exit to top
-   
-   put it into someFolder
-   set the defaultfolder to someFolder
-   
-   set the itemdelimiter to slash
-   put item -1 of svgURL into shortFile
-   if char -4 to -1 of shortFile is not ".svg" then
-      set the itemdelimiter to "."
-      if the number of items of shortFile = 2 then delete item -1 of shortFile
-      put ".svg" after shortFile
-   end if
-   put "file:" & shortFile into localSvgUrl
-   
-   put someHTML into url "file:index.html"
-   put someSVG into url localSvgUrl
-end menu_ExportSvg
-
-on _
-end _
-
-on menu_FluidSvg svgView, someBoolean
-   set the svg_IsFluid of svgView to someBoolean
-end menu_FluidSvg
-
-on _
-end _
-
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
 
 
 --> Dev | Menu
@@ -330,3 +294,4 @@ on menu_RevealTextStackFolder svgView
    put "the textStack_Folder:" && textStackFolder
    finder_Reveal textStackFolder
 end menu_RevealTextStackFolder
+

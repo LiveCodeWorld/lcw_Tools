@@ -30,7 +30,7 @@ getprop addView_Params
 end addView_Params
 
 getprop addModule_Params
-   put env_ListModuleNames() into moduleNames
+   put env_ListShortModuleFolders() into moduleNames
    put outline_FromPathIndex (moduleNames, "_") into moduleMenu
    return moduleMenu
 end addModule_Params

@@ -111,28 +111,6 @@ end disabled_SetViewMetadata
 
 --> Global | View | Script | Menu
 -
-on menu_SetViewMetadata viewObject
-   get the view_Name of viewObject
-   put the stack_Name of viewObject into viewName
-   put metadata_ConstructArray (viewName, "view") into uRipArray
-   --
-   -- set the view_Name ["view"] of viewObject to viewName
-   set the script_MetaData of viewObject to uRipArray
-   put the result into uRipArray
-   --
-   edit the script of viewObject
-end menu_SetViewMetadata
-
-on _
-end _
-
-on menu_DisplayViewBehaviors viewObject
-   display_ViewBehaviors viewObject
-end menu_DisplayViewBehaviors
-
-on _
-end _
-
 on menu_EditViewScript viewObject
    edit the script of viewObject
 end menu_EditViewScript
@@ -145,6 +123,10 @@ on menu_EditCardScript viewObject
    put the card_Object of viewObject into cardObject
    edit the script of cardObject
 end menu_EditCardScript
+
+on menu_DisplayViewBehaviors viewObject
+   display_ViewBehaviors viewObject
+end menu_DisplayViewBehaviors
 
 on _
 end _
@@ -207,7 +189,14 @@ end menu_SetViewCardBehavior
 on _
 end _
 
-on menu_GoToView scriptObject
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
+
+
+--> Dev | Menu
+-
+on _GoToView scriptObject
    put the object_MetaData ["name"] of scriptObject into viewName
    put view_GetTemplateObject (viewName) into templateObject
    switch
@@ -221,66 +210,55 @@ on menu_GoToView scriptObject
       default
          object_GoTo templateObject
    end switch
-end menu_GoToView
+end _GoToView
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_CreateView scriptObject
+on _CreateView scriptObject
    breakpoint
    -- template_ConstructCloneStack
    template_ConstructStackFromObject scriptObject
-end menu_CreateView
+end _CreateView
 
-on menu_EditToolMenu mTarget
+on _EditToolMenu mTarget
    put the menu_ToolTitle of mTarget into mTitle
    menu_Edit mTitle
-end menu_EditToolMenu
+end _EditToolMenu
 
-on menu_BehaviorsOfView mTarget
+on _BehaviorsOfView mTarget
    put the object_Behaviors of mTarget
-end menu_BehaviorsOfView
+end _BehaviorsOfView
 
 on _
 end _
 
-on menu_HierarchyObject mTarget, someThing
+on _HierarchyObject mTarget, someThing
    menu_SetChoice someThing, scriptObject, someType
    -- put ObjectDictionary [scriptObject] into scriptObject
    if someType is "behavior" then
       put the behavior of scriptObject into scriptObject
    end if
    edit the script of scriptObject
-end menu_HierarchyObject
-
-command menu_SetChoice menuChoice, @mainChoice, @secondChoice
-   put line 1 of menuChoice into menuChoice
-   set the itemdelimiter to "|"
-   put item 1 of menuChoice into mainChoice
-   put item 2 to -1 of menuChoice into secondChoice
-end menu_SetChoice
-
-on menu_SetTemplateStack mTarget, libStack
-   set the view_TemplateStack of mTarget to libStack
-end menu_SetTemplateStack
+end _HierarchyObject
 
 
 --> Dev | Menu | Props
 -
-getprop lib_Stacks
-   put library_ListUsedStacks() into libStacks
-   return libStacks
-end lib_Stacks
-
 local BehaviorObjectMenu, ObjectDictionary
 
-getprop some_Things [mTarget]
+private command _SetChoice menuChoice, @mainChoice, @secondChoice
+   put line 1 of menuChoice into menuChoice
+   set the itemdelimiter to "|"
+   put item 1 of menuChoice into mainChoice
+   put item 2 to -1 of menuChoice into secondChoice
+end _SetChoice
+
+-- getprop hierarchyObject_Params
+put library_ListUsedStacks() into libStacks
+return libStacks
+end hierarchyObject_Params
+
+getprop hierarchyObject_Params [mTarget]
    return BehaviorObjectMenu
-end some_Things
+end hierarchyObject_Params
 
 getprop disabled_HierarchyObject [mTarget]
    local longObjects, shortObjects, shortNames

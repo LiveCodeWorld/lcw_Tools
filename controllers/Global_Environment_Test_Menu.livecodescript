@@ -69,7 +69,7 @@ on _
 end _
 
 on menu_IndicateStarted
-   display_LcwProjectList
+   display_Environment
 end menu_IndicateStarted
 
 on menu_SetWatchMenu mTarget

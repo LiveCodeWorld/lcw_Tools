@@ -54,6 +54,13 @@ on browserFrameDocumentLoadBegin
 end browserFrameDocumentLoadBegin
 
 
+--> Geometry
+-
+on LayoutControl pRect
+   pass LayoutControl
+end LayoutControl
+
+
 --> Objects
 -
 getprop svg_View
@@ -148,10 +155,30 @@ setprop svg_Scale svgScale
 end svg_Scale
 
 
-
-
 --> SVG | Props
 -
+getprop svg_Html
+   put the htmltext of me into someHTML
+   return someHTML
+end svg_Html
+
+setprop svg_Html someHTML
+   set the htmltext of me to someHTML
+end svg_Html
+
+getprop svg_XML
+   get the name of me
+   put the htmltext of me into someHTML
+   put svg_Get (someHTML) into svgXML
+   return svgXML
+end svg_XML
+
+setprop svg_XML svgXML
+   put the htmltext of me into someHTML
+   svg_Set someHTML, svgXML
+   set the htmltext of me to someHTML
+end svg_XML
+
 getprop svg_File
    put LocalArray ["svg_URL"] into svgURL
    if char 1 to 5 of svgURL is not "file:" then return empty
@@ -165,7 +192,7 @@ setprop svg_File [isFluid] svgPath
    put url svgURL into svgXML
    -- put svgXML
    if isFluid is true then
-      svg_SetDimensions svgXML, "100%", "100%"
+      _SetDimensions svgXML, "100%", "100%"
    end if
    
    put svgPath into svgTitle
@@ -186,7 +213,7 @@ setprop svg_URL [isFluid] svgURL
    put url svgURL into svgXML
    -- put svg_Get (svgXML) into svgXML
    if isFluid is true then
-      svg_SetDimensions svgXML, "100%", "100%"
+      _SetDimensions svgXML, "100%", "100%"
    end if
    
    put svgURL into svgTitle
@@ -219,10 +246,10 @@ getprop svg_Width
 end svg_Width
 
 setprop svg_Width someWidth
-   put svg_CreateXmlTree() into treeID
+   put _CreateXmlTree() into treeID
    revXMLSetAttribute treeID, "/svg","width", someWidth
    put revXMLText (treeID, empty, true) into newSvgXML
-   svg_DeleteXmlTree
+   _DeleteXmlTree
    delete line 1 of newSvgXML -- the xml header
    put word 1 to -1 of newSvgXML into newSvgXML
    
@@ -237,11 +264,11 @@ getprop svg_Height
 end svg_Height
 
 setprop svg_Height svgHeight
-   svg_DeleteXmlTree
-   put svg_CreateXmlTree() into treeID
+   _DeleteXmlTree
+   put _CreateXmlTree() into treeID
    revXMLSetAttribute treeID, "/svg","height", svgHeight
    put revXMLText (treeID, empty, true) into newSvgXML
-   svg_DeleteXmlTree
+   _DeleteXmlTree
    delete line 1 of newSvgXML -- the xml header
    put word 1 to -1 of newSvgXML into newSvgXML
    
@@ -265,9 +292,9 @@ setprop svg_Header svgHeader
 end svg_Header
 
 getprop svg_HeaderTable
-   put svg_CreateXmlTree() into treeID
+   put _CreateXmlTree() into treeID
    put revXMLAttributes (treeID, "/svg", tab, CR) into attributeTable
-   svg_DeleteXmlTree
+   _DeleteXmlTree
    return attributeTable
 end svg_HeaderTable
 
@@ -306,9 +333,9 @@ setprop svg_HeaderArray svgHeaderArray
 end svg_HeaderArray
 
 getprop svg_HeaderAttributes
-   put svg_CreateXmlTree() into treeID
+   put _CreateXmlTree() into treeID
    put revXMLAttributes (treeID, "/svg", tab, CR) into attributeTable
-   svg_DeleteXmlTree
+   _DeleteXmlTree
    return attributeTable
 end svg_HeaderAttributes
 
@@ -324,67 +351,26 @@ setprop svg_Dimensions svgDimensions
    put item 2 of svgDimensions into svgHeight
    
    put the svg_XML of me into svgXML
-   svg_SetDimensions svgXML, svgWidth, svgHeight
+   _SetDimensions svgXML, svgWidth, svgHeight
    set the svg_XML of me to svgXML
    return svgXML
 end svg_Dimensions
 
-getprop svg_XML
-   put the htmltext of me into someHTML
-   put svg_Get (someHTML) into svgXML
-   return svgXML
-end svg_XML
 
-setprop svg_XML svgXML
-   put the htmltext of me into someHTML
-   svg_Set someHTML, svgXML
-   set the htmltext of me to someHTML
-end svg_XML
-
-
---> SVG
+--> Private
 -
-function svg_Get someHTML
-   put revXMLCreateTree (someHTML, false, true, false) into treeID
-   put revXMLRootNode (treeID) into rootNode
-   put rootNode & "/body/svg" into svgNode
-   put revXMLText (treeID, svgNode, true) into svgXML
-   revXMLDeleteTree treeID
-   return svgXML
-   
-   local startChar, endChar
-   -- text_SetOffsets "<svg ", "</svg>", someHTML, startChar, endChar
-   -- put the result into svgXML
-   -- return svgXML
-   
-   -- brain dead but brittle way
-   set the wholematches to false
-   put lineOffset ("<svg ", someHTML) into startNum
-   put lineOffset ("</svg>", someHTML) into endNum
-   put line startNum to endNum of someHTML into svgXML
-   return word 1 to -1 of svgXML
-end svg_Get
-
-command svg_Set @someHTML, newSvgXml
-   local startChar, endChar
-   text_SetOffsets "<svg ", "</svg>", someHTML, startChar, endChar
-   put the result into oldSvgXML
-   put newSvgXml into char startChar to endChar of someHTML
-   return oldSvgXML
-end svg_Set
-
-command svg_SetDimensions @svgXML, svgWidth, svgHeight
-   put svg_CreateXmlTree (svgXML) into treeID
+private command _SetDimensions @svgXML, svgWidth, svgHeight
+   put _CreateXmlTree (svgXML) into treeID
    revXMLSetAttribute treeID, "/svg","width", svgWidth
    revXMLSetAttribute treeID, "/svg","height", svgHeight
    put revXMLText (treeID, empty, true) into svgXML
-   svg_DeleteXmlTree
+   _DeleteXmlTree
    
    delete line 1 of svgXML -- the xml header
    put word 1 to -1 of svgXML into svgXML
-end svg_SetDimensions
+end _SetDimensions
 
-private function svg_CreateXmlTree pSvgXML
+private function _CreateXmlTree pSvgXML
    if pSvgXML is empty then
       put the svg_XML of me into pSvgXML -- in case we have other HTML displayed
    end if
@@ -392,87 +378,12 @@ private function svg_CreateXmlTree pSvgXML
    put revCreateXMLTree (pSvgXML, pGoodXML, true, false) into svgXmlTreeID
    put svgXmlTreeID into LocalArray ["svgXmlTreeID"]
    return svgXmlTreeID
-end svg_CreateXmlTree
+end _CreateXmlTree
 
-private command svg_DeleteXmlTree
+private command _DeleteXmlTree
    put LocalArray ["svgXmlTreeID"] into svgXmlTreeID
    if svgXmlTreeID is not a number then return svgXmlTreeID
    revXMLDeleteTree svgXmlTreeID
    delete variable LocalArray ["svgXmlTreeID"]
    return svgXmlTreeID
-end svg_DeleteXmlTree
-
-command text_SetOffsets startText, endText, someText, @startChar, @endChar, pStartAfterCharNum
-   if pStartAfterCharNum is a number then   
-      delete char 1 to pStartAfterCharNum of someText
-   end if
-   
-   put offset (startText, someText) into startChar
-   if startChar is 0 then
-      put 0 into startChar
-      put 0 into endChar
-      return empty
-   end if
-   put the length of startText - 1 into startBit
-   if endText = empty then
-      put startChar + startBit into endChar
-   else
-      put text_OffsetAfter (endText, someText, startChar + startBit) into endChar
-      if endChar is 0 then
-         put 0 into startChar
-         put 0 into endChar
-         return empty
-      end if
-      add the length of endText - 1 to endChar
-   end if
-   
-   add startAfterCharNum to startChar
-   add startAfterCharNum to endChar
-   return char startChar to endChar of someText
-end text_SetOffsets
-
-command old_ExtractDimensions svgXML, @svgWidth, @svgHeight, @lineNum
-   -- <svg width="880pt" height="480pt"  
-   set the wholematches to false
-   put lineOffset ("<svg ", svgXML) into lineNum
-   put line lineNum of svgXML into firstLine
-   put "<svg width=\'(.+)pt\' height=\'(.+)pt\'" into someReg
-   replace "'" with quote in someReg
-   get matchText (firstLine, someReg, svgWidth, svgHeight)
-end old_ExtractDimensions
-
-command old_SetDimensions @svgXML, svgWidth, svgHeight
-   -- <svg width="880pt" height="480pt"  
-   set the wholematches to false
-   put lineOffset ("<svg ", svgXML) into lineNum
-   put line lineNum of svgXML into firstLine
-   put "<svg width=\'(.+)pt\' height=\'(.+)pt\'" into someReg
-   replace "'" with quote in someReg
-   get matchChunk (firstLine, someReg, sWidth, eWidth, sHeight, eHeight)
-   
-   put char sWidth to eWidth of line lineNum of svgXML into oldWidth
-   put char sHeight to eHeight of line lineNum of svgXML into oldHeight
-   
-   put svgWidth into char sWidth to eWidth of line lineNum of svgXML
-   put svgHeight into char sHeight to eHeight of line lineNum of svgXML
-   return oldWidth,oldHeight
-end old_SetDimensions
-
-
---> SVG | Templates
--
-function svg_GetHTMLTemplate
-   /*
-   <!DOCTYPE html>
-   <html>
-   <head>
-   <title>[[svgTitle]]</title>
-   </head>
-   <body>
-   [[svgXML]]
-   </body>
-   </html>
-   */
-   put "<!DOCTYPE html><html><head><title>[[svgTitle]]</title></head><body>[[svgXML]]</body></html>" into htmlTemplate
-   return htmlTemplate
-end svg_GetHTMLTemplate
+end _DeleteXmlTree

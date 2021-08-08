@@ -82,6 +82,20 @@ getprop disabled_Owner [tObject]
    return false
 end disabled_Owner
 
+getprop checked_HeightIsFixed [viewObject]
+   put the height_IsFixed of viewObject into heightIsFixed
+   return heightIsFixed
+end checked_HeightIsFixed
+
+command drag_Delete tObject, someThing
+   switch someThing
+      default
+         put someThing
+         breakpoint
+   end switch
+   return "View|SivaSiva|Navigation|Bottom"
+end drag_Delete
+
 
 --> Global | Layout | Placeholder | Menu
 -
@@ -148,11 +162,6 @@ on menu_IsTransparent tObject, someBoolean
    set the view_IsOpaque of tObject to not someBoolean
 end menu_IsTransparent
 
-getprop checked_HeightIsFixed [viewObject]
-   put the height_IsFixed of viewObject into heightIsFixed
-   return heightIsFixed
-end checked_HeightIsFixed
-
 on menu_HeightIsFixed viewObject
    put the height_IsFixed of viewObject into heightIsFixed
    --
@@ -169,19 +178,15 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_PlaceholderBehavior viewObject
+on _PlaceholderBehavior viewObject
    put the behavior of viewObject into bObject
    edit the script of bObject
-end menu_PlaceholderBehavior
-
-on menu_TestTarget tObject
-   put the name of tObject
-end menu_TestTarget
+end _PlaceholderBehavior
 
 on _
 end _
 
-on menu_DisplayDragWidgets
+on _DisplayDragWidgets
    put "Global | Layout | Placeholder | Replace | Menu" into mTitle
    put "Controls,Drag and Drop" into someTitle
    put empty into mLineTitle
@@ -190,35 +195,22 @@ on menu_DisplayDragWidgets
    put "drag_Delete" into dCommand
    put "headerBar,navBar,segmented,browser,tree" into someIndex
    display_Index someIndex, someTitle, mTitle, mLineTitle, mUp, mDoubleUp, dCommand
-end menu_DisplayDragWidgets
+end _DisplayDragWidgets
 
-command drag_Delete tObject, someThing
-   switch someThing
-      default
-         put someThing
-         breakpoint
-   end switch
-   return "View|SivaSiva|Navigation|Bottom"
-end drag_Delete
-
-on menu_Owner tObject, ownerMenuItem
-   menu_SendMessage ownerMenuItem
-end menu_Owner
-
-on menu_ChangeWidth tObject
+on _ChangeWidth tObject
    put lcw_Ask ("Change the width of placeholder to...", the width of tObject) into newWidth
    set the width of tObject to newWidth
    dispatch "LayoutControl" to the owner of tObject
-end menu_ChangeWidth
+end _ChangeWidth
 
-on menu_GoToPlaceholderTemplate
+on _GoToPlaceholderTemplate
    put view_GetTemplateObject ("Layouts|Placeholder") into templateObject
    object_GoTo templateObject
-end menu_GoToPlaceholderTemplate
+end _GoToPlaceholderTemplate
 
-on menu_UpdateElements tObject
+on _UpdateElements tObject
    put the layout_Elements of tObject into layoutElements
    repeat for each line someView in layoutElements
       view_Update someView, true
    end repeat
-end menu_UpdateElements
+end _UpdateElements

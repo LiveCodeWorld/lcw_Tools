@@ -12,6 +12,15 @@ version: 0.1
 local LocalArray
 
 
+--> Working on
+-
+private function project_ConstructFolder shortFolder, standardFolder
+   text_AddTrailing standardFolder, slash
+   if shortFolder is not empty then put shortFolder & slash after standardFolder
+   return standardFolder
+end project_ConstructFolder
+
+
 --> Menu | Props
 -
 on menu_Init tObject
@@ -89,7 +98,7 @@ getprop disabled_MoveExternalBehaviors [viewObject]
 end disabled_MoveExternalBehaviors
 
 getprop disabled_ModuleBehaviorFolder [viewObject]
-   put LocalArray ["moduleFolder"] into moduleFolder
+   put LocalArray ["moduleFolder"] into moduleFolder   
    put project_ConstructFolder ("behaviors", moduleFolder) into moduleBehaviorFolder
    if there is a folder moduleBehaviorFolder then
       return false
@@ -209,26 +218,22 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_ImportScriptOnlyBehaviors viewObject, someBoolean
+on _ImportScriptOnlyBehaviors viewObject, someBoolean
    set the imported_ViewBehaviors [true] of viewObject to someBoolean
-end menu_ImportScriptOnlyBehaviors
+end _ImportScriptOnlyBehaviors
 
-on menu_DeleteBehaviorGroup viewObject
+on _DeleteBehaviorGroup viewObject
    view_DeleteBehaviorGroup viewObject
-end menu_DeleteBehaviorGroup
+end _DeleteBehaviorGroup
 
-on menu_DeleteBehaviorCard viewObject
+on _DeleteBehaviorCard viewObject
    view_DeleteBehaviorCard viewObject
-end menu_DeleteBehaviorCard
+end _DeleteBehaviorCard
 
 on _
 end _
 
-on menu_SetModuleBehaviors viewObject, moduleBehavior
-   breakpoint
-end menu_SetModuleBehaviors
-
-on menu_ChooseViewBehavior viewObject
+on _ChooseViewBehavior viewObject
    breakpoint
    put LocalArray ["moduleFolder"] into moduleFolder
    answer file "Select a behavior for this view..." with moduleFolder -- with type "LiveCode Stacks|rev|RSTK"
@@ -238,29 +243,22 @@ on menu_ChooseViewBehavior viewObject
    set the behavior of viewObject to bObject
    
    _refresh viewObject
-end menu_ChooseViewBehavior
+end _ChooseViewBehavior
 
 on _
 end _
 
-on menu_Refresh viewObject
-   _refresh viewObject
-end menu_Refresh
-
-on menu_AddViewBehavior viewObject
+on _AddViewBehavior viewObject
    breakpoint
    view_AddBehavior viewObject
-end menu_AddViewBehavior
+end _AddViewBehavior
 
-on _
-end _
-
-on menu_ResetViewBehavior viewObject
+on _ResetViewBehavior viewObject
    put the behavior of viewObject into bStackObject
    set the behavior of viewObject to bStackObject
-end menu_ResetViewBehavior
+end _ResetViewBehavior
 
-on menu_FixBrokenBehaviors viewObject, menuChoice
+on _FixBrokenBehaviors viewObject, menuChoice
    switch menuChoice
       case "Fix broken behaviors"
          display_BrokenBehaviors viewObject, true
@@ -278,7 +276,7 @@ on menu_FixBrokenBehaviors viewObject, menuChoice
       set the behavior of someObject to the behavior of someObject
    end repeat
    put someObjects
-end menu_FixBrokenBehaviors
+end _FixBrokenBehaviors
 
 on _
 end _
@@ -289,22 +287,22 @@ Now we use "the imported_ViewBehaviors"
 and store the behaviors in buttons in a group
 */
 
-on menu_ConvertViewBehavior scriptObject
+on _ConvertViewBehavior scriptObject
    breakpoint
    put "Choose a name for your script only menu stack...." into pQuestion
    put "Global_Example_Menu" into suggestedAnswer
    
    put the script of scriptObject into bScript
    lcw_CreateLibrary "controller", pQuestion, suggestedAnswer
-end menu_ConvertViewBehavior
+end _ConvertViewBehavior
 
-on menu_MobileBehavior viewObject, someBoolean
+on _MobileBehavior viewObject, someBoolean
    breakpoint
    -- adds or removes
    _SetMobileCardBehavior viewObject, someBoolean
-end menu_MobileBehavior
+end _MobileBehavior
 
-on menu_ImportMobileBehavior viewObject, someBoolean
+on _ImportMobileBehavior viewObject, someBoolean
    breakpoint
    -- should close or refresh the script editor tab
    put the card_Object of viewObject into viewCardObject
@@ -346,9 +344,9 @@ on menu_ImportMobileBehavior viewObject, someBoolean
       _SetMobileCardBehavior viewObject, true
    end if
    edit the script of viewCardObject
-end menu_ImportMobileBehavior
+end _ImportMobileBehavior
 
-on menu_ImportViewBehavior viewObject, someBoolean
+on _ImportViewBehavior viewObject, someBoolean
    breakpoint
    -- should close or refresh the script editor tab
    if someBoolean is true then
@@ -364,7 +362,7 @@ on menu_ImportViewBehavior viewObject, someBoolean
       set the view_StoredScript of viewObject to empty
    end if
    edit the script of viewObject
-end menu_ImportViewBehavior
+end _ImportViewBehavior
 
 private command _SetMobileCardBehavior viewObject, someBoolean
    put the card_Object of viewObject into viewCardObject
@@ -378,12 +376,6 @@ private command _SetMobileCardBehavior viewObject, someBoolean
    set the behavior_Objects of viewCardObject to bObjects
 end _SetMobileCardBehavior
 
-
---> Dev | Menu | Props
--
-
---> Dev | Menu | Disabled
--
 getprop disabled_AddViewBehavior [mTarget]
    if exists (the behavior of mTarget) then
       return "delete"

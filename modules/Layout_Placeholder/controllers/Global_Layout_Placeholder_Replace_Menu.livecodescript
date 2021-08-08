@@ -26,7 +26,7 @@ getprop replaceWithView_Params
 end replaceWithView_Params
 
 getprop replaceWithModule_Params
-   put env_ListModuleNames() into moduleNames
+   put env_ListShortModuleFolders() into moduleNames
    put outline_FromPathIndex (moduleNames, "_") into mmoduleMenu
    return mmoduleMenu
 end replaceWithModule_Params

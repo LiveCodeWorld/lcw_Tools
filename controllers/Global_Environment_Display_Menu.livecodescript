@@ -18,38 +18,29 @@ local LocalArray
 
 --> Menu | Init
 -
-on menu_Init tObject   
-   -- do something when the menu first loads
-end menu_Init
+getprop menu_IsSimple
+   return mArray_GetSimple()
+end menu_IsSimple
 
 
 --> Global | Environment | Display | Menu
 -
-on display_ListAllProjects
-   put library_ListProjectNames() into projectNames
-   --
-   display_LcwProjectList projectNames
-end display_ListAllProjects
+on menu_EnvironmentLibs
+   display_EnvironmentLibs
+end menu_EnvironmentLibs
 
-on display_ListAllControllers indexView
-   if the shiftKey is "Down" then
-      display_Controllers
-   else
-      display_Controllers indexView
-   end if
-end display_ListAllControllers
+on menu_EnvironmentMenus
+   display_EnvironmentMenus
+end menu_EnvironmentMenus
 
-on _
-end _
+on menu_EnvironmentViews
+   display_EnvironmentViews
+end menu_EnvironmentViews
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
+on menu_EnvironmentModules
+   display_ListModules
+end menu_EnvironmentModules
 
-
---> Dev | Menu
--
-
-
---> Deps
--
+on menu_EnvironmentOldViews
+   display_OldViewFiles
+end menu_EnvironmentOldViews
