@@ -109,6 +109,7 @@ on menu_RenameController displayView
    --
    put the project_Name of stack gMenuTitle into projectName
    display_ProjectControllers projectName
+   display_Project projectName, true
    --
    edit the script of stack newStackName
 end menu_RenameController

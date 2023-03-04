@@ -19,12 +19,20 @@ local LocalArray
 -
 getprop menu_Target [tObject]
    put the display_View of tObject into displayView
+   --
+   put _GetGlobalController (displayView) into mController
+   put mController into LocalArray ["mController"]
+   put exists (mController) into LocalArray ["menuExists"]
+   --
+   put _GetControllerPath (displayView) into stackPath -- loads stack into memory
+   put stackPath into LocalArray ["stackPath"]
+   put exists (stack stackPath) into LocalArray ["stackPathExists"]
+   --
    return displayView
 end menu_Target
 
 getprop moveController_Param [displayView]
    put _GetStackName (displayView) into gMenuTitle
-   --
    put the project_Name of stack gMenuTitle into projectName
    return projectName
 end moveController_Param
@@ -33,24 +41,54 @@ getprop moveController_Params
    return library_ListProjectNames()
 end moveController_Params
 
+getprop disabled_EditController [displayView]
+   return LocalArray ["stackPathExists"] is false
+end disabled_EditController
+
+getprop disabled_FixShortFile [displayView]
+   return LocalArray ["menuExists"] is false
+end disabled_FixShortFile
+
+-- getprop disabled_RenameController
+return LocalArray ["menuExists"] is false
+end disabled_RenameController
+
+-- getprop disabled_ReindexMenu [displayView]
+return LocalArray ["menuExists"] is true
+end disabled_ReindexMenu
+
+getprop disabled_DeleteController
+   return LocalArray ["menuExists"] is false
+end disabled_DeleteController
+
 getprop disabled_MoveController [displayView]
-   put _GetStackName (displayView) into stackName
-   --
-   if exists (stack stackName) is false then
-      return true
-   else
-      return false
-   end if
+   return LocalArray ["menuExists"] is false
 end disabled_MoveController
 
-getprop disabled_EditController [displayView]
-   put _GetControllerPath (displayView) into stackPath -- loads stack into memory
-   if exists (stack stackPath) is false then
-      return true
-   else
-      return false
+private function _MenuController displayView
+   put _GetControllerPath (displayView) into cPath
+   if exists (stack cPath) is false then
+      put _GetStackName (displayView) into gMenuTitle
+      put "mController path:" && cPath
+      lcw_AnswerWarning "Cannot locate file for global menu '[[gMenuTitle]]'!", displayView, gMenuTitle
    end if
-end disabled_EditController
+   
+   put the name of stack cPath into mController
+   return mController
+end _MenuController
+
+private function _GetGlobalController displayView
+   put _GetStackName (displayView) into gMenuTitle
+   put menu_GetGlobalController (gMenuTitle) into mController
+   return mController
+end _GetGlobalController
+
+private function _SelectedMenuController displayView
+   put _GetStackName (displayView) into gMenuTitle
+   --
+   put the name of stack gMenuTitle into mController
+   return mController
+end _SelectedMenuController
 
 private function _GetStackName displayView
    -- put the selected_Index of displayView into stackName
@@ -71,18 +109,26 @@ private function _GetControllerPath displayView
    return controllerPath
 end _GetControllerPath
 
-private function _SelectedMenuController displayView
-   put _GetStackName (displayView) into gMenuTitle
-   --
-   put the name of stack gMenuTitle into mController
-   return mController
-end _SelectedMenuController
-
 private command _CloseSelectedScriptTab displayView
    put _SelectedMenuController (displayView) into mController
    scriptEditor_CloseTab mController
    return mController
 end _CloseSelectedScriptTab
+
+getprop disabled_FixShortFile [displayView]
+   put _GetStackName (displayView) into gMenuTitle
+   put project_NameToShortFolder (gMenuTitle) & ".livecodescript" into goodShortFile
+   put the short_File of stack gMenuTitle into oldShortFile
+   
+   switch
+      case exists (stack gMenuTitle) is false
+         return true
+      case oldShortFile = goodShortFile
+         return true
+      default
+         return false
+   end switch
+end disabled_FixShortFile
 
 
 --> Global | Project | Controllers | Line | Menu
@@ -100,51 +146,27 @@ on menu_MenuTools displayView
 end menu_MenuTools
 
 on menu_ReindexMenu displayView
-   put _GetControllerPath (displayView) into cPath
-   if exists (stack cPath) is false then
-      put _GetStackName (displayView) into gMenuTitle
-      put "mController path:" && cPath
-      lcw_AnswerWarning "Cannot locate file for global menu '[[gMenuTitle]]'!", displayView, gMenuTitle
-   end if
-   
-   put the name of stack cPath into mController
-   mArray_UpdateGlobal mController
-   put the result into resultArray
-   display_Data resultArray, "Added These Menus", "gMenuTitle"
+   put _MenuController (displayView) into mController
+   --
+   menu_ReIndexController mController
+   --
+   put the project_Name of mController into projectName
+   display_Project projectName, true
+   --
+   put the menu_GlobalTitle of mController into gMenuTitle
+   put menu_ConstructFilter (gMenuTitle, 2) into sFilter
+   display_EnvironmentMenus true, sFilter
 end menu_ReindexMenu
 
 on _
 end _
 
-on menu_RenameController displayView
-   put _GetStackName (displayView) into gMenuTitle
-   put the project_Name of stack gMenuTitle into projectName
-   --
-   _CloseSelectedScriptTab displayView
-   put the result into mController
+on menu_FixControllerName displayView
+   put _MenuController (displayView) into mController
    --
    ask_FixMenuControllerStackName mController
    put the result into newStackName
-   --
-   display_ProjectControllers projectName
-   --
-   edit the script of stack newStackName
-end menu_RenameController
-
-getprop disabled_FixShortFile [displayView]
-   put _GetStackName (displayView) into gMenuTitle
-   put project_NameToShortFolder (gMenuTitle) & ".livecodescript" into goodShortFile
-   put the short_File of stack gMenuTitle into oldShortFile
-   
-   switch
-      case exists (stack gMenuTitle) is false
-         return true
-      case oldShortFile = goodShortFile
-         return true
-      default
-         return false
-   end switch
-end disabled_FixShortFile
+end menu_FixControllerName
 
 on menu_FixShortFile displayView
    put _GetStackName (displayView) into gMenuTitle
@@ -158,7 +180,7 @@ on menu_FixShortFile displayView
    project_ChangeStackShortFileName gMenuTitle, goodShortFile
    put the result into newStackPath
    put the name of stack newStackPath into mController
-   menu_UpdateFromController mController
+   menu_ReIndexController mController
    --
    display_Project projectName
 end menu_FixShortFile

@@ -87,17 +87,6 @@ on menu_DisplayDynadot
    display_Dynadot
 end menu_DisplayDynadot
 
-on menu_SetWatchMenu mTarget, shortName
-   ide_SetMenuTitle "Recent", "Watch"
-   --
-   put ide_GetMenuTitle ("Recent") into mTitle
-   menu_Edit mTitle
-end menu_SetWatchMenu
-
-on menu_ReindexIdeMenu
-   ide_ReIndexMenus
-end menu_ReindexIdeMenu
-
 on _
 end _
 

@@ -26,12 +26,14 @@ end menu_DisplayAtopiaCatModel
 
 on menu_UpdateAtopiaFromCatModel
    put atopia_ConstructCatModel() into atopiaCatModel
-   --
    lcw_Answer "Are you sure you want to trash and update metadata for all these Atopia domains?", displayView
    --
-   atopia_UpdateFromCatModel atopiaCatModel
+   atopia_TrashAndIndex atopiaCatModel
+   atopia_UpdateNewSites atopiaCatModel
+   put the result into statusData
    --
    display_AtopiaCatModel
+   display_Data statusData, "statusData", "Atopia"
 end menu_UpdateAtopiaFromCatModel
 
 on submenu_TransportServer

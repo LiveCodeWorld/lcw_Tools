@@ -268,8 +268,7 @@ function colour_Darken rgbColour, pDarkenPercent
    put max(darkerV, 0) into darkerV
    put darkerV into item 3 of hsvColour
    put colour_HsvToRgb(hsvColour) into newRgbColour
-   
-   -- return rgbColour
+   --
    return newRgbColour
 end colour_Darken
 

@@ -14,7 +14,6 @@ local LocalArray
 
 getprop menu_Target [tObject]
    put the display_View of tObject into displayView
-   --
    put the displayed_Object of displayView into viewObject
    --
    put the displayed_ModuleName of displayView into moduleName
@@ -29,11 +28,13 @@ getprop menu_Target [tObject]
       return empty
    end if
    --
-   put moduleName into LocalArray ["moduleName"]
    put the displayed_ModuleFolder of displayView into moduleFolder
-   put displayView into LocalArray ["displayView"]
    put _GetClonedStackNames (viewObject) into clonedStackNames
    put clonedStackNames into LocalArray ["clonedStackNames"]
+   --
+   put moduleName into LocalArray ["moduleName"]
+   put moduleFolder into LocalArray ["moduleFolder"]
+   put displayView into LocalArray ["displayView"]
    --
    return viewObject
 end menu_Target
@@ -113,9 +114,17 @@ end disabled_DeselectModule
 
 --> Global | Module | Tree | Menu
 -
-on submenu_Module
-   return "Global | Module | Menu"
-end submenu_Module
+on menu_CreateModuleMenu viewObject
+   put LocalArray ["moduleName"] into moduleName
+   put LocalArray ["displayView"] into displayView
+   --
+   ask_CreateModuleMenu moduleName, displayView
+   --
+   -- module_CreateMenu moduleStackName, pGlobalMenuTitle, pControllerScript
+end menu_CreateModuleMenu
+
+private on _
+end _
 
 on menu_ModuleStackTools viewObject, moduleStackName
    replace ":" with "|" in moduleStackName
@@ -141,15 +150,8 @@ on menu_CloseModuleStack viewObject, moduleStackName
    module_CloseStackAndTools moduleStackName
 end menu_CloseModuleStack
 
-on menu_CreateModuleMenu viewObject
-   put LocalArray ["moduleName"] into moduleName
-   put LocalArray ["displayView"] into displayView
-   --
-   ask_CreateModuleMenu moduleName, displayView
-end menu_CreateModuleMenu
-
-on _
-end _
+private on __
+end __
 
 on menu_RememberModuleStacks viewObject
    set the cursor to watch
@@ -158,7 +160,7 @@ on menu_RememberModuleStacks viewObject
    put the view_Name of viewObject into moduleStackName
    if exists (stack moduleStackName) is false then
       put LocalArray ["displayView"] into displayView
-      lcw_AnswerWarning "Cannot local module stack '[[moduleStackName]]!", displayView, moduleName
+      lcw_AnswerWarning "Cannot local module stack '[[moduleStackName]]!", displayView, moduleStackName
    end if
    put the module_Folder of viewObject into moduleFolder
    
@@ -189,18 +191,19 @@ on menu_RememberProjectStacks viewObject
    display_GitRefreshProjectName projectName
 end menu_RememberProjectStacks
 
+on menu_RevealModuleFolder
+   put LocalArray ["moduleFolder"] into moduleFolder
+   finder_Reveal moduleFolder
+end menu_RevealModuleFolder
+
+private on ___
+end ___
+
 on menu_Refresh viewObject
    put the view_Name of viewObject into moduleStackName
    display_ModuleTools moduleStackName
 end menu_Refresh
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
 on _SelectModule viewObject
    select viewObject
 end _SelectModule

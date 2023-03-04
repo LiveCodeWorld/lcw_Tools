@@ -32,7 +32,26 @@ on mDouble_DisplayModuleFromShortFolder indexView, shortModuleFolder
    display_ModuleFromShortModuleFolder shortModuleFolder
 end mDouble_DisplayModuleFromShortFolder
 
-on mDouble_EditProp indexView, hName
+on mDouble_EditProp displayView, hName
+   put the selected_Path of displayView into relPath
+   replace comma with "/" in relPath
+   --
+   put the displayed_ModuleFolder of displayView into moduleFolder
+   put moduleFolder & relPath into filePath
+   --
+   if there is a stack filePath then
+      set the itemdelimiter to "."
+      if item -1 of filePath = "livecode" then
+         go to stack filePath
+      else
+         edit the script of stack filePath
+      end if
+   else
+      put filePath
+   end if
+end mDouble_EditProp
+
+private command _EditProperty displayView, hName
    put the displayed_Object of indexView into viewObject
    put the behavior of viewObject into viewBehavior
    
@@ -41,7 +60,7 @@ on mDouble_EditProp indexView, hName
    put hKeyLine_AddObject (shortHkeyLine, viewBehavior) into hkeyLine
    
    hkey_Edit hkeyLine
-end mDouble_EditProp
+end _EditProperty
 
 
 --> Display | Module

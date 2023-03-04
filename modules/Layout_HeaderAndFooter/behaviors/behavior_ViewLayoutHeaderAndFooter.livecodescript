@@ -53,8 +53,9 @@ end header_IsVisible
 
 setprop header_IsVisible someBoolean
    lock screen
+   put the rect of me into oRect
    set the visible of _headerView() to someBoolean
-   LayoutControl
+   LayoutControl oRect
    unlock screen
 end header_IsVisible
 
@@ -64,8 +65,9 @@ end footer_IsVisible
 
 setprop footer_IsVisible someBoolean
    lock screen
+   put the rect of me into oRect
    set the visible of _footerView() to someBoolean
-   LayoutControl
+   LayoutControl oRect
    unlock screen
 end footer_IsVisible
 
@@ -77,7 +79,7 @@ setprop footer_Height footerHeight
    if footerHeight is not a number then put empty into footerHeight
    lock screen
    put footerHeight into LocalArray ["footerHeight"]
-   LayoutControl
+   LayoutControl`
    unlock screen
 end footer_Height
 
@@ -169,6 +171,8 @@ private function _footerRect pRect
 end _footerRect
 
 command LayoutControl pRect
+   -- set the rect_Test of the card_Object of me to pRect
+   
    if pRect is empty then put the rect of me into pRect
    put the inner_Rect [pRect] of me into innerRect
    put the landscape_Layout of me into isLandscape
@@ -301,3 +305,4 @@ command margin_Normalize @someMargin, @leftM, @topM, @rightM, @bottomM
    end if
    put leftM,topM,rightM,bottomM into someMargin
 end margin_Normalize
+

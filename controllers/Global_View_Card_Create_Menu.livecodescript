@@ -14,7 +14,10 @@ getprop menu_Target [tObject]
 end menu_Target
 
 getprop disabled_MakeFirstControlAView [cardObject]
-   if exists (control 1 of cardObject) then
+   if exists (control 1 of cardObject) is false then return true
+   
+   put the view_Object of control 1 of cardObject into viewObject
+   if exists (viewObject) then
       return false
    else
       return true
@@ -65,13 +68,18 @@ private command _TestLayoutControl viewObject
    switch it
       case "unhandled"
          put the behavior_Objects of viewObject
-         lcw_Answer "Behaviors still nto fixed!"
+         lcw_Answer "Behaviors still not fixed!"
          break
    end switch
 end _TestLayoutControl
 
+
 --> Global | View | Card | Create | Menu
 -
+on submenu_Card
+   return "Global | Card | Menu"
+end submenu_Card
+
 on menu_FixBehaviorObjects cardObject
    put the long id of control 1 of cardObject into viewObject
    --
@@ -81,12 +89,46 @@ on menu_FixBehaviorObjects cardObject
    _TestLayoutControl viewObject
 end menu_FixBehaviorObjects
 
+on menu_MakeFirstControlAView cardObject
+   -- menu_SetViewMetadata
+   put the long id of control 1 of cardObject into viewObject
+   put the stack_Name of cardObject into viewName
+   --
+   put metadata_ConstructArray (viewName, "view") into uripArray
+   -- set the view_Name ["view"] of viewObject to viewName
+   set the script_MetaData of viewObject to uRipArray
+   put the result into uRipArray
+   
+   set the name of viewObject to viewName
+   put the module_Behaviors of viewObject into moduleBehaviors
+   set the behavior_Objects of viewObject to moduleBehaviors
+   
+   display_ObjectProperties viewObject
+   edit the script of viewObject
+end menu_MakeFirstControlAView
+
+private command _
+end _
+
+on menu_ViewScript cardObject
+   edit the script of control 1 of cardObject
+end menu_ViewScript
+
+on menu_ViewBehavior cardObject
+   put the behavior of control 1 of cardObject into bObject
+   edit the script of bObject
+end menu_ViewBehavior
+
+private command __
+end __
+
 on menu_SetModuleBehavior cardObject
    put the long id of control 1 of cardObject into viewObject
    --
    put the module_Behaviors of viewObject into moduleBehaviors
+   
+   breakpoint
    set the behavior_Objects of viewObject to moduleBehaviors
-   --
    _TestLayoutControl viewObject
 end menu_SetModuleBehavior
 
@@ -113,43 +155,6 @@ on menu_CreateViewGroup cardObject
    edit the script of the behavior of createdObject
 end menu_CreateViewGroup
 
-on menu_MakeFirstControlAView cardObject
-   -- menu_SetViewMetadata
-   put the long id of control 1 of cardObject into viewObject
-   put the stack_Name of cardObject into viewName
-   --
-   put metadata_ConstructArray (viewName, "view") into uripArray
-   -- set the view_Name ["view"] of viewObject to viewName
-   set the script_MetaData of viewObject to uRipArray
-   put the result into uRipArray
-   
-   set the name of viewObject to viewName
-   put the module_Behaviors of viewObject into moduleBehaviors
-   set the behavior_Objects of viewObject to moduleBehaviors
-   
-   display_ObjectProperties viewObject
-   edit the script of viewObject
-end menu_MakeFirstControlAView
-
-on _
-end _
-
-on menu_ViewScript cardObject
-   edit the script of control 1 of cardObject
-end menu_ViewScript
-
-on menu_ViewBehavior cardObject
-   put the behavior of control 1 of cardObject into bObject
-   edit the script of bObject
-end menu_ViewBehavior
-
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
 on menu_TemplateCardBehavior cardObject
    put the behavior of cardObject into bObject
    edit the script of bObject

@@ -13,14 +13,16 @@ see "lib_FunctionKey"
 
 --> Working on
 -
-command display_Environment pProjectNames
-   -- was "display_LcwProjectList"
+command display_Environment pRefreshOnly, pProjectNames
+   if pRefreshOnly is true AND display_FindIndexView ("Environment") is empty then
+      return empty -- display is not open so do nothing
+   end if
    if pProjectNames is empty then
       put env_ListLocalProjects() into pProjectNames
    end if
    put "List of Projects,Environment" into pStackTitle
    
-   put "mDouble_DisplayProject" into mDoubleClick
+   put "mDoubleUp_Environment" into mDoubleClick
    put empty into mUp
    put empty into dragCommand
    --
@@ -94,14 +96,21 @@ end project_AskCreate
 
 --> Display | Events
 -
-on mDouble_DisplayProject displayView, projectName
+on mDoubleUp_Environment displayView, projectName
    if the optionkey is "Down" then breakpoint
-   
-   -- display_ProjectLibs projectName
-   display_Project projectName
-end mDouble_DisplayProject
+   if the shiftKey is "Down" then
+      -- display_ProjectLibs projectName
+      display_GitProjectStatus projectName
+   else
+      display_Project projectName
+   end if
+end mDoubleUp_Environment
 
-on mDouble_DisplayStackDeps displayView, stackName
+on mDoubleUp_EnvironmentLib displayView, stackName
+   mDoubleUp_Project displayView, stackName
+end mDoubleUp_EnvironmentLib
+
+on mDoubleUp_Project displayView, stackName
    if the optionkey is "Down" then breakpoint
    
    put the name of stack stackName into stackObject
@@ -110,17 +119,7 @@ on mDouble_DisplayStackDeps displayView, stackName
    end if
    edit the script of stackObject
    return true
-end mDouble_DisplayStackDeps
-
-command mDouble_DisplayBehavior displayView, stackName
-   if the optionkey is "Down" then breakpoint
-   
-   mDouble_DisplayStack displayView, stackName
-end mDouble_DisplayBehavior
-
-on mDouble_DisplayLib displayView, stackName
-   mDouble_DisplayStackDeps displayView, stackName
-end mDouble_DisplayLib
+end mDoubleUp_Project
 
 
 --> Display | LCW
@@ -138,7 +137,7 @@ command display_EnvironmentLibs pFilterItems, pDisplayView
    --
    display_Data modelsAndLibs, sTitle, "Environment", pDisplayView
    put the result into displayView
-   display_SetInteractions displayView, "Environment | Lib", "mDouble_DisplayLib"
+   display_SetInteractions displayView, "Environment | Lib", "mDoubleUp_EnvironmentLib"
    return displayView
 end display_EnvironmentLibs
 
@@ -186,18 +185,3 @@ command display_ProjectBackScripts homeStackName, pIndexView
    put the result into indexView
    return indexView
 end display_ProjectBackScripts
-
-
---> Display | Environment
--
-function project_ConstructMenuTitle homeStackName
-   set the itemdelimiter to "_"
-   put item -1 of homeStackName into menuBit
-   put toupper (char 1 of menuBit) into char 1 of menuBit
-   put "Global |" && menuBit && "| Menu" into gMenuTitle
-   return gMenuTitle
-end project_ConstructMenuTitle
-
-
---> Private
--

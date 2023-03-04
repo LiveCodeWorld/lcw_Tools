@@ -1,6 +1,7 @@
 ﻿script "Global | Environment | Display | Menu"
 --> MetaData
 -
+copyright: David Bovill
 license: GPLv3
 name: Global | Environment | Display | Menu
 type: controller
@@ -18,10 +19,6 @@ local LocalArray
 
 --> Menu | Init
 -
-getprop menu_IsSimple
-   return mArray_GetSimple()
-end menu_IsSimple
-
 
 --> Global | Environment | Display | Menu
 -
@@ -44,3 +41,18 @@ end menu_EnvironmentModules
 on menu_EnvironmentOldViews
    display_OldViewFiles
 end menu_EnvironmentOldViews
+
+on _
+end _
+
+on menu_DisplayTransporters
+   display_Transporters
+end menu_DisplayTransporters
+
+on menu_GithubProjects
+   display_GithubProjects
+end menu_GithubProjects
+
+on menu_GithubOrgs
+   display_GitHubOrgs
+end menu_GithubOrgs

@@ -14,19 +14,15 @@ local LocalArray
 
 --> Menu | Props
 -
-on menu_Init tObject
-   put the index_View of tObject into indexView
-   if exists (indexView) is false then return false
-   
-   put indexView into LocalArray ["indexView"]
-   put the view_Index of indexView into LocalArray ["viewProps"]
-   
-   put the displayed_ProjectName of indexView into LocalArray ["projectName"]
-   put the displayed_ProjectFolder of indexView into LocalArray ["projectFolder"]
-   put the displayed_ModuleFolder of indexView into LocalArray ["moduleFolder"]
-   put the displayed_ModuleName of indexView into LocalArray ["moduleName"]
-   put the displayed_ModuleHomeStackPath of indexView into LocalArray ["moduleHomeStackPath"]   
-end menu_Init
+getprop menu_Target [tObject]
+   put the display_View of tObject into displayView
+   if exists (displayView) then
+      put the displayed_Object of displayView into viewObject
+      return viewObject
+   else
+      return tObject
+   end if
+end menu_Target
 
 getprop disabled_EditCardScript [viewObject]
    put the card_Object of viewObject into cardObject
@@ -54,11 +50,11 @@ getprop disabled_SetViewCardBehavior [viewObject]
    return behaviorIsSet
 end disabled_SetViewCardBehavior
 
-getprop disabled_SetModuleBehavior [viewObject]
+getprop disabled_SetModuleBehaviors [viewObject]
    put the behavior_Objects of viewObject into bObjects
    put the module_Behaviors of viewObject into mObjects
    return bObjects = mObjects
-end disabled_SetModuleBehavior
+end disabled_SetModuleBehaviors
 
 getprop disabled_GoToView [scriptObject]
    put the object_MetaData ["type"] of scriptObject into mObectType
@@ -87,7 +83,7 @@ getprop disabled_EditViewScript [viewObject]
 end disabled_EditViewScript
 
 getprop disabled_SetMenuButtonScript [viewObject]
-   put view_GetMenuButton() into viewTemplate
+   put menu_GetGlobalButton() into viewTemplate
    put the menu_Button of viewObject into mButton
    switch
       case mButton is empty
@@ -131,21 +127,15 @@ end menu_DisplayViewBehaviors
 on _
 end _
 
-on menu_SetModuleBehavior scriptObject
-   put the module_Behaviors of scriptObject into moduleBehaviors
-   set the behavior_Objects of scriptObject to moduleBehaviors
-   
-   repeat for each line someObject in moduleBehaviors
-      put the short name of someObject into bName
-      put "Set the view behavior of" && the mobile_Name of scriptObject && "to" && kwote (bName) into someMessage
-      lcw_Notify someMessage
-      
-      edit the script of someObject
-   end repeat
-end menu_SetModuleBehavior
+on menu_SetModuleBehaviors mView
+   put the module_Behaviors of mView into moduleBehaviors
+   set the behavior_Objects of mView to moduleBehaviors
+   --
+   menu_EditModuleBehaviors mView
+end menu_SetModuleBehaviors
 
-on menu_EditModuleBehavior scriptObject
-   put the module_Behaviors of scriptObject into moduleBehaviors
+on menu_EditModuleBehaviors mView
+   put the module_Behaviors of mView into moduleBehaviors
    if moduleBehaviors is empty then
       answer "there are no behaviors for this module!"
       exit to top
@@ -153,13 +143,13 @@ on menu_EditModuleBehavior scriptObject
    repeat for each line moduleBehavior in moduleBehaviors
       edit the script of moduleBehavior
    end repeat
-end menu_EditModuleBehavior
+end menu_EditModuleBehaviors
 
 on _
 end _
 
 on menu_SetMenuButtonScript viewObject
-   put view_GetMenuButton() into viewTemplate
+   put menu_GetGlobalButton() into viewTemplate
    put the menu_Button of viewObject into mButton
    --
    set the script of mButton to the script of viewTemplate
@@ -167,7 +157,7 @@ on menu_SetMenuButtonScript viewObject
 end menu_SetMenuButtonScript
 
 on menu_EditMenuButtonTemplate viewObject
-   put view_GetMenuButton() into viewTemplate
+   put menu_GetGlobalButton() into viewTemplate
    edit the script of viewTemplate
 end menu_EditMenuButtonTemplate
 

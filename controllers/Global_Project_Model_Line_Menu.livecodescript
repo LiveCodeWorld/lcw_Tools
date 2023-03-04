@@ -38,9 +38,9 @@ private function _GetModelStack tObject
    return libraryStack
 end _GetModelStack
 
-getprop moveModel_Param [modelStack]
-   put the project_Name of modelStack into projectName
-   return projectName
+-- getprop moveModel_Param [modelStack]
+put the project_Name of modelStack into projectName
+return projectName
 end moveModel_Param
 
 getprop moveModel_Params [modelStack]
@@ -53,6 +53,21 @@ end moveModel_Params
 
 --> Global | Project | Model | Line | Menu
 -
+on menu_RenameModel modelStack
+   put the short name of modelStack into stackName
+   --
+   ask_RenameProjectStack stackName
+end menu_RenameModel
+
+on _
+end _
+
+on menu_CreateProjectModel modelStack
+   put the project_Name of modelStack into projectName
+   ask_CreateProjectModel projectName
+   display_Project projectName
+end menu_CreateProjectModel
+
 on menu_MoveModel modelStack, newProjectName
    # Collect info
    put the project_Name of modelStack into oProjectName

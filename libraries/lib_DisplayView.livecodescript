@@ -9,6 +9,33 @@ version: 0.3
 
 --> Working on
 -
+function view_ConstructToolMenu viewObject, isaView
+   put the view_MenuTitle [true] of viewObject into mTitle
+   put view_MenuToolTitles (mTitle, isaView) into mTitles
+   return mTitles
+end view_ConstructToolMenu
+
+function view_MenuToolTitles mTitle, isaView
+   if menu_GlobalControllerExists (mTitle) is true then
+      put tab & "submenu" & CR & "-" after mTitle
+   end if
+   --
+   if isaView is not false then
+      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
+      put CR & "-" after mTitle
+      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
+      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+   else
+      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
+   end if
+   return word 1 to -1 of mTitle
+end view_MenuToolTitles
+
 
 --> Display | View | Clone
 -
@@ -17,7 +44,18 @@ command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStack
    --
    if exists (stack pCloneName) is true then
       -- already exists (lets use it)
-      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+      if exists (control 1 of cd 1 of stack pCloneName) is false then
+         breakpoint
+         return empty
+      end if
+      -- put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+      
+      -- check it is a clone stack
+      put the view_Object of control 1 of cd 1 of stack pCloneName into viewObject
+      if viewObject is empty then
+         breakpoint
+         return empty
+      end if
    else
       if pCloneName is empty then
          put viewName into stackLabel
@@ -177,36 +215,6 @@ command display_ViewTemplate viewName, pRepoFolder
 end display_ViewTemplate
 
 
---> Display | View | ToolMenus
--
-function view_ConstructToolMenu viewObject, isaView
-   put the view_MenuTitle [true] of viewObject into mTitle
-   put view_MenuToolTitles (mTitle, isaView) into mTitles
-   return mTitles
-end view_ConstructToolMenu
-
-function view_MenuToolTitles mTitle, isaView
-   if menu_GlobalControllerExists (mTitle) is true then
-      put tab & "submenu" & CR & "-" after mTitle
-   end if
-   --
-   if isaView is not false then
-      -- put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
-      put CR & "-" after mTitle
-      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
-      put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
-      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
-      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
-   else
-      put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-   end if
-   return word 1 to -1 of mTitle
-end view_MenuToolTitles
-
-
 --> Display | Project | Views
 -
 command display_ViewIndex viewObject, pIndexView
@@ -255,7 +263,8 @@ command display_ViewIndex viewObject, pIndexView
 end display_ViewIndex
 
 command display_ViewBehaviors viewObject, pIndexView, pStacklabel
-   put the view_Behaviors of viewObject into bObjects
+   -- put the view_Behaviors of viewObject into bObjects
+   put the behavior_Objects of viewObject into bObjects
    put the view_Name of viewObject into viewName
    
    put the project_Folder of viewObject into projectFolder

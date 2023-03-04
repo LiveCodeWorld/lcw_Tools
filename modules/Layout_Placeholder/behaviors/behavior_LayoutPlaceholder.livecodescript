@@ -21,6 +21,12 @@ local LocalArray
 
 --> Working on
 -
+on LayoutControl pRect
+   if pRect is a rect then
+      set the rect of me to pRect
+   end if
+end LayoutControl
+
 getprop height_IsFixed
    return LocalArray ["heightIsFixed"] is not false
 end height_IsFixed
@@ -33,7 +39,11 @@ end height_IsFixed
 --> Events | Menu
 -
 on mouseDown pMouseBtnNum
-   menu_PopUp "Global | Layout | Placeholder | Menu"
+   if pMouseBtnNum = 3 then
+      menu_PopUp "Global | Layout | Placeholder | Menu"
+   else
+      pass mouseDown
+   end if
 end mouseDown
 
 getprop menu_Target [targetObject]

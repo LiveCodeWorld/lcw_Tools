@@ -13,6 +13,16 @@ Their should be an easy default, with teh ability to customise.
 */
 
 
+--> Display | Template
+-
+command display_ViewTemplate viewName, pRepoFolder
+   -- go_ViewTemplate
+   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
+   object_GoTo viewObject
+   return viewObject
+end display_ViewTemplate
+
+
 --> Display | Tools
 -
 on display_ModuleTools stackName

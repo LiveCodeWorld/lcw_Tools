@@ -10,7 +10,7 @@ version: 0.1
 --> Menu | Props
 -
 -- getprop checked_AnimationEngine
-   put animation_EngineIsOn() into isOn
+   put ae_IsActive() into isOn
    return isOn
 end checked_AnimationEngine
 
@@ -81,14 +81,3 @@ on menu_CheckModules indexView
       go to stack moduleName
    end repeat
 end menu_CheckModules
-
--- on menu_AnimationEngine
-   put menu_GetChecked (the params) into isChecked
-   put env_ConstructHomePath ("AnimationEngine") into homePath
-   if isChecked is true then
-      stop using stack homePath
-   else
-      start using stack homePath
-   end if
-   go to stack homePath
-end menu_AnimationEngine

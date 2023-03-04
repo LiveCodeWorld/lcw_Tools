@@ -6,7 +6,6 @@ name: Global | View | Geometry | Menu
 type: controller
 version: 0.2
 
-
 --> Menu | Props
 -
 local LocalArray
@@ -56,7 +55,7 @@ getprop disabled_DispatchResizeToFit [viewObject]
    end switch
 end disabled_DispatchResizeToFit
 
-getprop disabled_DispatchLayoutControl [viewObject]
+getprop disabled_LayoutViewOnCard [viewObject]
    put the view_Name of viewObject into viewName
    switch
       case viewName is not empty
@@ -64,32 +63,21 @@ getprop disabled_DispatchLayoutControl [viewObject]
       default
          return true
    end switch
-end disabled_DispatchLayoutControl
+end disabled_LayoutViewOnCard
 
+getprop disabled_RestoreGeometry [vObject]
+   put the rect_Array of vObject into rectArray
+   if rectArray is an array then
+      return false
+   else
+      return true
+   end if
+end disabled_RestoreGeometry
 
---> Global | View | Geometry | Menu
--
-on menu_Clone viewObject
-   put the stack_Name of viewObject into stackNameToClone
-   stack_Clone stackNameToClone
-end menu_Clone
-
-on _
-end _
-
-on menu_DispatchResizeToFit viewObject
-   dispatch "ResizeToFit" to viewObject
-end menu_DispatchResizeToFit
-
-on menu_DispatchLayoutControl viewObject
-   put the card_Object of viewObject into cardObject
-   put the view_RectOnCard of cardObject into cardRect
-   
-   if the shiftKey is "Down" then breakpoint
-   dispatch "LayoutControl" to viewObject with cardRect
-   switch it
+private command _HandleDispatch dispatchResult, viewObject, cardObject
+   switch dispatchResult
       case "unhandled"
-         -- breakpoint  
+         breakpoint  
          lcw_Notify merge ("'Layoutcontrol' unhandled by view [[the name of viewObject]]!")
          
          put the behavior of viewObject into bObject
@@ -101,12 +89,65 @@ on menu_DispatchLayoutControl viewObject
          display_BrokenBehaviors cardObject, true
          break
       default
-         lcw_Notify merge ("Dispatched 'Layoutcontrol' to view [[the name of viewObject]]!")
+         put the rect of viewObject into vRect
+         if vRect = vCardRect then
+            lcw_Notify merge ("Dispatched 'Layoutcontrol' to view [[the name of viewObject]]!")
+         else
+            /*
+            set the rect_Test ["red"] of cardObject to vCardRect
+            set the rect_Test ["yellow"] of cardObject to vRect
+            */
+         end if
    end switch
-end menu_DispatchLayoutControl
+end _HandleDispatch
 
-on _
-end _
+
+--> Global | View | Geometry | Menu
+-
+on menu_Clone vObject
+   put the stack_Name of vObject into stackNameToClone
+   stack_Clone stackNameToClone
+end menu_Clone
+
+private on ___
+end ___
+
+on menu_LayoutControl vObject
+   if the shiftKey is "Down" then breakpoint
+   put the rect of vObject into oRect
+   dispatch "LayoutControl" to vObject with oRect
+end menu_LayoutControl
+
+on menu_LayoutViewOnCard viewObject
+   put the card_Object of viewObject into cardObject
+   put the view_RectOnCard of cardObject into vCardRect
+   
+   if the shiftKey is "Down" then breakpoint
+   dispatch "LayoutControl" to viewObject with vCardRect
+   --
+   _HandleDispatch it, viewObject, cardObject
+end menu_LayoutViewOnCard
+
+on menu_LayoutSquare viewObject
+   put the card_Object of viewObject into cardObject
+   put the view_RectOnCard of cardObject into vCardRect
+   put rect_GetSquare (vCardRect) into squareRect
+   --
+   dispatch "LayoutControl" to viewObject with squareRect
+   
+   if the shiftKey is "Down" then
+      set the rect_Test of cardObject to squareRect
+   end if
+   put the rect of viewObject into realRect
+   rect_ExtractDimensions squareRect, squareW, squareH
+   rect_ExtractDimensions realRect, realW, realH
+   
+   put "Real:" && realRect && "w:" & realW && "h:" & realH & CR into sInfo
+   put "Square:" && squareRect && "w:" & squareW && "h:" & squareH after sInfo
+   put sInfo
+   --
+   _HandleDispatch it, viewObject, cardObject
+end menu_LayoutSquare
 
 on menu_SixLayoutTests someView
    put the card_Object of someView into cardControl
@@ -121,82 +162,23 @@ on menu_SixLayoutTests someView
    lcw_Notify someComment
 end menu_SixLayoutTests
 
+private on _
+end _
+
+on submenu_Rect
+   return "Global | RectArray | Menu"
+end submenu_Rect
+
+on submenu_MoreTests
+   return "Global | View | Test | Geometry | Menu"
+end submenu_MoreTests
+
+private on __
+end __
+
 on menu_SetCardMargin vObject
    put the card_Margin of vObject into cMargin
    put lcw_Ask ("Set the card_Margin of this card to:", cMargin, someView) into newMargin
    set the card_margin of vObject to newMargin
 end menu_SetCardMargin
 
-on _
-end _
-
-on menu_DispatchResizeStack vObject
-   put the card_Object of vObject into cardObject
-   dispatch "resizeStack" to cardObject
-end menu_DispatchResizeStack
-
-on menu_DispatchResizeControl vObject
-   dispatch "resizeControl" to vObject
-end menu_DispatchResizeControl
-
-on menu_DispatchPreopenCard viewObject
-   if the shiftKey is "Down" then breakpoint
-   dispatch "preOpenCard" to viewObject
-end menu_DispatchPreopenCard
-
-on menu_DispatchPreopenControl viewObject
-   if the shiftKey is "Down" then breakpoint
-   dispatch "preOpenControl" to viewObject
-   switch it
-      case "unhandled"
-         put the card_Object of viewObject into cardObject
-         display_BrokenBehaviors cardObject, true
-         break
-      default
-         -- all is fine
-   end switch
-end menu_DispatchPreopenControl
-
-on _
-end _
-
-on menu_Gather vObject
-   put LocalArray ["stackTopLeft"] into stackTopLeft
-   put the stack_Name of vObject into vStackName
-   --
-   set the topleft of stack vStackName to stackTopLeft
-   show stack vStackName
-end menu_Gather
-
-on submenu_MoreTests
-   return "Global | View | Test | Geometry | Menu"
-end submenu_MoreTests
-
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_EditCardBehavior vObject
-   put the card_Object of vObject into cObject
-   put the behavior of cObject into bObject
-   if exists (bObject) then
-      edit the script of bObject
-   else
-      lcw_AnswerWarning "There is no behavior for this card!", vObject
-   end if
-end menu_EditCardBehavior
-
-on menu_TestViewRectOnCard vObject
-   put the card_Object of vObject into cObject
-   --
-   put the view_RectOnCard of cObject into viewRect
-   rect_Test viewRect, cObject
-end menu_TestViewRectOnCard
-
-on menu_SetViewRect vObject
-   put the view_RectOnCard of vObject into viewRect
-   set the rect of vObject to viewRect
-end menu_SetViewRect

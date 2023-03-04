@@ -50,34 +50,59 @@ private function _GetModuleStackName dView
    return moduleStackName
 end _GetModuleStackName
 
+private function _GetModuleFolder dView
+   put _GetModuleStackName (dView) into moduleStackName
+   put the module_Folder of stack moduleStackName into moduleFolder
+   return moduleFolder
+end _GetModuleFolder
+
 private function _GetStackPath dView
    get the selected_Path of dView
    put item 1 of it into shortFolder
    put item 2 of it into shortFile
    --
-   put _GetModuleStackName (dView) into moduleStackName
-   -- put module_ConstructFolder(moduleStackName, projectName) into moduleFolder
-   put the module_Folder of stack moduleStackName into moduleFolder
+   put _GetModuleFolder (dView) into moduleFolder
    put folder_AddShort (moduleFolder, shortFolder) & shortFile into stackPath
+   --
    return stackPath
 end _GetStackPath
+
+private function _ConstructModulePath dView
+   put _GetModuleFolder (dView) into moduleFolder
+   put project_ConstructHomeStackPath (moduleFolder) into mStackPath
+   return mStackPath
+end _ConstructModulePath
 
 
 --> Global | Module | Behavior | Line | Menu
 -
-on menu_CheckBehavior dView
-   put _GetModuleView (dView) into moduleView
-   put moduleView
-end menu_CheckBehavior
-
 on menu_EditStackScript dView
    put _GetStackPath (dView) into stackPath
    --
    edit the script of stack stackPath
 end menu_EditStackScript
 
-on _
-end _
+on menu_NewBehavior dView
+   put lcw_Ask ("What name do you want to give this new behavior?", "behavior_New") into newBehaviorName
+   if there is a stack newBehaviorName then
+      lcw_AnswerWarning "A stack named '[[newBehaviorName]]' already exists!", dView, newBehaviorName
+   end if
+   --
+   put _GetModuleStackName (dView) into moduleStackName
+   put the module_Folder of stack moduleStackName into moduleFolder
+   --
+   put newBehaviorName & ".livecodescript" into bShortPath
+   put module_ConstructBehaviorPath (newBehaviorName, moduleFolder, bShortPath) into newBehaviorStackPath
+   if there is a stack newBehaviorStackPath then
+      put newBehaviorStackPath
+      lcw_AnswerWarning "A stack at this path already exists!", dView
+   end if
+   --
+   module_CreateBehavior moduleFolder, newBehaviorName
+   put the result into newBehaviorStackPath
+   --
+   menu_Refresh dView
+end menu_NewBehavior
 
 on menu_RenameBehavior dView
    put _GetStackPath (dView) into stackPath
@@ -98,6 +123,21 @@ end menu_RenameBehavior
 on _
 end _
 
+on menu_Reveal dView
+   put _ConstructModulePath (dView) into mStackPath
+   finder_Reveal mStackPath
+end menu_Reveal
+
+on menu_CheckBehavior dView
+   put _GetModuleView (dView) into moduleView
+   put moduleView
+end menu_CheckBehavior
+
+on menu_Refresh dView
+   put _ConstructModulePath (dView) into mStackPath
+   display_ModuleTools mStackPath
+end menu_Refresh
+
 on submenu_Dev
    return "Dev | Menu"
 end submenu_Dev
@@ -105,7 +145,7 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_EditShortFile dView
+on _EditShortFile dView
    breakpoint
    put "behavior_ZZZ" into newBehaviorName
    --
@@ -113,18 +153,18 @@ on menu_EditShortFile dView
    module_RenameBehavior stackPath, newBehaviorName
    --
    edit the script of stack stackPath
-end menu_EditShortFile
+end _EditShortFile
 
-on menu_TextSimpleRename dView
+on _TextSimpleRename dView
    put "behavior_ZZZ" into newBehaviorName
    --
    put _GetStackPath (dView) into stackPath
    module_RenameBehavior stackPath, newBehaviorName
    --
    edit the script of stack stackPath
-end menu_TextSimpleRename
+end _TextSimpleRename
 
-on menu_TestMoveRename dView
+on _TestMoveRename dView
    put "behavior_XXX" into afds
    --
    put _GetStackPath (dView) into stackPath
@@ -135,7 +175,7 @@ on menu_TestMoveRename dView
    put the result into newBehaviorPath
    --
    edit the script of stack newBehaviorPath
-end menu_TestMoveRename
+end _TestMoveRename
 
 on _RevealBehaviorFolder dView
    put _GetStackPath (dView) into behaviorStackPath

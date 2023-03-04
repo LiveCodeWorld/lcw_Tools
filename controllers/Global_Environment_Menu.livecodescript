@@ -18,14 +18,6 @@ local LocalArray
 
 --> Menu | Init
 -
-getprop menu_IsSimple
-   return mArray_GetSimple()
-end menu_IsSimple
-
-getprop checked_SetSimple
-   return mArray_GetSimple()
-end checked_SetSimple
-
 getprop disabled_Server
    put mArray_GetSimple() into isSimple
    return isSimple
@@ -56,6 +48,19 @@ on submenu_Atopia
    return "Global | Environment | Atopia | Menu"
 end submenu_Atopia
 
+on menu_FederationModels
+   display_FederationModels
+end menu_FederationModels
+
+on menu_FederationTools
+   put fedray_FetchModel() into fedray
+   display_Tools fedray, "Federation Model", "Federation", "LCW", "lcw_Server"
+end menu_FederationTools
+
+on menu_ServerTools
+   display_Tools someData, "Federation Servers", "Federation | Server", "LCW", "lcw_Server"
+end menu_ServerTools
+
 on _
 end _
 
@@ -78,6 +83,10 @@ on submenu_Server
    return "Global | Environment | Server | Menu"
 end submenu_Server
 
+on submenu_Ide
+   return "Global | ScriptEditor | Menu"
+end submenu_Ide
+
 on submenu_Dev
    return "Global | Environment | Dev | Menu"
 end submenu_Dev
@@ -93,8 +102,3 @@ end menu_RecentExports
 on _Refresh
    display_Environment
 end _Refresh
-
-on menu_SetSimple
-   put mArray_GetSimple() is false into isSimple
-   mArray_SetSimple isSimple
-end menu_SetSimple

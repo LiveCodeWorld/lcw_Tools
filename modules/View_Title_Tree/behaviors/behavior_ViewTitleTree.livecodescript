@@ -289,7 +289,7 @@ on LayoutControl pRect
    put the icon_Button of me into titleRightIconButton
    put the menu_Button of me into titleMenuButton
    
-   put rect_SubtractMargin (4, pRect) into rightIconRect
+   put rect_Subtract (4, pRect) into rightIconRect
    put item 4 of rightIconRect - item 2 of rightIconRect into rightIconHeight
    put item 3 of rightIconRect - rightIconHeight into item 1 of rightIconRect
    
@@ -381,10 +381,10 @@ command rect_AddVector @someRect, pointVector
     add yVector to item 4 of someRect
 end rect_AddVector
 
-function rect_SubtractMargin someMargin, someRect
+function rect_Subtract someMargin, someRect
    rect_SubtractMargins someRect, someMargin
    return someRect
-end rect_SubtractMargin
+end rect_Subtract
 
 command rect_SubtractMargins @someRect, pMargin
    margin_Normalize pMargin, leftM, topM, rightM, bottomM   

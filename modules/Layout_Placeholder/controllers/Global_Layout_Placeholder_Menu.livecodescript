@@ -87,6 +87,10 @@ getprop checked_HeightIsFixed [viewObject]
    return heightIsFixed
 end checked_HeightIsFixed
 
+getprop checked_IsOpaque [viewObject]
+   return the view_IsOpaque of viewObject
+end checked_IsOpaque
+
 command drag_Delete tObject, someThing
    switch someThing
       default
@@ -122,15 +126,15 @@ on menu_UpdateLayoutPlaceholders tObject
    end repeat
 end menu_UpdateLayoutPlaceholders
 
-on _
+private command _
 end _
 
 on menu_DeleteMe tObject
    send "delete tObject" to tObject in 0 ticks
 end menu_DeleteMe
 
-on _
-end _
+private command __
+end __
 
 on menu_ChangeName tObject
    put the short name of tObject into someValue
@@ -158,9 +162,13 @@ on menu_ChangeColour tObject
    set the view_Colour of tObject to newValue
 end menu_ChangeColour
 
-on menu_IsTransparent tObject, someBoolean
-   set the view_IsOpaque of tObject to not someBoolean
-end menu_IsTransparent
+private command ___
+end ___
+
+on menu_IsOpaque tObject
+   put the view_IsOpaque of tObject into sBoolean
+   set the view_IsOpaque of tObject to not sBoolean
+end menu_IsOpaque
 
 on menu_HeightIsFixed viewObject
    put the height_IsFixed of viewObject into heightIsFixed
@@ -168,23 +176,13 @@ on menu_HeightIsFixed viewObject
    set the height_IsFixed of viewObject to (heightIsFixed is false)
 end menu_HeightIsFixed
 
-on _
-end _
+private command ____
+end ____
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on _PlaceholderBehavior viewObject
+on menu_PlaceholderBehavior viewObject
    put the behavior of viewObject into bObject
    edit the script of bObject
-end _PlaceholderBehavior
-
-on _
-end _
+end menu_PlaceholderBehavior
 
 on _DisplayDragWidgets
    put "Global | Layout | Placeholder | Replace | Menu" into mTitle

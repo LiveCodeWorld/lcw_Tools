@@ -26,11 +26,16 @@ getprop disabled_SwapFooter [layoutView]
    return isTemplate
 end disabled_SwapFooter
 
+getprop updateComponents_Params
+   put the hkey_CaseConditions ["M menu_UpdateComponents"] of me into cParams
+   return cParams
+end updateComponents_Params
+
 getprop editBehavior_Params
    put the hkey_CaseConditions ["M menu_EditBehavior"] of me into cParams
    return cParams
 end editBehavior_Params
-   
+
 getprop setOrientation_Params
    return "portrait,landscape"
 end setOrientation_Params
@@ -46,29 +51,28 @@ getprop setOrientation_Param [layoutView]
    end if
 end setOrientation_Param
 
+getprop checked_ShowFooter [layoutView]
+   put the footer_IsVisible of layoutView into sBoolean
+   return sBoolean
+end checked_ShowFooter
+
+getprop checked_ShowHeader [layoutView]
+   put the header_IsVisible of layoutView into sBoolean
+   return sBoolean
+end checked_ShowHeader
+
 
 --> Global | Layout | HeaderAndFooter | Menu
 -
-on menu_DisplayKenBurns layoutView, shortHtmlFile
-   put the body_View of layoutView into browserView 
-   put the project_HtmlFile ["burns_data.html"] of browserView into htmlFile
-   set the url of browserView to htmlFile
-end menu_DisplayKenBurns
+on menu_ShowHeader layoutView
+   put the header_IsVisible of layoutView into sBoolean
+   set the header_IsVisible of layoutView to (sBoolean is false)
+end menu_ShowHeader
 
-on menu_SetDiscord layoutView
-   put the body_View of layoutView into browserView 
-   set the url of browserView to "https://discord.gg/GreQPTw"
-end menu_SetDiscord
-
-on menu_JoinSlack layoutView
-   put the body_View of layoutView into browserView 
-   set the url of browserView to "https://slack.com/signin"
-end menu_JoinSlack
-
-on menu_Tiger layoutView
-   put the body_View of layoutView into browserView 
-   set the url of browserView to "http://timmywil.github.io/jquery.panzoom/demo/"
-end menu_Tiger
+on menu_ShowFooter layoutView
+   put the footer_IsVisible of layoutView into sBoolean
+   set the footer_IsVisible of layoutView to (sBoolean is false)
+end menu_ShowFooter
 
 on _
 end _
@@ -111,18 +115,24 @@ on menu_UpdateComponents layoutView, withWhat
    put the body_View of layoutView into bodyView
    put the footer_View of layoutView into footerView
    
+   put "View|SivaSiva|Navigation|Bottom" into footerName
+   -- put "placeholder" into pName
+   put "Layout|Placeholder" into pName
+   put "View|SivaSiva|Navigation|Bottom" into footerName
+   
+   
    lock screen
    switch withWhat
       case "Placeholders"
-         set the control_Type of headerView to "placeholder"
+         set the control_Type of headerView to pName
          put the result into pButton
          set the background_Colour of pButton to "random"
          
-         set the control_Type of bodyView to "placeholder"
+         set the control_Type of bodyView to pName
          put the result into pButton
          set the background_Colour of pButton to "random"
          
-         set the control_Type of footerView to "placeholder"
+         set the control_Type of footerView to pName
          put the result into pButton
          set the background_Colour of pButton to "random"
          break
@@ -130,30 +140,27 @@ on menu_UpdateComponents layoutView, withWhat
          set the control_Type of headerView to "headerBar" -- "View|SivaSiva|Navigation|Bottom"
          put the result into newHeaderView
          set the behavior of newHeaderView to the name of stack "behavior_ViewHeader"
-         -- set the opaque of newHeaderView to true
          set the backgroundcolor of newHeaderView to white
          set the title_Text of newHeaderView to "Log"
          
          set the control_Type of bodyView to "field"
          put the result into newBodyView
-         -- set the behavior of newBodyView to the name of stack "behavior_ViewBrowser"
          
-         set the control_Type of footerView to "View|SivaSiva|Navigation|Bottom"
+         set the control_Type of footerView to footerName
          break
          break
       case "Browser"
          set the control_Type of headerView to "headerBar" -- "View|SivaSiva|Navigation|Bottom"
          put the result into newHeaderView
          set the behavior of newHeaderView to the name of stack "behavior_ViewHeader"
-         -- set the opaque of newHeaderView to true
          set the backgroundcolor of newHeaderView to white
          
          set the control_Type of bodyView to "browser"
          put the result into newBodyView
-         set the url of newBodyView to "http://dev.himalayanacademy.com/monastery/meet-the-monks"
+         set the url of newBodyView to "https://google.com"
          set the behavior of newBodyView to the name of stack "behavior_ViewBrowser"
          
-         set the control_Type of footerView to "View|SivaSiva|Navigation|Bottom"
+         set the control_Type of footerView to footerName
          break
    end switch
    unlock screen
@@ -175,8 +182,8 @@ on menu_SwapFooter layoutView, whichView
    end switch
 end menu_SwapFooter
 
-on _
-end _
+on __
+end __
 
 on menu_SetTitle layoutView
    set the title_Text of layoutView to "Log"
@@ -186,13 +193,27 @@ on menu_SetOrientation layoutView, whichOrientation
    set the mobile_Orientation of layoutView to whichOrientation
 end menu_SetOrientation
 
-on _
-end _
+private command ___
+end ___
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
+on menu_DisplayKenBurns layoutView, shortHtmlFile
+   put the body_View of layoutView into browserView 
+   put the project_HtmlFile ["burns_data.html"] of browserView into htmlFile
+   set the url of browserView to htmlFile
+end menu_DisplayKenBurns
 
+on menu_SetDiscord layoutView
+   put the body_View of layoutView into browserView 
+   set the url of browserView to "https://discord.gg/GreQPTw"
+end menu_SetDiscord
 
---> Dev | Menu
--
+on menu_JoinSlack layoutView
+   put the body_View of layoutView into browserView 
+   set the url of browserView to "https://slack.com/signin"
+end menu_JoinSlack
+
+on menu_Tiger layoutView
+   put the body_View of layoutView into browserView 
+   set the url of browserView to "http://timmywil.github.io/jquery.panzoom/demo/"
+end menu_Tiger
+

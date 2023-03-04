@@ -51,9 +51,6 @@ end disabled_Behavior
 private function _GetMenu menuBit
    put the long id of me into myController
    put merge ("Global | Module | [[menuBit]] | Line | Menu") into gMenuTitle
-   -- 
-   controller_CreateIfNeeded gMenuTitle, "lcw_Tools"
-   --
    return gMenuTitle
 end _GetMenu
 

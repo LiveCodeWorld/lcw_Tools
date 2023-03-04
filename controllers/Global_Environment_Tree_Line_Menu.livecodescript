@@ -101,18 +101,8 @@ on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
-on menu_RevealProjectFolder projectName
-   put the project_Folder of stack projectName into projectFolder
-   finder_Reveal projectFolder
-end menu_RevealProjectFolder
-
 on _
 end _
-
-on menu_ScriptOnly projectName
-   put the scriptonly of stack projectName into isScriptOnly
-   set the scriptonly of stack projectName to isScriptOnly is false
-end menu_ScriptOnly
 
 on menu_StartProject projectName
    project_Start projectName, true
@@ -120,19 +110,30 @@ end menu_StartProject
 
 on menu_StopProject projectName
    project_Stop projectName
+   display_Environment true
 end menu_StopProject
 
 on _
 end _
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
+on menu_FixProjectStackFiles projectName
+   project_FixStackFiles projectName
+   put the result into projectArray
+   --
+   set the cursor to watch
+   display_Project projectName, true
+   display_EnvironmentMenus true
+   display_GitRefreshProjectName projectName
+end menu_FixProjectStackFiles
+
+on menu_ScriptOnly projectName
+   put the scriptonly of stack projectName into isScriptOnly
+   set the scriptonly of stack projectName to isScriptOnly is false
+end menu_ScriptOnly
+
+on menu_RevealProjectFolder projectName
+   put the project_Folder of stack projectName into projectFolder
+   finder_Reveal projectFolder
+end menu_RevealProjectFolder
 
 
---> Dev | Menu
--
-on _TestFolderArray projectName
-   put the project_StackNameArray of stack projectName into sData
-   display_Data sData, "Test Data"
-end _TestFolderArray
