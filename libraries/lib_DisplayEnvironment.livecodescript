@@ -100,6 +100,8 @@ on mDoubleUp_Environment displayView, projectName
    if the optionkey is "Down" then breakpoint
    if the shiftKey is "Down" then
       -- display_ProjectLibs projectName
+      
+      project_Start projectName
       display_GitProjectStatus projectName
    else
       display_Project projectName

@@ -97,12 +97,22 @@ on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName
 end menu_DisplayProjectLibs
 
+private command _
+end _
+
+on menu_InitGit projectName
+   put the project_Folder of stack projectName into projectFolder
+   git_AskInit projectFolder
+   --
+   display_GitProjectStatus projectName
+end menu_InitGit
+
 on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
-on _
-end _
+private command __
+end __
 
 on menu_StartProject projectName
    project_Start projectName, true
@@ -113,8 +123,8 @@ on menu_StopProject projectName
    display_Environment true
 end menu_StopProject
 
-on _
-end _
+private command ___
+end ___
 
 on menu_FixProjectStackFiles projectName
    project_FixStackFiles projectName
