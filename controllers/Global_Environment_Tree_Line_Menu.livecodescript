@@ -101,8 +101,7 @@ private command _
 end _
 
 on menu_InitGit projectName
-   put the project_Folder of stack projectName into projectFolder
-   git_AskInit projectFolder
+   git_AskInit projectName
    --
    display_GitProjectStatus projectName
 end menu_InitGit

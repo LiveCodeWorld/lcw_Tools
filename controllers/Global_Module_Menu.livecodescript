@@ -140,14 +140,21 @@ on menu_RenameModule
    display_ProjectLibs projectName
 end menu_RenameModule
 
+on menu_RemoveFromMemory displayView
+   put LocalArray ["moduleStackName"] into moduleName
+   put the project_Folder of stack moduleName into projectFolder
+   --
+   module_RemoveFromMemory moduleName, projectFolder
+end menu_RemoveFromMemory
+
 private on _
 end _
 
-on menu_DisplayModuleTools
+on _DisplayModuleTools
    put LocalArray ["moduleStackName"] into moduleStackName
    --
    display_ModuleTools moduleStackName
-end menu_DisplayModuleTools
+end _DisplayModuleTools
 
 on submenu_Tools
    return "Global | Module | Tree | Menu"

@@ -127,6 +127,8 @@ command display_ProjectArray projectName, pConstruct
    end if
    put the result into displayView
    --
+   display_SetInteractions displayView, "Project | Array", "mDoubleUp_ProjectArray", "lib_DisplayProject"
+   --
    return displayView
 end display_ProjectArray
 

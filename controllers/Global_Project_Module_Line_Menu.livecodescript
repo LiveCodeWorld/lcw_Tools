@@ -43,6 +43,10 @@ command _Init tObject
    put projectName into LocalArray ["projectName"]
 end _Init
 
+private function _GetProjectFolder
+   return LocalArray ["projectFolder"]
+end _GetProjectFolder
+
 private function _GetModuleFolder
    return LocalArray ["moduleFolder"]
 end _GetModuleFolder
@@ -106,7 +110,9 @@ on menu_CreateModuleMenu moduleStackName
 end menu_CreateModuleMenu
 
 on menu_RemoveFromMemory moduleName
-   delete stack moduleName
+   -- delete stack moduleName
+   put _GetProjectFolder() into projectFolder
+   module_RemoveFromMemory moduleName, projectFolder
 end menu_RemoveFromMemory
 
 private on __
