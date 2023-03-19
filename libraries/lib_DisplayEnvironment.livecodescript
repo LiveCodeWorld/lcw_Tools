@@ -97,15 +97,19 @@ end project_AskCreate
 --> Display | Events
 -
 on mDoubleUp_Environment displayView, projectName
-   if the optionkey is "Down" then breakpoint
-   if the shiftKey is "Down" then
-      -- display_ProjectLibs projectName
-      
-      project_Start projectName
-      display_GitProjectStatus projectName
-   else
-      display_Project projectName
-   end if
+   switch
+      case the optionkey is "Down"
+         breakpoint
+      case the title_Text of displayView = "Not Up-to-Date"
+      case the shiftKey is "Down" 
+         -- display_ProjectLibs projectName
+         
+         project_Start projectName
+         display_GitProjectStatus projectName
+         break
+      default
+         display_Project projectName
+   end switch
 end mDoubleUp_Environment
 
 on mDoubleUp_EnvironmentLib displayView, stackName
