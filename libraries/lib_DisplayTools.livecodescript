@@ -64,51 +64,6 @@ private command _SetModuleToolsMenus stackName, displayView
    return true
 end _SetModuleToolsMenus
 
---  command display_ModuleTools stackName, pEditScripts
-if exists (control 1 of cd 1 of stack stackName) is true then
-   put the long id of control 1 of cd 1 of stack stackName into viewObject   
-   put the view_Props of viewObject into viewProps
-   --
-   put the module_Folder of stack stackName into moduleFolder
-   put the original_ModuleName of stack stackName into moduleName
-   if moduleName is empty then
-      put stackName into moduleName
-   end if
-else
-   put empty into viewObject
-   put "View does not exist!" into viewProps
-   put empty into mTitles
-end if
--- 
-display_Data viewProps, stackName, "Module Tools"
-put the result into displayView
---
-_SetModuleToolsMenus stackName, displayView
---
-set the multiple_Hilites of displayView to false
-
-set the itemdelimiter to slash
-put item 1 to -3 of moduleFolder & slash into projectFolder
-put project_GetHomeStackName (projectFolder) into projectName
---
-set the displayed_Object of displayView to viewObject
-set the displayed_ModuleFolder of displayView to moduleFolder
-set the displayed_ModuleName of displayView to moduleName
-set the displayed_ProjectName of displayView to projectName
-set the displayed_ProjectFolder of displayView to projectFolder
---
-if pEditScripts is true then
-   if exists (cd 1 of stack moduleName) then
-      put the script of cd 1 of stack moduleName into cardScript
-      if cardScript is not empty then
-         edit the script of cd 1 of stack moduleName
-      end if
-      display_ModuleToolScripts moduleName, projectName
-   end if
-end if
-return displayView
-end display_ModuleTools
-
 command display_ModuleToolScripts moduleName, projectName
    -- put library_FetchProjectFolder (projectName) into projectFolder
    put env_ConstructProjectFolder (projectName) into projectFolder

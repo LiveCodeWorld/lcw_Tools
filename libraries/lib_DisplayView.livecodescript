@@ -22,14 +22,13 @@ function view_MenuToolTitles mTitle, isaView
    --
    if isaView is not false then
       put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
-      -- put CR & "Global | Module | Tree | Menu" & tab & "submenu" & tab & "Module Tools" after mTitle
+      put CR & "Global | View | Assets | Menu" & tab & "submenu" after mTitle
       put CR & "-" after mTitle
-      put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
+      -- put CR & "Global | View | Authoring | Menu" & tab & "submenu" after mTitle
       put CR & "Global | View | Script | Menu" & tab & "submenu" after mTitle
       put CR & "Global | View | Property | Menu" & tab & "submenu" after mTitle
       put CR & "Global | View | Geometry | Menu" & tab & "submenu" after mTitle
-      -- put CR & "Global | Behavior | View | Menu" & tab & "submenu" after mTitle
-      put CR &  "Global | View | Update | Menu" & tab & "submenu" after mTitle
+      put CR & "Global | View | Update | Menu" & tab & "submenu" after mTitle
    else
       put CR & "Global | Module | Menu" & tab & "submenu" after mTitle
    end if

@@ -10,7 +10,7 @@ version: 0.6
 --> Project Deps
 -
 getprop project_Deps
-   return "lcw,lcw_Menus"
+   return "lcw,lcw_Menus,lcw_ModuleTools"
 end project_Deps
 
 
