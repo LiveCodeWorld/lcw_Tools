@@ -23,23 +23,28 @@ end project_ConstructFolder
 
 --> Menu | Props
 -
-on menu_Init tObject
-   put the index_View of tObject into indexView
-   put indexView into LocalArray ["indexView"]
-   
-   -- put the title_Text of indexView into LocalArray ["moduleName"]
-   put the view_Index of indexView into LocalArray ["bObjects"]
-   
-   put the displayed_ProjectName of indexView into LocalArray ["projectName"]
-   put the displayed_ProjectFolder of indexView into LocalArray ["projectFolder"]
-   put the displayed_ModuleFolder of indexView into LocalArray ["moduleFolder"]
-   put the displayed_ModuleName of indexView into LocalArray ["moduleName"]
-   put the displayed_ModuleHomeStackPath of indexView into LocalArray ["moduleHomeStackPath"]   
-end menu_Init
-
-getprop editMenu_Params [displayView]
-   put LocalArray ["viewObject"] into viewObject
+getprop menu_Target [tObject]
+   put the display_View of tObject into dView
+   put the displayed_Object of dView into viewObject
    --
+   _InitProps tObject
+   --
+   return viewObject
+end menu_Target
+
+command _InitProps tObject
+   put the display_View of tObject into displayView
+   put displayView into LocalArray ["displayView"]
+   
+   put the view_Index of displayView into LocalArray ["bObjects"]
+   put the displayed_ProjectName of displayView into LocalArray ["projectName"]
+   put the displayed_ProjectFolder of displayView into LocalArray ["projectFolder"]
+   put the displayed_ModuleFolder of displayView into LocalArray ["moduleFolder"]
+   put the displayed_ModuleName of displayView into LocalArray ["moduleName"]
+   put the displayed_ModuleHomeStackPath of displayView into LocalArray ["moduleHomeStackPath"]   
+end _InitProps
+
+getprop editMenu_Params [viewObject]
    if viewObject is empty then return empty
    put the module_ControllerStackNames of viewObject into stackNames
    return stackNames
@@ -131,14 +136,45 @@ getprop disabled_ImportMobileBehavior [viewObject]
 end disabled_ImportMobileBehavior
 
 private command _refresh viewObject
-   put LocalArray ["indexView"] into indexView
-   display_ViewBehaviors viewObject, indexView
+   put LocalArray ["displayView"] into displayView
+   display_ViewBehaviors viewObject, displayView
 end _refresh
 
 
 --> Global | View | Behavior | Menu
 -
-on menu_EditMenu displayView, mStackName
+on menu_ListBehaviorObjects viewObject
+   put the behavior_Objects of viewObject into bObjects
+   --
+   put LocalArray ["displayView"] into displayView
+   set the displayed_Index of displayView to bObjects
+end menu_ListBehaviorObjects
+
+on menu_ListModuleBehaviors viewObject
+   put the module_Behaviors of viewObject into moduleBehaviors
+   /*
+   put LocalArray ["projectFolder"] into projectFolder
+   put LocalArray ["moduleName"] into moduleName
+   put module_ListBehaviorStackNames (moduleName, projectFolder) into moduleBehaviors
+   */
+   --
+   put LocalArray ["displayView"] into displayView
+   --
+   lock screen
+   set the displayed_Index of displayView to moduleBehaviors
+   put the behavior_Objects of viewObject into bObjects
+   set the coloured_Lines ["green"] of displayView to bObjects
+   unlock screen
+end menu_ListModuleBehaviors
+
+on menu_Refresh viewObject
+   _refresh viewObject
+end menu_Refresh
+
+private on _
+end _
+
+on menu_EditMenu viewObject, mStackName
    edit the script of stack mStackName
 end menu_EditMenu
 
@@ -147,8 +183,8 @@ on menu_EditViewBehavior viewObject
    edit the script of bObject
 end menu_EditViewBehavior
 
-on _
-end _
+private on __
+end __
 
 on menu_DisplayNestedViewArray viewObject
    display_NestedViewArray viewObject
@@ -189,8 +225,8 @@ on menu_MoveExternalBehaviors viewObject, moveWhere
    put externalBehaviors
 end menu_MoveExternalBehaviors
 
-on _
-end _
+private on ___
+end ___
 
 on menu_ModuleBehaviorFolder viewObject
    put LocalArray ["moduleFolder"] into moduleFolder
@@ -208,8 +244,8 @@ on menu_ProjectFolder viewObject
    finder_Reveal projectFolder
 end menu_ProjectFolder
 
-on _
-end _
+private on ____
+end ____
 
 on submenu_Dev
    return "Dev | Menu"

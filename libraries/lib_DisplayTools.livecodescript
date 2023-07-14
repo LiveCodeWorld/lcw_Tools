@@ -43,6 +43,44 @@ on display_ModuleTools stackName
    return displayView
 end display_ModuleTools
 
+on mDouble_EditModuleProp displayView, shortFile
+   put the title_Text of displayView into moduleName
+   put the displayed_ModuleFolder of displayView into moduleFolder
+   put the selected_Path of displayView into fPath
+   replace comma with slash in fPath
+   put moduleFolder & fPath into sFile
+   -- 
+   set the itemDelimiter to "."
+   put item -1 of sFile into fExt
+   switch
+      case there is a stack sFile
+         if fExt = "livecode" then
+            set the loc of stack sFile to the screenloc
+            show stack sFile
+            go to stack sFile
+         else
+            edit the script of stack sFile
+         end if
+         break
+      case fExt = "livecode"
+      case fExt = "livecodescript"
+         breakpoint
+      case fExt = "json"
+         display_JsonFile sFile
+         put the result into dView
+         set the displayed_ModuleFolder of dView to moduleFolder
+         break
+      case fExt = "array"
+         display_ArrayFile sFile
+         put the result into dView
+         set the displayed_ModuleFolder of dView to moduleFolder
+         break    
+      default
+         put sFile
+         breakpoint
+   end switch
+end mDouble_EditModuleProp
+
 private command _SetModuleToolsMenus stackName, displayView
    if exists (control 1 of cd 1 of stack stackName) is false then return false
    
@@ -55,11 +93,11 @@ private command _SetModuleToolsMenus stackName, displayView
    --
    if menu_GlobalControllerExists (mTitle) is false then
       put "Global | Module | Tree | Menu" into line 1 of mTitles
-      display_SetInteractions displayView, "Module | Tree", "mDouble_EditProp"
+      display_SetInteractions displayView, "Module | Tree", "mDouble_EditModuleProp"
    else
       set the title_Menu of displayView to mTitles
       set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
-      set the mouse_DoubleUp of displayView to "mDouble_EditProp"
+      set the mouse_DoubleUp of displayView to "mDouble_EditModuleProp"
    end if
    return true
 end _SetModuleToolsMenus

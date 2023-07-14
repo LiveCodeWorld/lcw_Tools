@@ -33,21 +33,10 @@ getprop menu_Target [tObject]
    return projectName
 end menu_Target
 
-getprop disabled_StartProject [pName]
-   if LocalArray ["oColour"] = "255,0,0" then -- red
-      return false
-   else
-      return "delete"
-   end if
-end disabled_StartProject
-
-getprop disabled_StopProject [pName]
-   if LocalArray ["oColour"] = "255,0,0" then -- red
-      return "delete"
-   else
-      return false
-   end if
-end disabled_StopProject
+getprop checked_StartProject [projectName]
+   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   return isActive
+end checked_StartProject
 
 getprop disabled_ScriptOnly [projectName]
    if exists (stack projectName) is true then
@@ -97,7 +86,7 @@ on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName
 end menu_DisplayProjectLibs
 
-private command _
+private on _
 end _
 
 on menu_InitGit projectName
@@ -110,19 +99,20 @@ on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
-private command __
+private on __
 end __
 
 on menu_StartProject projectName
-   project_Start projectName, true
+   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   if isActive is true then
+      project_Stop projectName
+   else
+      project_Start projectName, true
+   end if
+   display_Environment true
 end menu_StartProject
 
-on menu_StopProject projectName
-   project_Stop projectName
-   display_Environment true
-end menu_StopProject
-
-private command ___
+private on ___
 end ___
 
 on menu_FixProjectStackFiles projectName

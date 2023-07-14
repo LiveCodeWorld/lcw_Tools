@@ -52,10 +52,7 @@ on functionKey keyNumber
          stack_ToggleShrink
          break
       case 12
-         put the top_ViewObjects of topCard into topViewObjects
-         repeat for each line viewObject in topViewObjects
-            display_BrokenBehaviors viewObject, true
-         end repeat
+         _SaveEverything
          break
       default
          if the optionKey is "Down" then
@@ -65,3 +62,16 @@ on functionKey keyNumber
    end switch
    pass functionKey
 end functionKey
+
+private command _SaveEverything
+   stack_SaveEdited "all"
+   --
+   display_NotUpToDate
+end _SaveEverything
+
+private command _DisplayBrokenBehaviors
+   put the top_ViewObjects of topCard into topViewObjects
+   repeat for each line viewObject in topViewObjects
+      display_BrokenBehaviors viewObject, true
+   end repeat
+end _DisplayBrokenBehaviors

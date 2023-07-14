@@ -9,6 +9,146 @@ version: 0.3
 
 --> Working on
 -
+
+--> Display | View
+-
+command display_Camera cameraDeviceName, sRect
+   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
+   put the result into displayView
+   return displayView
+end display_Camera
+
+command display_Image imageOrURL, pStackLabel, pCloneName, pStackStyle, pStackRect
+   -- if pCloneName is empty then put "Image" into pCloneName
+   -- display_Clone "View|Image|Fit Inside", pCloneName, imageOrURL, "displayed_Data", pStackRect
+   display_Clone "View|Image", pCloneName, imageOrURL, "displayed_Data", pStackRect
+   put the result into displayView
+   return displayView
+end display_Image
+
+command display_View viewName, pData, pCloneName, pStackRect
+   -- utility to make it easy to creeate new stacks
+   put "displayed_Data" into pDataProp
+   --
+   put view_GetTemplateObject (viewName) into viewObject
+   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
+   --
+   if pCloneName is empty then
+      -- lazy
+      put viewName into stackLabel
+      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect
+   else
+      -- clean new stack to play with
+      display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect
+   end if
+   put the result into viewObject
+   --
+   -- display_ViewTools viewName
+   return viewObject
+end display_View
+
+command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
+   if pCloneName is empty then put stack_ConstructNewCloneName (viewName) into pCloneName
+   
+   stack_Create pCloneName, viewName, "", pStackRect, "", true, pStackStyle
+   put the result into viewObject
+   --
+   _SetAndShow viewObject, pCloneName, pData, pDataProp
+   --
+   return viewObject
+end display_NewViewStack
+
+command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
+   -- put display_FindCloned (viewName, pCloneName) into foundView
+   if pStackStyle is empty then put "palette" into pStackStyle
+   --
+   if exists (stack pCloneName) is true then
+      -- already exists (lets use it)
+      if exists (control 1 of cd 1 of stack pCloneName) is false then
+         breakpoint
+         return empty
+      end if
+      
+      # Check it is a clone stack (could check view_Name)
+      put the view_Object of control 1 of cd 1 of stack pCloneName into viewObject
+      if viewObject is empty then
+         breakpoint
+         return empty
+      end if
+   else
+      if pCloneName is empty then
+         put viewName into stackLabel
+      else
+         put pCloneName into stackLabel
+      end if
+      --
+      stack_CloneInvisible viewName, pCloneName
+      put the result into pCloneName
+      --
+      if exists (control 1 of cd 1 of stack pCloneName) then
+         put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+      else
+         -- problem copying view?
+         breakpoint
+         show stack pCloneName
+         return the name of stack pCloneName
+      end if
+   end if
+   --
+   -- put the rect of viewObject into pLocOrRect
+   put the view_RectOnCard of viewObject into viewRect
+   --
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   set the pDataProp of viewObject to pData
+   --
+   if the visible of stack pCloneName is false then
+      -- causes flicker. If we need to reposition then possibly but now now...
+      display_ShowStack viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect, viewRect
+   end if
+   --
+   return viewObject
+end display_Clone
+
+command display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect, pViewRect
+   if pStackStyle is empty then put "toplevel" into pStackStyle
+   set the stack_Style of stack cloneStackName to pStackStyle
+   if pStackLabel is not empty then set the label of stack cloneStackName to pStackLabel
+   --
+   stack_Position cloneStackName, pLocOrRect
+   if pViewRect is a rect then
+      dispatch "LayoutControl" to viewObject with pViewRect
+   else
+      dispatch "LayoutControl" to viewObject
+   end if
+   --
+   show stack cloneStackName
+   go to stack cloneStackName
+   --
+   return cloneStackName
+end display_ShowStack
+
+
+--> Display | View | Examples
+-
+command display_SVG svgFile, pStackLabel, pStackStyle, pLocOrRect
+   stack_CloneInvisible "View|Image|SVG", "Display SVG"
+   put the result into cloneStackName
+   put the long id of widget 1 of cd 1 of stack cloneStackName into viewObject
+   --
+   if svgFile begins with "http" then
+      set the svg_URL [true] of viewObject to svgFile
+   else
+      set the svg_File [true] of viewObject to svgFile
+   end if
+   --
+   if pStackLabel is empty then
+      set the itemdelimiter to slash
+      put item -1 of svgFile into pStackLabel
+   end if
+   display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect
+   return viewObject
+end display_SVG
+
 function view_ConstructToolMenu viewObject, isaView
    put the view_MenuTitle [true] of viewObject into mTitle
    put view_MenuToolTitles (mTitle, isaView) into mTitles
@@ -36,51 +176,49 @@ function view_MenuToolTitles mTitle, isaView
 end view_MenuToolTitles
 
 
---> Display | View | Clone
+--> Display | View | Clone | Find
 -
-command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
-   if pStackStyle is empty then put "palette" into pStackStyle
-   --
-   if exists (stack pCloneName) is true then
-      -- already exists (lets use it)
-      if exists (control 1 of cd 1 of stack pCloneName) is false then
-         breakpoint
-         return empty
+function display_FindCloned vName, displayStackLabel, pDisplayViewTitle
+   -- only one
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      if the label of stack dStackName = displayStackLabel then
+         if exists (control 1 of stack dStackName) is false then next repeat
+         put the long id of control 1 of stack dStackName into dView
+         --
+         switch
+            case the view_Name of dView is not vName
+               next repeat
+            case the title_Text of dView = pDisplayViewTitle
+            case displayStackLabel is empty
+               return dView
+            default
+               next repeat
+         end switch
       end if
-      -- put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-      
-      -- check it is a clone stack
-      put the view_Object of control 1 of cd 1 of stack pCloneName into viewObject
-      if viewObject is empty then
-         breakpoint
-         return empty
+   end repeat
+   return empty
+end display_FindCloned
+
+function display_FindView displayStackLabel, pDisplayViewTitle, pTypes
+   -- Looks for Display Array, and Display Index views depending on pTypes
+   if pTypes is empty then put "Display Index,Display Array" into pTypes
+   
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      get word 1 to 2 of dStackName
+      if it is not among the items of pTypes then next repeat
+      if the label of stack dStackName = displayStackLabel then
+         put the long id of group 1 of stack dStackName into displayView
+         if pDisplayViewTitle is empty then
+            return displayView
+         else if the title_Text of displayView = pDisplayViewTitle then
+            return displayView
+         end if
       end if
-   else
-      if pCloneName is empty then
-         put viewName into stackLabel
-      else
-         put pCloneName into stackLabel
-      end if
-      --
-      stack_CloneInvisible viewName, pCloneName
-      put the result into pCloneName
-      --
-      if exists (control 1 of cd 1 of stack pCloneName) then
-         put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-      else
-         -- problem copying view?
-         show stack pCloneName
-         return the name of stack pCloneName
-      end if
-   end if
-   --
-   if pDataProp is empty then put "displayed_Data" into pDataProp
-   set the pDataProp of viewObject to pData
-   --
-   stack_ShowAndGo viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect
-   --
-   return viewObject
-end display_Clone
+   end repeat
+   return empty
+end display_FindView
 
 
 --> Display | Events
@@ -144,19 +282,6 @@ command mDoubleUp_EditBehavior indexView, bObject
 end mDoubleUp_EditBehavior
 
 
---> Display
--
-command display_Camera cameraDeviceName, sRect
-   -- put the stack_BelowRect of stack "Image 1" into sRect
-   --
-   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
-   put the result into displayView
-   -- display_SetMenu displayView, "Camera", "title_Menu"
-   --
-   return displayView
-end display_Camera
-
-
 --> Display | View
 -
 command palette_View viewName, pCardMargin, pStackRect, pHidden
@@ -164,38 +289,6 @@ command palette_View viewName, pCardMargin, pStackRect, pHidden
    put the result into createdView
    return createdView
 end palette_View
-
-command display_View viewName, pData, pCloneName, pStackRect
-   -- utility to make it easy to creeate new stacks
-   put "displayed_Data" into pDataProp
-   --
-   put view_GetTemplateObject (viewName) into viewObject
-   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
-   --
-   if pCloneName is empty then
-      -- lazy
-      put viewName into stackLabel
-      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect
-   else
-      -- clean neew stack to play with
-      display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect
-   end if
-   put the result into viewObject
-   --
-   -- display_ViewTools viewName
-   return viewObject
-end display_View
-
-command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
-   if pCloneName is empty then put stack_ConstructNewCloneName (viewName) into pCloneName
-   
-   stack_Create pCloneName, viewName, "", pStackRect, "", true, pStackStyle
-   put the result into viewObject
-   --
-   _SetAndShow viewObject, pCloneName, pData, pDataProp
-   --
-   return viewObject
-end display_NewViewStack
 
 
 --> Display | View
@@ -262,22 +355,22 @@ command display_ViewIndex viewObject, pIndexView
 end display_ViewIndex
 
 command display_ViewBehaviors viewObject, pIndexView, pStacklabel
-   -- put the view_Behaviors of viewObject into bObjects
    put the behavior_Objects of viewObject into bObjects
    put the view_Name of viewObject into viewName
    
    put the project_Folder of viewObject into projectFolder
    if projectFolder is empty then
       -- may not be in a module or project
-      put viewName & comma & "No Project" into stackTitle
+      -- put viewName & comma & "No Project" into stackTitle
    else
       put the project_Name of viewObject into projectName
       put the module_Folder of viewObject into moduleFolder
       put the module_Name of viewObject into moduleName
       put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
       
-      put viewName & comma & projectName into stackTitle
+      -- put viewName & comma & projectName into stackTitle
    end if
+   put viewName & comma & "Behaviors" into stackTitle
    
    if exists (pIndexView) then
       set the view_Index of pIndexView to bObjects
@@ -294,7 +387,7 @@ command display_ViewBehaviors viewObject, pIndexView, pStacklabel
    
    if projectFolder is not empty then
       set the displayed_ModuleFolder of indexView to moduleFolder
-      set the displayed_ModuleName of indexView to moduleFolderName
+      set the displayed_ModuleName of indexView to moduleName
       set the displayed_ModuleHomeStackPath of indexView to moduleHomeStackPath
       set the displayed_ProjectName of indexView to projectName
       set the displayed_ProjectFolder of indexView to projectFolder
@@ -437,3 +530,4 @@ private command _askMoveBehavior someComment, bObject, viewObject
          exit to top
    end switch
 end _askMoveBehavior
+

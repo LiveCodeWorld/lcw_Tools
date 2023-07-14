@@ -109,6 +109,12 @@ on menu_Clone vObject
    stack_Clone stackNameToClone
 end menu_Clone
 
+on menu_SetCardMargin vObject
+   put the card_Margin of vObject into cMargin
+   put lcw_Ask ("Set the card_Margin of this card to:", cMargin, someView) into newMargin
+   set the card_margin of vObject to newMargin
+end menu_SetCardMargin
+
 private on ___
 end ___
 
@@ -128,57 +134,17 @@ on menu_LayoutViewOnCard viewObject
    _HandleDispatch it, viewObject, cardObject
 end menu_LayoutViewOnCard
 
-on menu_LayoutSquare viewObject
-   put the card_Object of viewObject into cardObject
-   put the view_RectOnCard of cardObject into vCardRect
-   put rect_GetSquare (vCardRect) into squareRect
-   --
-   dispatch "LayoutControl" to viewObject with squareRect
-   
-   if the shiftKey is "Down" then
-      set the rect_Test of cardObject to squareRect
-   end if
-   put the rect of viewObject into realRect
-   rect_ExtractDimensions squareRect, squareW, squareH
-   rect_ExtractDimensions realRect, realW, realH
-   
-   put "Real:" && realRect && "w:" & realW && "h:" & realH & CR into sInfo
-   put "Square:" && squareRect && "w:" & squareW && "h:" & squareH after sInfo
-   put sInfo
-   --
-   _HandleDispatch it, viewObject, cardObject
-end menu_LayoutSquare
+-- on submenu_Rect
+   return "Global | RectArray | Menu"
+end submenu_Rect
 
-on menu_SixLayoutTests someView
-   put the card_Object of someView into cardControl
-   put the view_RectOnCard of cardControl into cardRect
-   
-   repeat 6
-      set the cursor to busy
-      dispatch "LayoutControl" to someView with cardRect
-   end repeat
-   
-   put merge ("Dispatched 'LayoutControl' to [[the name of someView]] 6 times") into someComment
-   lcw_Notify someComment
-end menu_SixLayoutTests
+on submenu_Card
+   return "Global | Card | Menu"
+end submenu_Card
 
 private on _
 end _
 
-on submenu_Rect
-   return "Global | RectArray | Menu"
-end submenu_Rect
-
 on submenu_MoreTests
    return "Global | View | Test | Geometry | Menu"
 end submenu_MoreTests
-
-private on __
-end __
-
-on menu_SetCardMargin vObject
-   put the card_Margin of vObject into cMargin
-   put lcw_Ask ("Set the card_Margin of this card to:", cMargin, someView) into newMargin
-   set the card_margin of vObject to newMargin
-end menu_SetCardMargin
-

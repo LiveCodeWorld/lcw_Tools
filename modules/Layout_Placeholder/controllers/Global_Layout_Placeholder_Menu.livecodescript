@@ -117,7 +117,8 @@ on menu_UpdateLayoutPlaceholders tObject
    put the top_Controls of layoutView into topControls
    repeat for each line someControl in topControls
       put the view_Name of someControl into vName
-      if vName = "View|Layout|Placeholder" then
+      if vName = "Layout|Placeholder" then
+         -- if vName = "View|Layout|Placeholder" then
          put the view_Colour of someControl into oColour
          view_Update someControl, true
          put the result into newView
@@ -126,14 +127,14 @@ on menu_UpdateLayoutPlaceholders tObject
    end repeat
 end menu_UpdateLayoutPlaceholders
 
-private command _
+private on _
 end _
 
 on menu_DeleteMe tObject
    send "delete tObject" to tObject in 0 ticks
 end menu_DeleteMe
 
-private command __
+private on __
 end __
 
 on menu_ChangeName tObject
@@ -162,7 +163,7 @@ on menu_ChangeColour tObject
    set the view_Colour of tObject to newValue
 end menu_ChangeColour
 
-private command ___
+private on ___
 end ___
 
 on menu_IsOpaque tObject
@@ -176,13 +177,29 @@ on menu_HeightIsFixed viewObject
    set the height_IsFixed of viewObject to (heightIsFixed is false)
 end menu_HeightIsFixed
 
-private command ____
+private on ____
 end ____
 
-on menu_PlaceholderBehavior viewObject
+on menu_EditBehavior viewObject
    put the behavior of viewObject into bObject
    edit the script of bObject
-end menu_PlaceholderBehavior
+end menu_EditBehavior
+
+on menu_SetCameraBehavior viewObject
+   send "SetBehavior viewObject" to me in 2 ticks
+end menu_SetCameraBehavior
+
+on SetBehavior viewObject
+   set the behavior of viewObject to the name of stack "behavior_ViewCamera"
+end SetBehavior
+
+on menu_CameraTest viewObject
+   put the name of stack "behavior_ViewCamera" into bOject
+   set the camera_Open of viewObject to true
+end menu_CameraTest
+
+private on _____
+end _____
 
 on _DisplayDragWidgets
    put "Global | Layout | Placeholder | Replace | Menu" into mTitle

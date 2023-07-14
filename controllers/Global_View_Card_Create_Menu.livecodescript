@@ -13,15 +13,15 @@ getprop menu_Target [tObject]
    return the card_Object of tObject
 end menu_Target
 
-getprop disabled_MakeFirstControlAView [cardObject]
-   if exists (control 1 of cardObject) is false then return true
-   
-   put the view_Object of control 1 of cardObject into viewObject
-   if exists (viewObject) then
-      return false
-   else
-      return true
-   end if
+-- getprop disabled_MakeFirstControlAView [cardObject]
+if exists (control 1 of cardObject) is false then return true
+
+put the view_Object of control 1 of cardObject into viewObject
+if exists (viewObject) then
+   return false
+else
+   return true
+end if
 end disabled_MakeFirstControlAView
 
 getprop disabled_CreateViewGroup [cardObject]
@@ -107,7 +107,7 @@ on menu_MakeFirstControlAView cardObject
    edit the script of viewObject
 end menu_MakeFirstControlAView
 
-private command _
+private on _
 end _
 
 on menu_ViewScript cardObject
@@ -119,7 +119,7 @@ on menu_ViewBehavior cardObject
    edit the script of bObject
 end menu_ViewBehavior
 
-private command __
+private on __
 end __
 
 on menu_SetModuleBehavior cardObject

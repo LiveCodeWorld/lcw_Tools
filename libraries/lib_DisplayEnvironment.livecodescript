@@ -13,6 +13,19 @@ see "lib_FunctionKey"
 
 --> Working on
 -
+command display_NotUpToDate
+   put git_ListNotUpToDate() into needsUpdating
+   --
+   put display_FindView ("Environment") into displayView
+   if exists (displayView) is false then
+      display_Environment
+      put the result into displayView
+   end if
+   
+   set the displayed_Index ["Not Up-to-Date"] of displayView to needsUpdating
+   return displayView
+end display_NotUpToDate
+
 command display_Environment pRefreshOnly, pProjectNames
    if pRefreshOnly is true AND display_FindIndexView ("Environment") is empty then
       return empty -- display is not open so do nothing

@@ -25,10 +25,10 @@ getprop replaceWithView_Params
    return viewMenu
 end replaceWithView_Params
 
-getprop replaceWithModule_Params
-   put env_ListShortModuleFolders() into moduleNames
-   put outline_FromPathIndex (moduleNames, "_") into mmoduleMenu
-   return mmoduleMenu
+-- getprop replaceWithModule_Params
+put env_ListShortModuleFolders() into moduleNames
+put outline_FromPathIndex (moduleNames, "_") into moduleMenu
+return moduleMenu
 end replaceWithModule_Params
 
 function view_GetIndexMenu viewNames
@@ -37,6 +37,7 @@ function view_GetIndexMenu viewNames
    if it is empty then 
       return "Place Holder"
    else
+      -- replace "|" with "_" in it
       return it & CR & "-" & CR & "Place Holder"
    end if
 end view_GetIndexMenu
@@ -45,13 +46,15 @@ end view_GetIndexMenu
 --> Global | Layout | Placeholder | Replace | Menu
 -
 on menu_ReplaceWithPlaceholder tObject
-   put the short name of tObject into oName
-   set the control_Type [oName] of tObject to "placeHolder"
-   put the result into newView
+   set the control_Type of tObject to "placeHolder"
 end menu_ReplaceWithPlaceholder
 
 on _
 end _
+
+on menu_ReplaceWithModule tObject
+   display_ReplaceWithModule tObject
+end menu_ReplaceWithModule
 
 on menu_ReplaceWithWidget tObject, widgetName 
    set the header_Height of tObject to 64
@@ -63,11 +66,7 @@ on menu_ReplaceWithControl tObject, revControlName
    set the control_Type of tObject to revControlName
 end menu_ReplaceWithControl
 
-on menu_ReplaceWithView tObject, viewPathFragment 
+-- on menu_ReplaceWithView tObject, viewPathFragment 
    -- set the view_Swap [true] of tObject to viewPathFragment
    set the control_Type of tObject to viewPathFragment
 end menu_ReplaceWithView
-
-on menu_ReplaceWithModule tObject, viewPathFragment 
-   set the control_Type of tObject to viewPathFragment
-end menu_ReplaceWithModule

@@ -131,17 +131,6 @@ setprop background_Colour someColour
    set the backgroundcolor of me to someColour
 end background_Colour
 
-getprop view_Colour
-   -- legacy
-   return the effective backgroundcolor of the placeHolder_Button of me
-end view_Colour
-
-setprop view_Colour someColour
-   -- legacy
-   if someColour is "random" then put colour_GetRandom() into someColour
-   set the backgroundcolor of the placeHolder_Button of me to someColour
-end view_Colour
-
 getprop view_IsOpaque
    put the opaque of me into someBoolean
    return someBoolean

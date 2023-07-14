@@ -194,7 +194,7 @@ end project_GetFolderArray
 function project_GetStackNameArray projectName, pRepoFolder
    put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
    --
-   repeat for each item shortFolder in "libraries,models,controllers,views,behaviors"
+   repeat for each item shortFolder in "libraries,models,controllers,views,behaviors,stacks"
       put folder_AddShort (projectFolder, shortFolder) into sFolder
       get folder_GetStackNameArray (sFolder)
       if it is an array then

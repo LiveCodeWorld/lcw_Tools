@@ -35,7 +35,8 @@ on menu_EnvironmentViews
 end menu_EnvironmentViews
 
 on menu_EnvironmentModules
-   display_ListModules
+   -- display_ListModules
+   display_ModuleArray
 end menu_EnvironmentModules
 
 on menu_EnvironmentOldViews

@@ -147,10 +147,15 @@ end menu_WatchFiles
 on _
 end _
 
-on menu_RevealAssetFolder browserView
+on menu_ModuleAssetFolder browserView
+   put the module_AssetFolder of browserView into assetFolder
+   finder_Reveal assetFolder
+end menu_ModuleAssetFolder
+
+on menu_ProjectAssetFolder browserView
    put the project_AssetFolder of browserView into assetFolder
    finder_Reveal assetFolder
-end menu_RevealAssetFolder
+end menu_ProjectAssetFolder
 
 on menu_DisplayLocalFile browserView, shortHtmlFile
    put the project_HtmlFile [shortHtmlFile] of browserView into localFile
