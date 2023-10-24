@@ -92,17 +92,10 @@ end menu_FixBehaviorObjects
 on menu_MakeFirstControlAView cardObject
    -- menu_SetViewMetadata
    put the long id of control 1 of cardObject into viewObject
-   put the stack_Name of cardObject into viewName
+   put the stack_Name of viewObject into viewName
    --
-   put metadata_ConstructArray (viewName, "view") into uripArray
-   -- set the view_Name ["view"] of viewObject to viewName
-   set the script_MetaData of viewObject to uRipArray
-   put the result into uRipArray
-   
-   set the name of viewObject to viewName
-   put the module_Behaviors of viewObject into moduleBehaviors
-   set the behavior_Objects of viewObject to moduleBehaviors
-   
+   set the module_ViewMetaData [true] of viewObject to viewName
+   --   
    display_ObjectProperties viewObject
    edit the script of viewObject
 end menu_MakeFirstControlAView

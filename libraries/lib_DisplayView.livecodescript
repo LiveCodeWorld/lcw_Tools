@@ -10,6 +10,251 @@ version: 0.3
 --> Working on
 -
 
+--> Stack | List
+-
+function stack_ListLabeled sLabel
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      if the label of stack dStackName = sLabel then
+         put dStackName & CR after foundStackNames
+      end if
+   end repeat
+   delete char -1 of foundStackNames
+   return foundStackNames
+end stack_ListLabeled
+
+function stack_FindNameData pSearchStackLabel, pTestProperty
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      if pTestProperty is not empty then
+         if the pTestProperty of stack dStackName is not empty then
+            next repeat
+         end if
+      end if
+      
+      put the label of stack dStackName into stackLabel
+      switch
+         case pSearchStackLabel is empty
+         case stackLabel = pSearchStackLabel
+            if word 1 to -1 of stackLabel is empty then put "Space" into stackLabel
+            put displayView into stackNameData [dStackName]["displayView"]
+            put stackLabel into stackNameData [dStackName]["stackLabel"]
+            --
+            if pTestProperty is not empty then
+               put pTestProperty into stackNameData [dStackName]["prop"][pTestProperty]
+            end if
+            break
+         default
+            -- next repeat
+      end switch
+   end repeat
+   return stackNameData
+end stack_FindNameData
+
+function stack_ListNamedViews nameStem
+   put stack_FindNames (nameStem) into sNames
+   repeat for each line sName in sNames
+      if exists (control 1 of card 1) is false then next repeat
+      --
+      put the long id of control 1 of card 1 of stack sName into sView
+      put revRuggedId (sView) & CR after namedViews
+   end repeat
+   return namedViews
+end stack_ListNamedViews
+
+function stack_FindNames nameStem
+   -- could use filter
+   put revLoadedStacks ("application") into loadedStackNames
+   repeat for each line stackName in loadedStackNames
+      if stackName begins with nameStem then
+         put stackName & CR after foundStackNames
+      end if
+   end repeat
+   delete char -1 of foundStackNames
+   return foundStackNames
+end stack_FindNames
+
+function stack_ListNames pStackNames
+   switch pStackNames
+      case empty
+         return stack_ListOpen()
+      case "open"
+         return the openstacks
+      case "loaded"
+         return revLoadedStacks ("application")
+      default
+         -- could check they exist
+         return pStackNames
+   end switch
+end stack_ListNames
+
+function search_FindViews viewGetProp, pStackNames
+   if viewGetProp is empty then put "view_Object" into viewGetProp
+   put stack_ListNames (pStackNames) into stackNames
+   --
+   put search_StackNames (stackNames, "camera_View") into searchData -- searches everything in stack
+   -- put search_StacksForValue (stackNames, "view_Name", "View|Camera") into searchData
+   return keys (searchData)
+end search_FindViews
+
+function stack_ListOpen
+   put the openstacks into stackNames
+   repeat for each line stackName in stackNames
+      switch
+         case stackName = "Message Box"
+         case char 1 to 3 of stackName = "rev"
+         case char 1 to 4 of stackName = "com."
+         case char 1 to 9 of stackName = "behavior_"
+         case word -2 to -1 of stackName = "| Menu"
+            next repeat
+         default
+            put stackName & CR after appStackNames
+      end switch
+   end repeat
+   delete char -1 of appStackNames
+   return appStackNames
+end stack_ListOpen
+
+
+--> Display | Find
+-
+function display_ListLabeled sLabel, pViewNames
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      if the label of stack dStackName = sLabel then
+         if exists (control 1 of card 1 of stack dStackName) then
+            put the long id of control 1 of card 1 of stack dStackName into sView
+            if pViewNames is empty then
+               put sView & CR after foundViews
+            else
+               put the view_Name of sView into testViewName
+               if testViewName is among the items of pViewNames then
+                  put sView & CR after foundViews
+               end if
+            end if
+         end if
+      end if
+   end repeat
+   delete char -1 of foundViews
+   return foundViews
+end display_ListLabeled
+
+function display_FindCloned vName, displayStackLabel, pDisplayViewTitle
+   -- only one
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      if the label of stack dStackName = displayStackLabel then
+         if exists (control 1 of stack dStackName) is false then next repeat
+         put the long id of control 1 of stack dStackName into dView
+         --
+         switch
+            case the view_Name of dView is not vName
+               next repeat
+            case the title_Text of dView = pDisplayViewTitle
+            case displayStackLabel is empty
+               return dView
+            default
+               next repeat
+         end switch
+      end if
+   end repeat
+   return empty
+end display_FindCloned
+
+function display_FindView displayStackLabel, pDisplayViewTitle, pTypes
+   -- Looks for Display Array, and Display Index views depending on pTypes
+   if pTypes is empty then put "Display Index,Display Array" into pTypes
+   
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      get word 1 to 2 of dStackName
+      if it is not among the items of pTypes then next repeat
+      if the label of stack dStackName = displayStackLabel then
+         put the long id of group 1 of stack dStackName into displayView
+         if pDisplayViewTitle is empty then
+            return displayView
+         else if the title_Text of displayView = pDisplayViewTitle then
+            return displayView
+         end if
+      end if
+   end repeat
+   return empty
+end display_FindView
+
+function display_FindStackNameArray pSearchStackLabel, pSearchViewTitle, pPretty
+   -- looks for Dispay Array, and Display Index views
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      get word 1 to 2 of dStackName
+      if it is not among the items of "Display Index,Display Array" then next repeat
+      
+      put the long id of group 1 of stack dStackName into displayView
+      --
+      put the title_text of displayView into titleText
+      put the label of stack dStackName into stackLabel
+      
+      -- skip unless the following conditions are met
+      if pSearchStackLabel is empty then
+         put displayView into displayViewArray [dStackName]["displayView"]
+         put stackLabel into displayViewArray [dStackName]["stackLabel"]
+         put titleText into displayViewArray [dStackName]["titleText"]
+      else if stackLabel = pSearchStackLabel then
+         if pSearchViewTitle is empty then
+            put displayView into displayViewArray [dStackName]["displayView"]
+            put stackLabel into displayViewArray [dStackName]["stackLabel"]
+            put titleText into displayViewArray [dStackName]["titleText"]
+         else if titleText = pSearchViewTitle then
+            put displayView into displayViewArray [dStackName]["displayView"]
+            put stackLabel into displayViewArray [dStackName]["stackLabel"]
+            put titleText into displayViewArray [dStackName]["titleText"]
+         end if
+      end if
+   end repeat
+   --
+   if pPretty is true then
+      put _MakeStackNameArrayPretty (displayViewArray) into prettyArray
+      return prettyArray
+   else
+      return displayViewArray
+   end if
+end display_FindStackNameArray
+
+
+--> Display | View
+-
+command display_View viewName, pData, pCloneName, pStackRect, pDataProp, pStackStyle
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   put view_GetTemplateObject (viewName) into viewObject
+   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
+   --
+   if pCloneName is empty then -- lazy
+      put viewName into stackLabel
+      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect, pStackStyle
+   else
+      -- display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect -- clean new stack to play with
+      
+      put pCloneName into stackLabel
+      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect, pStackStyle
+   end if
+   put the result into viewObject
+   return viewObject
+end display_View
+
+command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
+   -- Not used. Creates clean stack. Card behaviour currenlty not set
+   if pCloneName is empty then put stack_ConstructNewCloneName (viewName) into pCloneName
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   
+   stack_Create pCloneName, viewName, "", pStackRect, "", true, pStackStyle
+   put the result into viewObject
+   --
+   set the pDataProp of viewObject to pData
+   show stack pCloneName
+   --
+   return viewObject
+end display_NewViewStack
+
+
 --> Display | View
 -
 command display_Camera cameraDeviceName, sRect
@@ -25,38 +270,6 @@ command display_Image imageOrURL, pStackLabel, pCloneName, pStackStyle, pStackRe
    put the result into displayView
    return displayView
 end display_Image
-
-command display_View viewName, pData, pCloneName, pStackRect
-   -- utility to make it easy to creeate new stacks
-   put "displayed_Data" into pDataProp
-   --
-   put view_GetTemplateObject (viewName) into viewObject
-   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
-   --
-   if pCloneName is empty then
-      -- lazy
-      put viewName into stackLabel
-      display_Clone viewName, stackLabel, pData, pDataProp, pStackRect
-   else
-      -- clean new stack to play with
-      display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect
-   end if
-   put the result into viewObject
-   --
-   -- display_ViewTools viewName
-   return viewObject
-end display_View
-
-command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
-   if pCloneName is empty then put stack_ConstructNewCloneName (viewName) into pCloneName
-   
-   stack_Create pCloneName, viewName, "", pStackRect, "", true, pStackStyle
-   put the result into viewObject
-   --
-   _SetAndShow viewObject, pCloneName, pData, pDataProp
-   --
-   return viewObject
-end display_NewViewStack
 
 command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
    -- put display_FindCloned (viewName, pCloneName) into foundView
@@ -104,6 +317,8 @@ command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStack
    if the visible of stack pCloneName is false then
       -- causes flicker. If we need to reposition then possibly but now now...
       display_ShowStack viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect, viewRect
+   else
+      go to stack pCloneName
    end if
    --
    return viewObject
@@ -176,51 +391,6 @@ function view_MenuToolTitles mTitle, isaView
 end view_MenuToolTitles
 
 
---> Display | View | Clone | Find
--
-function display_FindCloned vName, displayStackLabel, pDisplayViewTitle
-   -- only one
-   put revLoadedStacks ("application") into dStackNames
-   repeat for each line dStackName in dStackNames
-      if the label of stack dStackName = displayStackLabel then
-         if exists (control 1 of stack dStackName) is false then next repeat
-         put the long id of control 1 of stack dStackName into dView
-         --
-         switch
-            case the view_Name of dView is not vName
-               next repeat
-            case the title_Text of dView = pDisplayViewTitle
-            case displayStackLabel is empty
-               return dView
-            default
-               next repeat
-         end switch
-      end if
-   end repeat
-   return empty
-end display_FindCloned
-
-function display_FindView displayStackLabel, pDisplayViewTitle, pTypes
-   -- Looks for Display Array, and Display Index views depending on pTypes
-   if pTypes is empty then put "Display Index,Display Array" into pTypes
-   
-   put revLoadedStacks ("application") into dStackNames
-   repeat for each line dStackName in dStackNames
-      get word 1 to 2 of dStackName
-      if it is not among the items of pTypes then next repeat
-      if the label of stack dStackName = displayStackLabel then
-         put the long id of group 1 of stack dStackName into displayView
-         if pDisplayViewTitle is empty then
-            return displayView
-         else if the title_Text of displayView = pDisplayViewTitle then
-            return displayView
-         end if
-      end if
-   end repeat
-   return empty
-end display_FindView
-
-
 --> Display | Events
 -
 on mDouble_DisplayView indexView, viewName
@@ -229,7 +399,8 @@ on mDouble_DisplayView indexView, viewName
          answer merge("Could not find stack '[[viewName]]'.")
          break
       default
-         display_View viewName
+         -- display_View viewName
+         display_ViewTemplate viewName
    end switch
 end mDouble_DisplayView
 
@@ -289,22 +460,6 @@ command palette_View viewName, pCardMargin, pStackRect, pHidden
    put the result into createdView
    return createdView
 end palette_View
-
-
---> Display | View
--
-command display_ViewTemplate viewName, pRepoFolder
-   /*
-   if exists (control 1 of cd 1 of stack viewName) is false then return merge ("error, cannot find view for stack [[viewName]]")
-   go to stack viewName
-   put the long id of control 1 of cd 1 of stack viewName into viewObject
-   */ 
-   
-   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
-   if exists (viewObject) is false then throw "Error, no template object found for:" && viewName
-   --
-   object_GoTo viewObject
-end display_ViewTemplate
 
 
 --> Display | Project | Views

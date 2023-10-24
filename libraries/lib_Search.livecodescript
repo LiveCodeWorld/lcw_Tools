@@ -18,6 +18,40 @@ That is objectArray's contain propArray's - or object property arrays as returne
 
 --> Working on
 -
+function search_StacksForValue stackNames, someProperty, someValue, pControllerObject
+   breakpoint -- not working
+   local objectArray
+   repeat for each line stackName in stackNames
+      if exists(stack stackName) is false then next repeat
+      
+      put the name of stack stackName into stackObject
+      put search_StackForValue (stackObject, someProperty, someValue, pControllerObject) into searchResult -- not working
+      union searchResult with objectArray
+   end repeat
+   return objectArray
+end search_StacksForValue
+
+
+--> Stack | Decorations
+-
+command stack_ToggleDecorations sNames, pDecoration
+   put line 1 of sNames into testName
+   if the decorations of stack testName is "default" then
+      stack_SetDecorations sNames, pDecoration
+   else
+      stack_SetDecorations sNames, "default"
+   end if
+end stack_ToggleDecorations
+
+command stack_SetDecorations sNames, pDecoration
+   repeat for each line stackName in sNames
+      if exists (stack stackName) is false then next repeat
+      --
+      set the decorations of stack stackName to pDecoration
+   end repeat
+end stack_SetDecorations
+
+
 --> Stack | Behaviors
 -
 getprop stack_ObjectsWithExternalBehavior
@@ -89,6 +123,7 @@ end stack_BehaviorArray
 --> Search | Props
 -
 getprop menu_ReIndex
+   breakpoint
    /*
    Message execution error:
    Error description: Array: bad index expression
@@ -99,6 +134,7 @@ getprop menu_ReIndex
 end menu_ReIndex
 
 getprop script_GetSetHack
+   breakpoint
    -- used above
    try
       set the script_IsIndexed of the target to true
@@ -360,7 +396,6 @@ command search_StackAndSubstacks @objectArray, stackObject, someProperty, pContr
    put the substacks of stack mainStackName into subStackNames
    repeat for each line subStackName in subStackNames
       set the cursor to busy
-      -- put the long id of stack subStackName of stackObject into subStackObject -- LiveCode bug - stackObject not working with substack reference
       put the long id of stack subStackName of stack mainStackName into subStackObject
       search_SubStackForResult objectArray, subStackObject, someProperty, pControllerObject
    end repeat
@@ -368,7 +403,6 @@ end search_StackAndSubstacks
 
 command search_SubStackForResult @objectArray, stackObject, someProperty, pControllerObject
    search_ForValue objectArray, stackObject, someProperty, pControllerObject
-   -- search_ForResults objectArray, stackObject, someProperty, pControllerObject
    
    -- get the objects in the backgrounds
    put the backgroundids of stackObject into someBgIds
@@ -440,65 +474,67 @@ end search_ForResults
 --> Object | Search | Stack | For Value
 -
 function search_StackForValue stackObject, someProperty, someValue, controllerObject
-    put object_SearchSubStackForValue(stackObject, someProperty, someValue, controllerObject) into objectArray
-    
-    put the substacks of stackObject into subStackNames
-    repeat for each line subStackName in subStackNames
-        put the long id of stack subStackName of stackObject into stackObject
-        put search_SubStackForValue (stackObject, someProperty, someValue, controllerObject) & CR after foundObjects
-    end repeat
-    delete char -1 of foundObjects
-    return foundObjects
+   -- put object_SearchSubStackForValue( stackObject, someProperty, someValue, controllerObject) into objectArray
+   put search_SubStackForValue(stackObject, someProperty, someValue, controllerObject) into objectArray
+   
+   put the substacks of stackObject into subStackNames
+   repeat for each line subStackName in subStackNames
+      put the long id of stack subStackName of stackObject into stackObject
+      -- put search_SubStackForValue (stackObject, someProperty, someValue, controllerObject) & CR after foundObjects
+      put search_SubStackForValue (stackObject, someProperty, someValue, controllerObject) & CR after foundObjects
+   end repeat
+   delete char -1 of foundObjects
+   return foundObjects
 end search_StackForValue
    
 function search_SubStackForValue stackObject, someProperty, someValue, controllerObject
-    local objectArray
-    
-    if the someProperty of stackObject = someValue then
-        put stackObject & CR after foundObjects
-    end if
-     
-    -- get the objects in the backgrounds
-    put the backgroundids of stackObject into someBgIds
-    repeat for each line someId in someBgIds
-        put the long id of background id someId of stackObject into someBackground
+   local objectArray
+   
+   if the someProperty of stackObject = someValue then
+      put stackObject & CR after foundObjects
+   end if
+   
+   -- get the objects in the backgrounds
+   put the backgroundids of stackObject into someBgIds
+   repeat for each line someId in someBgIds
+      put the long id of background id someId of stackObject into someBackground
+      
+      if the someProperty of someBackground = someValue then
+         put someBackground & CR after foundObjects
+      end if
+      
+      repeat with controlNum = 1 to the number of controls in someBackground
+         put the long id of control controlNum of someBackground into someObject
+         if the someProperty of someObject = someValue then
+            put someObject & CR after foundObjects
+         end if
+      end repeat
+   end repeat
+   
+   -- get the card only objects of the cards
+   put the cardids of stackObject into someCardIDs
+   repeat for each line cardID in someCardIDs
+      put the long id of card id cardId of stackObject into cardObject
+      
+      if the someProperty of cardObject = someValue then
+         put cardObject & CR after foundObjects
+      end if
+      
+      repeat with controlNum = 1 to the number of controls in cardObject
+         put the long id of control controlNum of cardObject into someObject
          
-        if the someProperty of someBackground = someValue then
-            put someBackground & CR after foundObjects
-        end if
-         
-        repeat with controlNum = 1 to the number of controls in someBackground
-            put the long id of control controlNum of someBackground into someObject
+         put word 3 of someObject into someID
+         if someID is among the lines of someBgIds then
+            add the number of controls in someObject to controlNum
+         else
             if the someProperty of someObject = someValue then
-                put someObject & CR after foundObjects
+               put someObject & CR after foundObjects
             end if
-        end repeat
-    end repeat
-    
-    -- get the card only objects of the cards
-    put the cardids of stackObject into someCardIDs
-    repeat for each line cardID in someCardIDs
-        put the long id of card id cardId of stackObject into cardObject
-         
-        if the someProperty of cardObject = someValue then
-            put cardObject & CR after foundObjects
-        end if
-         
-        repeat with controlNum = 1 to the number of controls in cardObject
-            put the long id of control controlNum of cardObject into someObject
-            
-            put word 3 of someObject into someID
-            if someID is among the lines of someBgIds then
-                add the number of controls in someObject to controlNum
-            else
-                if the someProperty of someObject = someValue then
-                    put someObject & CR after foundObjects
-                end if
-            end if
-        end repeat
-    end repeat
-    delete char -1 of foundObjects
-    return foundObjects
+         end if
+      end repeat
+   end repeat
+   delete char -1 of foundObjects
+   return foundObjects
 end search_SubStackForValue
 
 private command search_TestObject @foundObjects, targetObject, someProperty, someValue, controllerObject

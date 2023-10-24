@@ -117,7 +117,7 @@ on menu_EditHtml browserView, shortHtmlFile
    atom_DisplayFile localFile
 end menu_EditHtml
 
-on _
+private on _
 end _
 
 on menu_StopWatchingEverything
@@ -144,8 +144,8 @@ on menu_WatchFiles browserView, someBoolean
    end if
 end menu_WatchFiles
 
-on _
-end _
+private on __
+end __
 
 on menu_ModuleAssetFolder browserView
    put the module_AssetFolder of browserView into assetFolder
@@ -172,8 +172,8 @@ on menu_DisplayInBrowser browserView, shortHtmlFile
    launch url ("file:///" & localFile)
 end menu_DisplayInBrowser
 
-on _
-end _
+private on ___
+end ___
 
 on menu_CreateHtmlFile browserView
    put lcw_Ask ("What file name would you like for the new HTML file?", "xxx.html") into shortHtmlFile

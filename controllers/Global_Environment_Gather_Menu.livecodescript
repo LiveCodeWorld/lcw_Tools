@@ -17,10 +17,6 @@ local LocalArray
 
 --> Menu | Props
 -
-getprop menu_IsSimple
-   return mArray_GetSimple()
-end menu_IsSimple
-
 
 --> Global | Environment | Gather | Menu
 -

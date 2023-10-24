@@ -59,6 +59,15 @@ private function _GetModuleStackPath
    return LocalArray ["moduleHomeStackPath"]
 end _GetModuleStackPath 
 
+getprop moveModule_Param
+   return LocalArray ["projectName"]
+end moveModule_Param
+
+getprop moveModule_Params
+   return env_ListActiveProjects()
+   return library_ListProjectNames()
+end moveModule_Params
+
 
 --> Global | Project | Module | Line | Menu
 -
@@ -76,13 +85,6 @@ end menu_DisplayModuleTools
 
 private on _
 end _
-
-on menu_EditModuleHome projectName
-   put _GetStackName (displayView) into mStackName
-   --
-   go to stack mStackName
-   edit the script of stack mStackName
-end menu_EditModuleHome
 
 on menu_CreateModule
    put lcw_Ask ("What name would you like for this module?", "View|Something") into moduleName
@@ -109,37 +111,33 @@ on menu_CreateModuleMenu moduleStackName
    end if
 end menu_CreateModuleMenu
 
-on menu_RemoveFromMemory moduleName
-   -- delete stack moduleName
-   put _GetProjectFolder() into projectFolder
-   module_RemoveFromMemory moduleName, projectFolder
-end menu_RemoveFromMemory
+on menu_MoveModule oldModuleName, newProjectName
+   module_Move oldModuleName, newProjectName
+end menu_MoveModule
 
 private on __
 end __
 
-on menu_ScriptOnly projectName
+on menu_TrashModule moduleName
+   put LocalArray ["displayView"] into displayView
+   --
+   lcw_Answer "Move module folder '[[moduleName]]' to the Trash?", displayView, moduleName
+   module_Trash moduleName
+   --
+   display_ModuleFromStackName moduleName
+end menu_TrashModule
+
+on menu_RemoveFromMemory moduleName
+   module_RemoveFromMemory moduleName
+end menu_RemoveFromMemory
+
+on menu_EditModuleHome moduleName
    put _GetStackName (displayView) into mStackName
    --
-   put the scriptonly of stack mStackName into isScriptOnly
-   set the scriptonly of stack mStackName to isScriptOnly is false
-end menu_ScriptOnly
+   go to stack mStackName
+   edit the script of stack mStackName
+end menu_EditModuleHome
 
-on menu_RevealModuleFolder
-   put _GetModuleFolder() into moduleFolder
-   finder_Reveal moduleFolder
-end menu_RevealModuleFolder
-
-on menu_ExportModuleJson
-   put _GetModuleFolder() into moduleFolder
-   if there is not a folder moduleFolder then
-      breakpoint
-      exit to top
-   end if
-   
-   project_ExportMenusAndStackFiles moduleFolder
-   put the result into projectArray
-   --
-   put _GetStackName (displayView) into moduleName
-   display_Data projectArray, moduleName, "Module Array"  
-end menu_ExportModuleJson
+on submenu_Dev
+   return menu_DevTitle()
+end submenu_Dev

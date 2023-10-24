@@ -15,6 +15,22 @@ Full help text should be provided on the linked wiki.*/
 -
 local LocalArray
 
+command display_AskProjectTrashStack stackObject
+   if exists (stackObject) is false then
+      display_DebugHistory pDisplayTitle, pAlsoArray
+      lcw_AnswerWarning "Stack does not exist!"
+   end if
+   put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
+   lcw_Answer someQuestion
+   --
+   put the project_Name of stackObject into projectName
+   --
+   project_TrashStack stackObject
+   put the result into trashedStackFile
+   --
+   display_ProjectLibs projectName
+end display_AskProjectTrashStack
+
 
 --> Display | ScriptCall
 -
@@ -42,7 +58,7 @@ end checkCall
 --> Menu | Props
 -
 getprop menu_Target [tObject]
-   get mArray_GetActiveTitle()
+   -- get mArray_GetActiveTitle()
    --
    put tObject into LocalArray ["tObject"]
    put the title_Text of tObject into oProjectName

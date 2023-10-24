@@ -35,9 +35,26 @@ getprop checked_AddBehavior [moduleView]
    return the selected_LineColour of displayView is "0,255,0" -- "Green"
 end checked_AddBehavior
 
+private function _BehaviorStack
+   -- put LocalArray ["displayView"] into displayView
+   -- put the selected_Line of displayView into bObject
+   put LocalArray ["bObject"] into bObject
+   return bObject
+end _BehaviorStack
+
 
 --> Global | View | Behavior | Line | Menu
 -
+on menu_EditBehavior moduleView
+   put _BehaviorStack() into bObject
+   edit the script of bObject
+end menu_EditBehavior
+
+on menu_BehaviorInspector
+   put _BehaviorStack() into bObject
+   display_ObjectProperties bObject
+end menu_BehaviorInspector
+
 on menu_AddBehavior moduleView
    put LocalArray ["displayView"] into displayView
    put the selected_LineColour of displayView into sLineColours
@@ -45,7 +62,7 @@ on menu_AddBehavior moduleView
 end menu_AddBehavior
 
 on menu_SetViewBehavior moduleView
-   put LocalArray ["bObject"] into bObject
+   put _BehaviorStack() into bObject
    set the behavior of moduleView to bObject
 end menu_SetViewBehavior
 

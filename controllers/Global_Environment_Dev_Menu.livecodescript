@@ -11,60 +11,50 @@ version: 0.1
 Full help text should be provided on the linked wiki.*/
 
 
---> Variables
--
-local LocalArray
-
 --> Menu | Props
 -
 
---> Events | Display | Not Needed?
--
-on doubleup_DisplayScriptOnlyfolder indexView, mainStackName
-   -- put the dataObject_Folder [true] of stack mainStackName into testDataFolder
-   put textStack_ConstructDataFolder (mainStackName) into dataFolder
-   put script_ReconstructFromExported (dataFolder) into someScript
-   
-   if exists (stack mainStackName) is false then
-      create script only stack mainStackName
-      set the script of stack mainStackName to someScript
-      edit the script of stack mainStackName
-      show stack mainStackName
-   else
-      display_Text someScript
-      atom_DisplayText someScript
-   end if
-end doubleup_DisplayScriptOnlyfolder
-
-function textStack_ConstructDataFolder mainStackName, pStackName, pLongObjectID
-   -- same functionality as "getprop dataObject_Folder"
-   
-   put textStack_ConstructFolder (mainStackName) into textStackFolder -- textStack_Folder
-   put textStackFolder & "data/" into textStackDataFolder
-   
-   switch pStackName
-      case empty
-      case mainStackName
-         put textStackDataFolder & "objects/" into dataFolder
-         break
-      default
-         put textStackDataFolder & "objects/substacks/" & pStackName & "/" into dataFolder
-   end switch
-   
-   switch word 1 of pLongObjectID
-      case empty
-      case "stack"
-         put "stack/" after dataFolder
-         break
-      default
-         put word 1 of pLongObjectID & "_" & word 3 of pLongObjectID & "/" after dataFolder
-   end switch
-   return dataFolder
-end textStack_ConstructDataFolder
-
-
 --> Global | Environment | Dev | Menu
 -
+on submenu_Install
+   return "Global | Install | Menu"
+end submenu_Install
+
+private on _
+end _
+
+on submenu_Server
+   return "Global | Environment | Server | Menu"
+end submenu_Server
+
+on submenu_TransportServer
+   return "Global | Transport | Model | Menu"
+end submenu_TransportServer
+
+on submenu_Atopia
+   return "Global | Environment | Atopia | Menu"
+end submenu_Atopia
+
+on menu_FederationModels
+   display_FederationModels
+end menu_FederationModels
+
+on menu_FederationTools
+   put fedray_FetchModel() into fedray
+   display_Tools fedray, "Federation Model", "Federation", "LCW", "lcw_Server"
+end menu_FederationTools
+
+-- on menu_ServerTools
+   display_Tools someData, "Federation Servers", "Federation | Server", "LCW", "lcw_Server"
+end menu_ServerTools
+
+on __
+end __
+
+on _Refresh
+   display_Environment
+end _Refresh
+
 on submenu_Prefs
    return "Global | Pref | Menu"
 end submenu_Prefs
@@ -73,7 +63,6 @@ on _
 end _
 
 on menu_DisplayExportedScript indexView, mainStackName
-   --put textStack_ConstructDataFolder (mainStackName) into dataFolder
    answer folder "Select a folder..."
    put it into dataFolder
    --

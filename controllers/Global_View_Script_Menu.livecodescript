@@ -36,9 +36,11 @@ getprop disabled_EditViewBehavior [viewObject]
    put exists (bObject) into bExists
    if bExists is false then return true
    
+   /*
    put the module_Behaviors of viewObject into moduleBehaviors
    put the behavior_Objects of viewObject into bObjects
    if bObjects = moduleBehaviors then return true
+   */
    
    return false
 end disabled_EditViewBehavior
@@ -124,7 +126,7 @@ on menu_DisplayViewBehaviors viewObject
    display_ViewBehaviors viewObject
 end menu_DisplayViewBehaviors
 
-on _
+private on _
 end _
 
 on menu_SetModuleBehaviors mView
@@ -145,8 +147,8 @@ on menu_EditModuleBehaviors mView
    end repeat
 end menu_EditModuleBehaviors
 
-on _
-end _
+private on __
+end __
 
 on menu_SetMenuButtonScript viewObject
    put menu_GetGlobalButton() into viewTemplate
@@ -161,8 +163,8 @@ on menu_EditMenuButtonTemplate viewObject
    edit the script of viewTemplate
 end menu_EditMenuButtonTemplate
 
-on _
-end _
+private on ___
+end ___
 
 on menu_EditViewCardBehavior viewObject
    put the card_Object of viewObject into cardObject
@@ -176,94 +178,9 @@ on menu_SetViewCardBehavior viewObject
    set the behavior of cardObject to the long id of stack "behavior_ViewTemplateCard"
 end menu_SetViewCardBehavior
 
-on _
-end _
+private on ____
+end ____
 
 on submenu_Dev
-   return "Dev | Menu"
+   return menu_DevTitle()
 end submenu_Dev
-
-
---> Dev | Menu
--
-on _GoToView scriptObject
-   put the object_MetaData ["name"] of scriptObject into viewName
-   put view_GetTemplateObject (viewName) into templateObject
-   switch
-      case templateObject = empty
-         answer warning merge ("The view '[[viewName]]' is not in the database!")
-         break
-      case exists (templateObject) is false
-         put templateObject
-         answer warning merge ("I cannot find the view template for view '[[viewName]]'")
-         break
-      default
-         object_GoTo templateObject
-   end switch
-end _GoToView
-
-on _CreateView scriptObject
-   breakpoint
-   -- template_ConstructCloneStack
-   template_ConstructStackFromObject scriptObject
-end _CreateView
-
-on _EditToolMenu mTarget
-   put the menu_ToolTitle of mTarget into mTitle
-   menu_Edit mTitle
-end _EditToolMenu
-
-on _BehaviorsOfView mTarget
-   put the object_Behaviors of mTarget
-end _BehaviorsOfView
-
-on _
-end _
-
-on _HierarchyObject mTarget, someThing
-   menu_SetChoice someThing, scriptObject, someType
-   -- put ObjectDictionary [scriptObject] into scriptObject
-   if someType is "behavior" then
-      put the behavior of scriptObject into scriptObject
-   end if
-   edit the script of scriptObject
-end _HierarchyObject
-
-
---> Dev | Menu | Props
--
-local BehaviorObjectMenu, ObjectDictionary
-
-private command _SetChoice menuChoice, @mainChoice, @secondChoice
-   put line 1 of menuChoice into menuChoice
-   set the itemdelimiter to "|"
-   put item 1 of menuChoice into mainChoice
-   put item 2 to -1 of menuChoice into secondChoice
-end _SetChoice
-
--- getprop hierarchyObject_Params
-put library_ListUsedStacks() into libStacks
-return libStacks
-end hierarchyObject_Params
-
-getprop hierarchyObject_Params [mTarget]
-   return BehaviorObjectMenu
-end hierarchyObject_Params
-
-getprop disabled_HierarchyObject [mTarget]
-   local longObjects, shortObjects, shortNames
-   put the object_BehaviorHierarchyArray of mTarget into hierarchyArray
-   
-   put hierarchyArray ["menu"] into BehaviorObjectMenu
-   put hierarchyArray ["longObjects"] into longObjects
-   -- put hierarchyArray ["shortObjects"] into shortObjects
-   -- put hierarchyArray ["shortNames"] into shortNames
-   
-   put hierarchyArray ["dictionary"] into ObjectDictionary
-   
-   if longObjects is empty then
-      return "delete"
-   else
-      return false
-   end if
-end disabled_HierarchyObject

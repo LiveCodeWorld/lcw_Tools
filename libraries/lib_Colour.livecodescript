@@ -16,6 +16,31 @@ This library is for working with colour.
 /*
 I think the colour conversion to HSV is not working properly
 */
+command display_ColouNameArray
+   put colour_FetchNameArray() into cNameArray
+   display_Data cNameArray
+end display_ColouNameArray
+
+function colour_FetchNameArray
+   put the model_Array ["ColourName.array"] of me into cNameArray
+   return cNameArray
+end colour_FetchNameArray
+
+command colour_StoreNameArray
+   put colour_ConstructNameArray() into cNameArray
+   set the model_Array ["ColourName.array"] of me to cNameArray
+end colour_StoreNameArray
+
+function colour_ConstructNameArray
+   put the colornames into cNames
+   repeat for each line cName in cNames
+      put colour_TranslateName (cName) into sRGB
+      if cNameArray [sRGB] is empty then
+         put cName into cNameArray [sRGB]
+      end if
+   end repeat
+   return cNameArray
+end colour_ConstructNameArray
 
 function colour_GetReverse someColour
    -- put colour_RgbToHSV (someColour) into someColour
@@ -166,11 +191,13 @@ command colour_HexNormalise @someColour, pObject
 end colour_HexNormalise
 
 function colour_RgbToName rgbColour
-   put revNumberToColor (rgbColour) into someColour
-   if someColour is empty then 
+   -- put revNumberToColor (rgbColour) into namedColour
+   put colour_FetchNameArray() into nameArray
+   put nameArray [rgbColour] into namedColour
+   if namedColour is empty then 
       return rgbColour
    else
-      return someColour
+      return namedColour
    end if
 end colour_RgbToName
 
@@ -339,22 +366,22 @@ function colour_HSVToRGB hsvColour
 end colour_HSVToRGB
 
 function colour_RgbToHex rgbColour
-    -- was "colour_ConvertToWeb"
-    
-    put "#" into theWebColor -- leading "#"
-    repeat for each item myItem in rgbColour -- numeric triplet -  R,G,B
-        put format("%02X",myItem) after theWebColor
-    end repeat
-    return theWebColor
-    
-    -- alternative technique
-    put "#" into theWebColor -- leading "#"
-    repeat for each item myItem in rgbColour -- numeric triplet - R,G,B
-        get baseconvert(myItem,10,16)
-        if the length of it is 1 then put zero before it  -- each component must be 2-digit
-        put it after theWebColor
-    end repeat
-    return theWebColor
+   if rgbColour is empty then return empty
+   --
+   put "#" into theWebColor -- leading "#"
+   repeat for each item myItem in rgbColour -- numeric triplet -  R,G,B
+      put format("%02X",myItem) after theWebColor
+   end repeat
+   return theWebColor
+   
+   -- alternative technique
+   put "#" into theWebColor -- leading "#"
+   repeat for each item myItem in rgbColour -- numeric triplet - R,G,B
+      get baseconvert(myItem,10,16)
+      if the length of it is 1 then put zero before it  -- each component must be 2-digit
+      put it after theWebColor
+   end repeat
+   return theWebColor
 end colour_RgbToHex
 
 function colour_HexToRgb hexColour

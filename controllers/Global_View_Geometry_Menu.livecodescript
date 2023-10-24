@@ -10,13 +10,11 @@ version: 0.2
 -
 local LocalArray
 
-on menu_Init tObject
+getprop menu_Target [tObject]
    put the stack_Name of tObject into dStackName
    put dStackName into LocalArray ["dStackName"]
    put the topleft of stack dStackName into LocalArray ["stackTopLeft"]
-end menu_Init
-
-getprop menu_Target [tObject]
+   
    put the display_View of tObject into displayView
    switch
       case exists (displayView)
@@ -134,16 +132,19 @@ on menu_LayoutViewOnCard viewObject
    _HandleDispatch it, viewObject, cardObject
 end menu_LayoutViewOnCard
 
--- on submenu_Rect
-   return "Global | RectArray | Menu"
-end submenu_Rect
+on menu_SetRect viewObject
+   put the card_Object of viewObject into cardObject
+   put the view_RectOnCard of cardObject into vCardRect
+   --
+   set the rect of viewObject to vCardRect
+end menu_SetRect
+
+private on _
+end _
 
 on submenu_Card
    return "Global | Card | Menu"
 end submenu_Card
-
-private on _
-end _
 
 on submenu_MoreTests
    return "Global | View | Test | Geometry | Menu"

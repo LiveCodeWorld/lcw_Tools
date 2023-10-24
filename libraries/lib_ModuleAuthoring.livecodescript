@@ -7,8 +7,227 @@ type: library
 version: 0.3
 
 
+--> Working on
+-
+setprop module_ViewMetaData [setNameAndBehaviors] viewName
+   put the long id of the target into viewObject
+   
+   ## Set Script Metadata (and uRIP)
+   put metadata_ConstructArray (viewName, "view") into uripArray
+   set the script_MetaData of viewObject to uRipArray
+   put the result into uRipArray
+   
+   if setNameAndBehaviors is true then
+      ## Set the Name
+      set the name of viewObject to viewName
+      
+      ## Set Behaviors   
+      put the module_Behaviors of viewObject into moduleBehaviors
+      set the behavior_Objects of viewObject to moduleBehaviors
+   end if
+   return viewObject
+end module_ViewMetaData
+
+command module_TrashStack stackName
+   put the filename of stack stackName into stackPath
+   --
+   put the module_HomeStack of stack stackName into moduleHomeStack
+   put the project_HomeStack of stack stackName into projectHomeStack
+   --
+   stack_Remove stackPath
+   revDeleteFile stackPath
+   --
+   set the stack_IsKnown of moduleHomeStack to false
+   set the stack_IsKnown of projectHomeStack to false
+   return stackPath
+end module_TrashStack
+
+command stack_Remove stackPaths
+   repeat for each line stackPath in stackPaths
+      if exists (stack stackPath) then
+         delete stack stackPath
+         put stackPath & CR into removedStackPaths
+      end if
+   end repeat
+   delete char -1 of removedStackPaths
+   return removedStackPaths
+end stack_Remove
+
+command module_Trash moduleName
+   ## Get moduleFolder before closing
+   put the module_Folder of stack moduleName into moduleFolder
+   put the project_Folder of stack moduleName into projectFolder
+   
+   ## Close and rremove from memory
+   module_RemoveFromMemory moduleName, projectFolder
+   
+   ## Move folder
+   revDeleteFolder moduleFolder
+   --
+   return the result
+end module_Trash
+
+command module_RemoveFromMemory moduleName, pProjectFolder
+   if there is a folder pProjectFolder then
+      put the module_StackPaths of stack moduleName into stackPaths
+   else
+      put module_ListStackPaths (moduleName, pProjectFolder) into moduleStackPaths
+   end if
+   stack_Remove stackPaths
+   return the result
+end module_RemoveFromMemory
+
+command module_Move oldModuleName, newProjectName
+   set the cursor to watch
+   put the project_Folder of stack oldModuleName into oldProjectFolder
+   put the module_Folder of stack oldModuleName into oldModuleFolder
+   put the project_Name of stack oldModuleName into oldProjectName
+   
+   set the itemdelimiter to slash
+   put item -1 of oldModuleFolder into oldModuleShortFolder
+   --
+   put library_FetchProjectFolder (newProjectName) into newProjectFolder
+   put module_GetFolder (oldModuleShortFolder, newProjectFolder) into newModuleFolder
+   
+   ## Remove from memory
+   -- module_RemoveFromMemory oldModuleName, oldProjectFolder
+   put directory_ListNestedPaths (oldModuleFolder) into oldModuleStackPaths
+   stack_Remove oldModuleStackPaths
+   
+   ## Move folder
+   revMoveFolder oldModuleFolder, newModuleFolder
+   
+   if the shiftKey is "Up" then
+      ## Re-index and re-load
+      project_ExportMenusAndStackFiles oldProjectFolder
+      project_ExportMenusAndStackFiles newProjectFolder
+   end if
+   
+   ## Refresh index views
+   display_Project oldProjectName
+   display_Project newProjectName   
+   
+   -- display_ProjectModules oldProjectName
+   -- display_ProjectModules newProjectName   
+end module_Move
+
+command module_CreateWithObject moduleName, pProjectName, pObject, pDisplayView
+   -- not implemented "pObject" yet
+   -- defaults to creating a module in the "lcw_Forms" project
+   if pProjectName is empty then put "lcw_Forms" into pProjectName
+   put module_ConstructFolder (moduleName, pProjectName) into moduleFolder
+   
+   put view_GetTemplateObject (moduleName) into moduleTemplate
+   if exists (moduleTemplate) then
+      lcw_AnswerWarning  "A view or module called '[[moduleName]]' already exists!", pDisplayView, moduleName
+   end if
+   
+   ## Copy
+   put exists (pObject) into objectExists
+   if objectExists then
+      put the behavior of pObject into bObject
+      if exists (bObject) is false then
+         put bObject
+         breakpoint
+         put empty into oScript
+      else
+         put the script of bObject into oScript
+      end if
+      put the view_Name of pObject into oldViewName
+      --
+      put the stack_Name of pObject into oStackName
+      put the rect of stack oStackName into oRect
+      --
+      copy pObject
+   end if
+   
+   ## Create Fresh Module
+   module_Create moduleFolder, moduleName
+   put the result into resultArray
+   put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
+   put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
+   put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
+   
+   ## Exit if nothing copied
+   if objectExists is false then
+      save stack moduleName
+      return resultArray
+   end if
+   
+   ## Set stack rect
+   set the rect of stack moduleHomeStackPath to oRect
+   
+   ## Go and Paste
+   go to stack moduleName
+   paste
+   -- copy pObject to cd 1 of stack moduleHomeStackPath
+   put it into copiedView
+   
+   ## Rename and Reset view_Name
+   set the module_ViewMetaData [true] of copiedView to moduleName
+   
+   ## Copy script and replace default of new module
+   if exists (pObject) then
+      put project_DefaultBehaviorName (moduleName) into bStackName
+      if oScript is not empty then
+         put metadata_ConstructArray (bStackName, "behavior") into uRipArray
+         script_SetMetadataArray oScript, uRipArray
+         set the script of stack moduleBehaviorStackPath to oScript
+      end if
+      save stack moduleBehaviorStackPath
+   end if
+   
+   ## Move main menu if it exists
+   put menu_GlobalTitleFromViewName (oldViewName) into oldMenuTitle
+   put menu_GetGlobalController (oldMenuTitle) into oldController
+   if exists (oldController) then
+      put the script of oldController into oldMenuScript
+      --
+      put metadata_ConstructArray (moduleName, "controller") into uRipArray
+      script_SetMetadataArray oldMenuScript, uRipArray
+      set the script of stack moduleControllerStackPath to oldMenuScript
+      save stack moduleControllerStackPath
+   end if
+   
+   save stack moduleName
+   --
+   put the project_Name of stack moduleName into projectName
+   display_Project projectName
+   display_ModuleFromStackName moduleName
+   display_ModuleTools moduleName, true
+   --
+   lcw_AnswerWarning "May not have moved all menus or behaviors!"
+   return resultArray
+end module_CreateWithObject
+
+
 --> To Trash?
 -
+command module_MoveController moduleStackName, moduleFolder
+   put module_ConstructGlobalMenuTitle (moduleStackName) into globalMenuTitle
+   put menu_GetGlobalController (globalMenuTitle) into mController
+   
+   if exists (mController) then
+      if word 1 of mController = "stack" then
+         put the filename of mController into oldControllerStackPath
+         set the itemdelimiter to slash
+         put item -1 of oldControllerStackPath into pShortFile
+         put module_ConstructControllerPath (moduleStackName, moduleFolder, pShortFile) into newModuleBehaviorStackPath
+         project_MoveStack oldControllerStackPath, newModuleBehaviorStackPath
+         return newModuleBehaviorStackPath
+      else
+         answer warning "Menu controller is not a stack.  Please move manually?"
+         edit the script of mController
+         breakpoint
+         return empty
+      end if
+   else
+      module_CreateMenuFromFolder moduleFolder -- ,moduleStackName
+      put the result into newModuleBehaviorStackPath
+      return newModuleBehaviorStackPath
+   end if
+end module_MoveController
+
 function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
    breakpoint
    if pShortFile is empty then
@@ -20,7 +239,7 @@ function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
 end module_ConstructControllerPath
 
 
---> Working on
+--> Module | Move
 -
 command module_MoveRenameBehavior oldBehaviorStackPath, newModuleStackName, pModuleFolder
    set the itemdelimiter to slash
@@ -71,13 +290,24 @@ function module_GetHomePath moduleName, pProjectName
 end module_GetHomePath
 
 on mDoubleUp_OldView displayView, shortFile
-   -- put the selected_Line of displayView into shortFile
+   if char 1 of shortFile = "." then
+      delete char 1 of shortFile
+   end if
+   --
    put view_OldFolder() & shortFile into oldViewFile
-   --
-   put the short name of stack oldViewFile into oldName
-   delete stack oldName
-   --
-   go to stack oldViewFile
+   if there is a stack oldViewFile then
+      put the short name of stack oldViewFile into oldName
+      delete stack oldName
+      --
+      go to stack oldViewFile
+   else
+      breakpoint
+      --
+      set the itemdelimiter to slash
+      put oldViewFile into oldViewFolder
+      put empty into item -1 of oldViewFolder
+      finder_RevealFileOrFolder oldViewFolder
+   end if
 end mDoubleUp_OldView
 
 command display_OldViewFiles
@@ -107,31 +337,6 @@ function view_OldFolder
    put "/My Revolution Enterprise/Plugins/opn_Plugins/opn_Components/views/" after oldViewFolder
    return oldViewFolder
 end view_OldFolder
-
-command module_CreateWithObject moduleName, pProjectName, pObject, pDisplayView
-   -- not implemented "pObject" yeet
-   -- defaults to creating a module in the "lcw_Forms" project
-   if pProjectName is empty then put "lcw_Forms" into pProjectName
-   
-   put view_GetTemplateObject (moduleName) into rowTemplate
-   if exists (rowTemplate) then
-      lcw_AnswerWarning  "A view or module called '[[moduleName]]' already exists!", pDisplayView, moduleName
-   end if
-   --
-   put module_ConstructFolder (moduleName, pProjectName) into moduleFolder
-   module_Create moduleFolder, moduleName
-   put the result into resultArray
-   --
-   go to stack moduleName
-   save stack moduleName
-   display_ModuleTools moduleName, true
-   --
-   return resultArray
-   --
-   put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
-   put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
-   put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
-end module_CreateWithObject
 
 command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
    text_AddTrailing rootModuleFolder, slash
@@ -250,17 +455,8 @@ function module_ConstructBehaviorScript bName
    return behaviorScript
 end module_ConstructBehaviorScript
 
-function controller_ConstructMenuScript mTitle
-   put scaffold_GetTemplate ("Global Menu Template") into menuScriptTemplate
-   put mTitle into controllerName
-   put lcw_GetAuthor() into authorName
-   put merge (menuScriptTemplate) into controllerScript
-   return controllerScript
-end controller_ConstructMenuScript
-
 function module_ConstructBehaviorShortFile moduleStackName
-   _CleanModuleStackName moduleStackName
-   put "behavior_" & moduleStackName & ".livecodescript" into shortFile
+   put project_DefaultBehaviorName (moduleStackName) & ".livecodescript" into shortFile
    return shortFile
 end module_ConstructBehaviorShortFile
 
@@ -401,31 +597,6 @@ command project_CreateView viewName, pViewFilePath
       set the stack_IsKnown of stack viewName to true
    end if
 end project_CreateView
-
-command module_MoveController moduleStackName, moduleFolder
-   put module_ConstructGlobalMenuTitle (moduleStackName) into globalMenuTitle
-   put menu_GetGlobalController (globalMenuTitle) into mController
-   
-   if exists (mController) then
-      if word 1 of mController = "stack" then
-         put the filename of mController into oldControllerStackPath
-         set the itemdelimiter to slash
-         put item -1 of oldControllerStackPath into pShortFile
-         put module_ConstructControllerPath (moduleStackName, moduleFolder, pShortFile) into newModuleBehaviorStackPath
-         project_MoveStack oldControllerStackPath, newModuleBehaviorStackPath
-         return newModuleBehaviorStackPath
-      else
-         answer warning "Menu controller is not a stack.  Please move manually?"
-         edit the script of mController
-         breakpoint
-         return empty
-      end if
-   else
-      module_CreateMenuFromFolder moduleFolder -- ,moduleStackName
-      put the result into newModuleBehaviorStackPath
-      return newModuleBehaviorStackPath
-   end if
-end module_MoveController
 
 
 --> Private

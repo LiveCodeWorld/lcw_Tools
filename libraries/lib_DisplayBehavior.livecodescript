@@ -7,18 +7,37 @@ type: library
 version: 0.1
 
 
+--> Working on
+-
+on mDoubleUp_Behavior displayView, bObject
+   put the displayed_Object of displayView into viewObject
+   edit the script of bObject
+end mDoubleUp_Behavior
+
+command display_ModuleBehaviors mView
+   put the behavior_Objects of mView into bObjects
+   --
+   put the view_Name of mView into vName
+   display_Data bObjects, vName, "Behaviors"
+   display_SetMouseAndMenu the result, "Behavior"
+   put the result into displayView
+   set the displayed_Object of displayView to mView
+   return displayView
+end display_ModuleBehaviors
+
+
 --> Display | Behaviors
 -
 command display_Behaviors
    put behavior_ListNames() into bNames
-  
+   
    put "doDrag" into dragCommand
    put empty into upCommand
    put empty into doubleUpCommand
-
+   
    put "Global | Behavior | Display | Menu" into titleMenu
    put "Global | Behavior | Display | Line | Menu" into lineMenu
-
+   
    display_Index bIndex, "Behaviors", titleMenu, lineMenu, upCommand, doubleUpCommand, dragCommand
    put the result into displayView
    set the multiple_Hilites of displayView to false

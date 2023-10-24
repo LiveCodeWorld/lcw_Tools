@@ -15,11 +15,18 @@ Their should be an easy default, with teh ability to customise.
 
 --> Display | Template
 -
-command display_ViewTemplate viewName, pRepoFolder
-   -- go_ViewTemplate
-   put view_GetTemplateObject (viewName, pRepoFolder) into viewObject
-   object_GoTo viewObject
-   return viewObject
+command display_ViewTemplate viewName, pStackLoc, pRepoFolder
+   put view_GetTemplateObject (viewName, pRepoFolder) into tObject
+   --
+   object_GoTo tObject, true
+   --
+   put the stack_Name of tObject into stackName
+   if pStackLoc is not a point then
+      put the screenloc into pStackLoc
+   end if
+   set the loc of stack stackName to pStackLoc
+   --
+   return tObject
 end display_ViewTemplate
 
 
