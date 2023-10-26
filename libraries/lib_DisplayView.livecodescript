@@ -9,9 +9,54 @@ version: 0.3
 
 --> Working on
 -
+function display_List pViewNames, pStackLabel
+   # List open stacks with a UX
+   put stack_ListOpen() into dStackNames
+   -- put revLoadedStacks ("application") into loadedStackNames
+   
+   # Filter
+   repeat for each line dStackName in dStackNames
+      get the label of stack dStackName
+      if (pStackLabel is not empty) AND (it is not pStackLabel) then
+         next repeat
+      end if
+      -- 
+      if exists (control 1 of card 1 of stack dStackName) then
+         put the long id of control 1 of card 1 of stack dStackName into sView
+         if pViewNames is empty then
+            put sView & CR after foundViews
+         else
+            put the view_Name of sView into testViewName
+            if testViewName is among the items of pViewNames then
+               put sView & CR after foundViews
+            end if
+         end if
+      end if
+   end repeat
+   delete char -1 of foundViews
+   return foundViews
+end display_List
+
 
 --> Stack | List
 -
+function stack_ListOpen
+   put the openstacks into stackNames
+   repeat for each line stackName in stackNames
+      switch
+         case stackName = "Message Box"
+         case char 1 to 3 of stackName = "rev"
+         case char 1 to 4 of stackName = "com."
+         case the scriptonly of stack stackName is true
+             next repeat
+         default
+            put stackName & CR after appStackNames
+      end switch
+   end repeat
+   delete char -1 of appStackNames
+   return appStackNames
+end stack_ListOpen
+
 function stack_ListLabeled sLabel
    put revLoadedStacks ("application") into dStackNames
    repeat for each line dStackName in dStackNames
@@ -88,57 +133,9 @@ function stack_ListNames pStackNames
    end switch
 end stack_ListNames
 
-function search_FindViews viewGetProp, pStackNames
-   if viewGetProp is empty then put "view_Object" into viewGetProp
-   put stack_ListNames (pStackNames) into stackNames
-   --
-   put search_StackNames (stackNames, "camera_View") into searchData -- searches everything in stack
-   -- put search_StacksForValue (stackNames, "view_Name", "View|Camera") into searchData
-   return keys (searchData)
-end search_FindViews
 
-function stack_ListOpen
-   put the openstacks into stackNames
-   repeat for each line stackName in stackNames
-      switch
-         case stackName = "Message Box"
-         case char 1 to 3 of stackName = "rev"
-         case char 1 to 4 of stackName = "com."
-         case char 1 to 9 of stackName = "behavior_"
-         case word -2 to -1 of stackName = "| Menu"
-            next repeat
-         default
-            put stackName & CR after appStackNames
-      end switch
-   end repeat
-   delete char -1 of appStackNames
-   return appStackNames
-end stack_ListOpen
-
-
---> Display | Find
+--> Display | Find | One
 -
-function display_ListLabeled sLabel, pViewNames
-   put revLoadedStacks ("application") into dStackNames
-   repeat for each line dStackName in dStackNames
-      if the label of stack dStackName = sLabel then
-         if exists (control 1 of card 1 of stack dStackName) then
-            put the long id of control 1 of card 1 of stack dStackName into sView
-            if pViewNames is empty then
-               put sView & CR after foundViews
-            else
-               put the view_Name of sView into testViewName
-               if testViewName is among the items of pViewNames then
-                  put sView & CR after foundViews
-               end if
-            end if
-         end if
-      end if
-   end repeat
-   delete char -1 of foundViews
-   return foundViews
-end display_ListLabeled
-
 function display_FindCloned vName, displayStackLabel, pDisplayViewTitle
    -- only one
    put revLoadedStacks ("application") into dStackNames

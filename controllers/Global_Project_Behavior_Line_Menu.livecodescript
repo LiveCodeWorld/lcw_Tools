@@ -17,10 +17,6 @@ local LocalArray
 
 --> Menu | Props
 -
-getprop menu_IsSimple
-   return true
-end menu_IsSimple
-
 getprop menu_Target [tObject]
    -- called once for each menu
    return the display_View of tObject
@@ -31,29 +27,35 @@ getprop menu_CheckTarget [mTarget]
    pass menu_CheckTarget
 end menu_CheckTarget
 
-getprop test_Param [mTarget]
-  return "b"
-end test_Param
-
-getprop test_Params [mTarget]
-   return "a,b,c"
-end test_Params
-
-getprop checked_TestChecked
-   return true
-end checked_TestChecked
-
-getprop disabled_Test
-  return false -- true, "delete"
-end disabled_Test
+getprop moveBehavior_Params
+   put env_ListActiveProjects() into projectNames
+   return projectNames
+end moveBehavior_Params
 
 
 --> Global | Project | Behavior | Line | Menu
 -
-on menu_Test displayView, abc
-   put displayView & CR & abc
-end menu_Test
-
-on menu_TestChecked
-  put menu_GetChecked (the params)
-end menu_TestChecked
+on menu_MoveBehavior dView, newProjectName
+   put _GetStackName (dView) into oBehaviorName
+   put _SelectedBehavior (dView) into bObject
+   --
+   ask_MoveBehavior mController, gMenuTitle, newProjectName, displayView
+   
+   put the title_Text of dView into oProjectName
+   --
+   switch
+      case newProjectName is empty
+         lcw_AnswerWarning "Something went wront with script. This menu item is supposed to list new project names?"
+      case oProjectName = newProjectName
+         lcw_AnswerWarning merge ("Stack is already in project '[[newProjectName]]'. Choose a new project to move this library to!")
+   end switch
+   
+   put the selected_Line of dView into oBehaviorName
+   breakpoint
+   project_MoveStackRelative oBehaviorName, newProjectName
+   --
+   lcw_Notify merge ("Moved library to new project '[[newProjectName]]'!")
+   --
+   display_Project oProjectName
+   display_Project newProjectName
+end menu_MoveBehavior

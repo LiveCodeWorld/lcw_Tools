@@ -5,7 +5,7 @@ copyright: Anonymous
 license: GPLv3
 name: Global | Environment | Tree | Line | Menu
 type: controller
-version: 0.1
+version: 0.2
 
 /*Here you can describe this menu.
 Full help text should be provided on the linked wiki.*/
@@ -20,6 +20,7 @@ local LocalArray
 -
 getprop menu_Target [tObject]
    put the selected_Line of tObject into projectName
+   --
    put the hilited_Line of tObject into lineNum
    put the line_Colour [lineNum] of tObject into LocalArray ["oColour"]
    --
@@ -29,9 +30,13 @@ getprop menu_Target [tObject]
    end if
    --
    put the display_View of tObject into LocalArray ["displayView"]
-   put the selected_Line of tObject into projectName
    return projectName
 end menu_Target
+
+getprop menu_CheckTarget [projectName]
+   put exists (stack projectName) into projectExists
+   return projectExists
+end menu_CheckTarget
 
 getprop checked_StartProject [projectName]
    put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
@@ -75,9 +80,27 @@ getprop disabled_RevealProjectFolder [projectName]
    end if
 end disabled_RevealProjectFolder
 
+getprop disabled_InitGit [projectName]
+   put the git_Folder of stack projectName into gitFolder
+   return gitFolder is not empty
+end disabled_InitGit
+
 
 --> Global | Environment | Tree | Line | Menu
 -
+on menu_StartProject projectName
+   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   if isActive is true then
+      project_Stop projectName
+   else
+      project_Start projectName, true
+   end if
+   display_Environment true
+end menu_StartProject
+
+private on _
+end _
+
 on menu_DisplayProject projectName
    display_Project projectName
 end menu_DisplayProject
@@ -86,8 +109,20 @@ on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName
 end menu_DisplayProjectLibs
 
-private on _
-end _
+private on __
+end __
+
+on menu_EditProjectHome projectName
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   go to stack homeStackPath
+   --
+   edit the script of stack homeStackPath
+end menu_EditProjectHome
+
+on menu_RevealProjectFolder projectName
+   put the project_Folder of stack projectName into projectFolder
+   finder_Reveal projectFolder
+end menu_RevealProjectFolder
 
 on menu_InitGit projectName
    git_AskInit projectName
@@ -99,40 +134,14 @@ on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
-private on __
-end __
-
-on menu_StartProject projectName
-   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
-   if isActive is true then
-      project_Stop projectName
-   else
-      project_Start projectName, true
-   end if
-   display_Environment true
-end menu_StartProject
-
 private on ___
 end ___
-
-on menu_FixProjectStackFiles projectName
-   project_FixStackFiles projectName
-   put the result into projectArray
-   --
-   set the cursor to watch
-   display_Project projectName, true
-   display_EnvironmentMenus true
-   display_GitRefreshProjectName projectName
-end menu_FixProjectStackFiles
-
-on menu_ScriptOnly projectName
-   put the scriptonly of stack projectName into isScriptOnly
-   set the scriptonly of stack projectName to isScriptOnly is false
-end menu_ScriptOnly
 
 on menu_RevealProjectFolder projectName
    put the project_Folder of stack projectName into projectFolder
    finder_Reveal projectFolder
 end menu_RevealProjectFolder
 
-
+on submenu_Dev
+   return menu_DevTitle ("Global | Environment | Tree | Line | Menu")
+end submenu_Dev
