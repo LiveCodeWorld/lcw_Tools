@@ -70,13 +70,25 @@ on submenu_Ide
    return "Global | ScriptEditor | Menu"
 end submenu_Ide
 
+on ___
+end ___
+
+on menu_SaveStartupProject dView
+   put lcw_Ask ("What project would you like to load at startup?", "lcw_Camera", "LCW", dView) into projectName
+   env_SaveProjectStartName projectName
+end menu_SaveStartupProject
+
+on menu_EditPluginScript
+   edit the script of stack "lcw_Plugin"
+end menu_EditPluginScript
+
+on ____
+end ____
+
 on menu_RecentExports mTarget
    put 60 * 60 into howLong
    display_RecentExports howLong
 end menu_RecentExports
-
-on ___
-end ___
 
 on submenu_Dev
    return "Global | Environment | Dev | Menu"

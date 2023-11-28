@@ -119,6 +119,10 @@ on menu_EditProjectHome projectName
    edit the script of stack homeStackPath
 end menu_EditProjectHome
 
+on menu_FixProjectStackFiles projectName
+   display_FixProjectStackFiles projectName
+end menu_FixProjectStackFiles
+
 on menu_RevealProjectFolder projectName
    put the project_Folder of stack projectName into projectFolder
    finder_Reveal projectFolder

@@ -37,7 +37,7 @@ end ask_CreateProjectBehavior
 
 command project_CreateBehavior bName, projectName
    put project_GetFolder (projectName) into projectFolder
-   put scaffold_GetTemplate ("View Behavior Template") into tScript
+   put scaffold_Get ("View Behavior Template") into tScript
    put merge (tScript) into tScript
    --
    project_CreateStack projectFolder, bName, "behaviors", "behavior", tScript
@@ -56,7 +56,7 @@ command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    put lcw_Ask (someQuestion, pSuggestedAnswer) into libStackName
    
    put project_GetFolder (projectName) into projectFolder
-   put scaffold_GetTemplate ("LCW Library") into libTemplateScript
+   put scaffold_Get ("LCW Library") into libTemplateScript
    --
    set the itemdelimiter to "_"
    get item 2 to -1 of libStackName
@@ -138,7 +138,9 @@ on mDouble_DisplayProjectTree displayView, stackName
    if the scriptonly of stack stackName is true then
       edit the script of stack stackName
    else
-      go to stack stackName
+      show stack stackPath
+      toplevel stack stackName
+      set the loc of stack stackName to the loc of displayView
    end if
    --
    if the shiftKey is "Down" then
@@ -205,7 +207,7 @@ function project_GetStackNameArray projectName, pRepoFolder
    --
    put project_ListModuleFolders (projectName) into moduleFolders
    repeat for each line moduleFolder in moduleFolders
-      put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+      put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
       if exists (stack moduleHomeStackPath) is false then next repeat
       
       put the short name of stack moduleHomeStackPath into stackName

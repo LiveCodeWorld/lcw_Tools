@@ -33,7 +33,7 @@ command _Init tObject
    end if
    
    put the stack_Folder of stack moduleName into moduleFolder
-   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
    
    put the project_Folder of stack moduleName into LocalArray ["projectFolder"]
    put displayView into LocalArray ["displayView"]
@@ -57,7 +57,7 @@ end _GetStackName
 
 private function _GetModuleStackPath
    return LocalArray ["moduleHomeStackPath"]
-end _GetModuleStackPath 
+end _GetModuleStackPath
 
 getprop moveModule_Param
    return LocalArray ["projectName"]
@@ -74,7 +74,11 @@ end moveModule_Params
 on menu_DisplayModule
    put _GetModuleStackPath() into stackPath
    --
+   show stack stackPath
    toplevel stack stackPath
+   --
+   put LocalArray ["displayView"] into displayView
+   set the loc of stack stackPath to the loc of displayView
 end menu_DisplayModule
 
 on menu_DisplayModuleTools
@@ -118,6 +122,27 @@ end menu_MoveModule
 private on __
 end __
 
+on menu_ExportModuleJson
+   put _GetModuleFolder() into moduleFolder
+   if there is not a folder moduleFolder then
+      breakpoint
+      exit to top
+   end if
+   
+   project_ExportMenusAndStackFiles moduleFolder
+   put the result into projectArray
+   --
+   put _GetStackName (displayView) into moduleName
+   display_Data projectArray, moduleName, "Module Array"  
+end menu_ExportModuleJson
+
+on menu_EditModuleHome moduleName
+   put _GetStackName (displayView) into mStackName
+   --
+   go to stack mStackName
+   edit the script of stack mStackName
+end menu_EditModuleHome
+
 on menu_TrashModule moduleName
    put LocalArray ["displayView"] into displayView
    --
@@ -131,13 +156,7 @@ on menu_RemoveFromMemory moduleName
    module_RemoveFromMemory moduleName
 end menu_RemoveFromMemory
 
-on menu_EditModuleHome moduleName
-   put _GetStackName (displayView) into mStackName
-   --
-   go to stack mStackName
-   edit the script of stack mStackName
-end menu_EditModuleHome
-
 on submenu_Dev
    return menu_DevTitle()
 end submenu_Dev
+

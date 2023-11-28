@@ -449,7 +449,7 @@ command module_CreateBehavior moduleFolder, pBehaviorStackName, pBehaviorScript
 end module_CreateBehavior
 
 function module_ConstructBehaviorScript bName
-   put scaffold_GetTemplate ("View Behavior Template") into tScript
+   put scaffold_Get ("View Behavior Template") into tScript
    put lcw_GetAuthor() into authorName
    put merge (tScript) into behaviorScript
    return behaviorScript

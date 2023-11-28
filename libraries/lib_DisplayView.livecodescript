@@ -9,6 +9,47 @@ version: 0.3
 
 --> Working on
 -
+command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
+   -- rename?
+   if pStackStyle is empty then put "palette" into pStackStyle
+   --
+   if pCloneName is empty then
+      put viewName into stackLabel
+   else
+      put pCloneName into stackLabel
+   end if
+   --
+   stack_CloneInvisible viewName, pCloneName
+   put the result into pCloneName
+   --
+   if exists (control 1 of cd 1 of stack pCloneName) then
+      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
+   else
+      -- problem copying view?
+      breakpoint
+      show stack pCloneName
+      return the name of stack pCloneName
+   end if
+   --
+   -- put the rect of viewObject into pLocOrRect
+   put the view_RectOnCard of viewObject into viewRect
+   --
+   if pDataProp is empty then put "displayed_Data" into pDataProp
+   set the pDataProp of viewObject to pData
+   --
+   if the visible of stack pCloneName is false then
+      -- causes flicker. If we need to reposition then possibly but now now...
+      display_ShowStack viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect, viewRect
+   else
+      go to stack pCloneName
+   end if
+   --
+   return viewObject
+end display_Clone
+
+
+--> Display | functions
+-
 function display_List pViewNames, pStackLabel
    # List open stacks with a UX
    put stack_ListOpen() into dStackNames
@@ -48,7 +89,7 @@ function stack_ListOpen
          case char 1 to 3 of stackName = "rev"
          case char 1 to 4 of stackName = "com."
          case the scriptonly of stack stackName is true
-             next repeat
+            next repeat
          default
             put stackName & CR after appStackNames
       end switch
@@ -268,59 +309,6 @@ command display_Image imageOrURL, pStackLabel, pCloneName, pStackStyle, pStackRe
    return displayView
 end display_Image
 
-command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle
-   -- put display_FindCloned (viewName, pCloneName) into foundView
-   if pStackStyle is empty then put "palette" into pStackStyle
-   --
-   if exists (stack pCloneName) is true then
-      -- already exists (lets use it)
-      if exists (control 1 of cd 1 of stack pCloneName) is false then
-         breakpoint
-         return empty
-      end if
-      
-      # Check it is a clone stack (could check view_Name)
-      put the view_Object of control 1 of cd 1 of stack pCloneName into viewObject
-      if viewObject is empty then
-         breakpoint
-         return empty
-      end if
-   else
-      if pCloneName is empty then
-         put viewName into stackLabel
-      else
-         put pCloneName into stackLabel
-      end if
-      --
-      stack_CloneInvisible viewName, pCloneName
-      put the result into pCloneName
-      --
-      if exists (control 1 of cd 1 of stack pCloneName) then
-         put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-      else
-         -- problem copying view?
-         breakpoint
-         show stack pCloneName
-         return the name of stack pCloneName
-      end if
-   end if
-   --
-   -- put the rect of viewObject into pLocOrRect
-   put the view_RectOnCard of viewObject into viewRect
-   --
-   if pDataProp is empty then put "displayed_Data" into pDataProp
-   set the pDataProp of viewObject to pData
-   --
-   if the visible of stack pCloneName is false then
-      -- causes flicker. If we need to reposition then possibly but now now...
-      display_ShowStack viewObject, pCloneName, stackLabel, pStackStyle, pLocOrRect, viewRect
-   else
-      go to stack pCloneName
-   end if
-   --
-   return viewObject
-end display_Clone
-
 command display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect, pViewRect
    if pStackStyle is empty then put "toplevel" into pStackStyle
    set the stack_Style of stack cloneStackName to pStackStyle
@@ -492,7 +480,7 @@ command display_ViewIndex viewObject, pIndexView
    end if
    
    put the module_Folder of viewObject into moduleFolder
-   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
    put the project_Folder of viewObject into projectFolder
    put the project_Name of viewObject into projectName
    
@@ -518,7 +506,7 @@ command display_ViewBehaviors viewObject, pIndexView, pStacklabel
       put the project_Name of viewObject into projectName
       put the module_Folder of viewObject into moduleFolder
       put the module_Name of viewObject into moduleName
-      put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+      put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
       
       -- put viewName & comma & projectName into stackTitle
    end if
@@ -602,7 +590,7 @@ command display_NestedViewArray viewObject
    set the displayed_ViewName of arrayView to viewName
    
    put the module_Folder of viewObject into moduleFolder
-   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
    put the project_Folder of viewObject into projectFolder
    
    set the displayed_ModuleFolder of arrayView to moduleFolder

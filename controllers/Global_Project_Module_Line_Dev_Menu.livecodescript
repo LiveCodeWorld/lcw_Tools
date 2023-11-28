@@ -34,7 +34,7 @@ command _Init tObject
    end if
    
    put the stack_Folder of stack moduleName into moduleFolder
-   put project_ConstructHomeStackPath (moduleFolder) into moduleHomeStackPath
+   put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
    
    put the project_Folder of stack moduleName into LocalArray ["projectFolder"]
    put displayView into LocalArray ["displayView"]
@@ -64,20 +64,6 @@ on menu_RevealModuleFolder
    put _GetModuleFolder() into moduleFolder
    finder_Reveal moduleFolder
 end menu_RevealModuleFolder
-
-on menu_ExportModuleJson
-   put _GetModuleFolder() into moduleFolder
-   if there is not a folder moduleFolder then
-      breakpoint
-      exit to top
-   end if
-   
-   project_ExportMenusAndStackFiles moduleFolder
-   put the result into projectArray
-   --
-   put _GetStackName (displayView) into moduleName
-   display_Data projectArray, moduleName, "Module Array"  
-end menu_ExportModuleJson
 
 on menu_RemoveFromMemory moduleName
    -- delete stack moduleName
