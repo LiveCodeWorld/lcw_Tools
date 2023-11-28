@@ -138,7 +138,7 @@ on mDouble_DisplayProjectTree displayView, stackName
    if the scriptonly of stack stackName is true then
       edit the script of stack stackName
    else
-      show stack stackPath
+      show stack stackName
       toplevel stack stackName
       set the loc of stack stackName to the loc of displayView
    end if

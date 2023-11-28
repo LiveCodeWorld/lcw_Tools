@@ -13,17 +13,21 @@ see "lib_FunctionKey"
 
 --> Working on
 -
-command display_NotUpToDate
+command display_NotUpToDate pDisplayView
    put git_ListNotUpToDate() into needsUpdating
    --
-   put display_FindView ("Environment") into displayView
-   if exists (displayView) is false then
-      display_Environment
-      put the result into displayView
-   end if
-   
-   set the displayed_Index ["Not Up-to-Date"] of displayView to needsUpdating
-   return displayView
+   switch
+      case pDisplayView = "Environment"
+         put display_FindView ("Environment") into pDisplayView
+      case exists (pDisplayView)
+         set the displayed_Index ["Not Up-to-Date"] of pDisplayView to needsUpdating
+         return pDisplayView
+      default
+         display_Data needsUpdating, "Not Up-to-Date", "Environment"
+         put the result into dView
+         display_SetToolMenus "Environment", dView, "lcw_Tools"
+         return dView
+   end switch
 end display_NotUpToDate
 
 command display_Environment pRefreshOnly, pProjectNames
@@ -44,9 +48,6 @@ command display_Environment pRefreshOnly, pProjectNames
    
    put display_FindView ("Environment") into displayView
    if exists (displayView) is false then
-      -- local mUp
-      -- display_Index pProjectNames, pStackTitle, titleMenu, lineMenu, mUp, mDoubleClick, dragCommand, true
-      
       display_Data pProjectNames, "Local Projects", "Environment"
       put the result into displayView
       --
