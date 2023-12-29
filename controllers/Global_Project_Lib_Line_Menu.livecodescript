@@ -68,6 +68,12 @@ getprop menu_Target [tObject]
    return libraryStack
 end menu_Target
 
+getprop moveToModuleBehavior_Params [libraryStack]
+   put the project_Name of libraryStack into projectName
+   -- return project_ListModules (projectName) -- stackNames
+   return project_ListModuleShortFolders (projectName)
+end moveToModuleBehavior_Params
+
 private function _GetLibraryStack tObject
    put the top_Line of tObject into shortFolder
    --
@@ -167,6 +173,23 @@ on menu_MoveUsed libraryStack, newProjectName
    display_Project oProjectName
    display_Project newProjectName
 end menu_MoveUsed
+
+on menu_MoveToModuleBehavior libraryStack, moduleShortFolder
+   put the project_Name of libraryStack into projectName
+   put the project_Folder of libraryStack into projectFolder
+   
+   # Move
+   project_MoveLibraryToModuleBehavior libraryStack, moduleShortFolder
+   put the result into newBehaviorPath
+   
+   # Refresh Project display
+   display_Project projectName
+   
+   # Refresh Module Tools display
+   put module_GetFolder (moduleShortFolder, projectFolder) into moduleFolder
+   put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
+   display_ModuleTools moduleHomeStackPath
+end menu_MoveToModuleBehavior
 
 on menu_StackIsUsed libraryStack, someBoolean
    if someBoolean is true then

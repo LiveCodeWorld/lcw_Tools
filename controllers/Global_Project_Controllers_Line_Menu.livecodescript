@@ -79,8 +79,13 @@ end _MenuController
 
 private function _GetGlobalController displayView
    put _GetStackName (displayView) into gMenuTitle
-   put menu_GetGlobalController (gMenuTitle) into mController
-   return mController
+   if exists (stack gMenuTitle) then
+      return the name of stack gMenuTitle
+   else
+      breakpoint
+      put menu_GetGlobalController (gMenuTitle) into mController
+      return mController
+   end if
 end _GetGlobalController
 
 private function _SelectedMenuController displayView
@@ -98,16 +103,26 @@ private function _GetStackName displayView
 end _GetStackName
 
 private function _GetControllerPath displayView
-   -- loads the stack into memory
    put _GetStackName (displayView) into gMenuTitle
+   if exists (stack gMenuTitle) then
+      put the filename of stack gMenuTitle into sPath
+      return sPath
+   else
+      breakpoint
+      return _GetStandardControllerPath (displayView)
+   end if
+end _GetControllerPath
+
+private function _GetStandardControllerPath displayView
+   put _GetStackName (displayView) into gMenuTitle
+   
    put the title_Text of displayView into projectName
-   --
    put the project_Folder of stack projectName into projectFolder
    put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
    put there is a stack controllerPath into someBoolean
    if someBoolean is false then return empty
    return controllerPath
-end _GetControllerPath
+end _GetStandardControllerPath
 
 private command _CloseSelectedScriptTab displayView
    put _SelectedMenuController (displayView) into mController

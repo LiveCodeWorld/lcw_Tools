@@ -39,7 +39,9 @@ getprop menu_CheckTarget [projectName]
 end menu_CheckTarget
 
 getprop checked_StartProject [projectName]
-   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   -- put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   if exists (Stack "LCW") is false then return false
+   put env_ProjectIsActive (projectName) into isActive
    return isActive
 end checked_StartProject
 
@@ -89,7 +91,9 @@ end disabled_InitGit
 --> Global | Environment | Tree | Line | Menu
 -
 on menu_StartProject projectName
-   put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   -- put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
+   put env_ProjectIsActive (projectName) into isActive
+   --
    if isActive is true then
       project_Stop projectName
    else

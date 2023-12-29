@@ -13,25 +13,6 @@ getprop menu_Target [tObject]
    return the card_Object of tObject
 end menu_Target
 
--- getprop disabled_MakeFirstControlAView [cardObject]
-if exists (control 1 of cardObject) is false then return true
-
-put the view_Object of control 1 of cardObject into viewObject
-if exists (viewObject) then
-   return false
-else
-   return true
-end if
-end disabled_MakeFirstControlAView
-
-getprop disabled_CreateViewGroup [cardObject]
-   if exists (control 1 of cardObject) then
-      return true
-   else
-      return false
-   end if
-end disabled_CreateViewGroup
-
 getprop disabled_ViewScript [cardObject]
    if exists (control 1 of cardObject) then
       return false
@@ -73,25 +54,23 @@ private command _TestLayoutControl viewObject
    end switch
 end _TestLayoutControl
 
+private function _FirstControl cardObject
+   put the long id of control 1 of cardObject into viewObject
+   return viewObject
+end _FirstControl
+
+getprop checked_MakeFirstControlAView [cardObject]
+   if exists (control 1 of cardObject) is false then return false
+   
+   put the view_Object of control 1 of cardObject into viewObject
+   return exists (viewObject)
+end checked_MakeFirstControlAView
+
 
 --> Global | View | Card | Create | Menu
 -
-on submenu_Card
-   return "Global | Card | Menu"
-end submenu_Card
-
-on menu_FixBehaviorObjects cardObject
-   put the long id of control 1 of cardObject into viewObject
-   --
-   get the behavior_Objects of viewObject
-   set the behavior_Objects of viewObject to it
-   --
-   _TestLayoutControl viewObject
-end menu_FixBehaviorObjects
-
 on menu_MakeFirstControlAView cardObject
-   -- menu_SetViewMetadata
-   put the long id of control 1 of cardObject into viewObject
+   put _FirstControl (cardObject) into viewObject
    put the stack_Name of viewObject into viewName
    --
    set the module_ViewMetaData [true] of viewObject to viewName
@@ -103,52 +82,73 @@ end menu_MakeFirstControlAView
 private on _
 end _
 
-on menu_ViewScript cardObject
-   edit the script of control 1 of cardObject
-end menu_ViewScript
-
 on menu_ViewBehavior cardObject
    put the behavior of control 1 of cardObject into bObject
    edit the script of bObject
 end menu_ViewBehavior
 
-private on __
-end __
-
-on menu_SetModuleBehavior cardObject
-   put the long id of control 1 of cardObject into viewObject
-   --
-   put the module_Behaviors of viewObject into moduleBehaviors
-   
-   breakpoint
-   set the behavior_Objects of viewObject to moduleBehaviors
-   _TestLayoutControl viewObject
-end menu_SetModuleBehavior
-
-on menu_CreateViewGroup cardObject
-   put the stack_Name of cardObject into viewName
-   go to stack viewName -- sets the topstack
-   
-   create group viewName
-   put it into createdObject
-   select createdObject
-   choose pointer tool
-   
-   dispatch "resizeStack" to createdObject
-   
-   put metadata_ConstructArray (viewName, "view") into uripArray
-   set the object_Metadata of createdObject to uripArray
-   
-   put the module_Behaviors of createdObject into moduleBehaviors
-   set the behavior_Objects of createdObject to moduleBehaviors
-   
-   set the lockloc of createdObject to true
-   set the showborder of createdObject to true
-   display_ObjectProperties createdObject
-   edit the script of the behavior of createdObject
-end menu_CreateViewGroup
+on menu_ViewScript cardObject
+   edit the script of control 1 of cardObject
+end menu_ViewScript
 
 on menu_TemplateCardBehavior cardObject
    put the behavior of cardObject into bObject
    edit the script of bObject
 end menu_TemplateCardBehavior
+
+private on __
+end __
+
+on menu_FixMenu cardObject
+   put _FirstControl (cardObject) into viewObject
+   put the stack_Name of viewObject into moduleName
+   put menu_GlobalTitleFromViewName (moduleName) into mTitle
+   breakpoint
+   --  
+   set the menu_Title of viewObject to mTitle
+end menu_FixMenu
+
+on menu_SetDefaultBehavior cardObject
+   put _FirstControl (cardObject) into viewObject
+   --
+   put the stack_Folder of viewObject into moduleFolder
+   put module_BehaviorPathFromFolder (moduleFolder) into bPath
+   --
+   -- put the module_DefaultBehavior of viewObject into bObject
+   -- put the stack_Name of viewObject into moduleName
+   -- put module_ConstructBehaviorPath (moduleName, moduleFolder) into bPath
+   
+   if exists (stack bPath) is false then
+      breakpoint
+      exit to top
+   end if
+   
+   # Set behavior
+   put the name of stack bPath into bObject
+   set the behavior of viewObject to bObject
+   --
+   display_ObjectProperties viewObject
+end menu_SetDefaultBehavior
+
+on menu_FixBehaviorObjects cardObject
+   put _FirstControl (cardObject) into viewObject
+   --
+   breakpoint
+   put the module_Behaviors of viewObject into bObjects
+   set the behavior_Objects of viewObject to bObjects
+end menu_FixBehaviorObjects
+
+private on ___
+end ___
+
+on submenu_Card
+   return "Global | Card | Menu"
+end submenu_Card
+
+on submenu_Dev
+   return menu_DevTitle ("Global | View | Card | Create | Menu")
+end submenu_Dev
+
+on menu_RefreshCard cardObject
+   dispatch "refresh" to cardObject
+end menu_RefreshCard

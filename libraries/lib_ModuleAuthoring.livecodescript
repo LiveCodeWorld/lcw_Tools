@@ -9,6 +9,10 @@ version: 0.3
 
 --> Working on
 -
+
+
+--> Module | Metadata
+-
 setprop module_ViewMetaData [setNameAndBehaviors] viewName
    put the long id of the target into viewObject
    
@@ -241,16 +245,22 @@ end module_ConstructControllerPath
 
 --> Module | Move
 -
-command module_MoveRenameBehavior oldBehaviorStackPath, newModuleStackName, pModuleFolder
+command module_MoveRenameBehavior oldBehaviorStackPath, newBehaviorName, pModuleFolder
    set the itemdelimiter to slash
    put item -1 of oldBehaviorStackPath into shortFile
    if pModuleFolder is empty then
-      put the module_Folder of stack stackPath into pModuleFolder
+      put the module_Folder of stack oldBehaviorStackPath into pModuleFolder
    end if
    --
-   get module_ConstructBehaviorShortFile (moduleStackName)
-   put project_DefaultBehaviorName (newModuleStackName) into newModuleStackName
-   put module_ConstructBehaviorPath (newModuleStackName, pModuleFolder) into newBehaviorStackPath
+   put newBehaviorName & ".livecodescript" into newShortBehaviorFile
+   put pModuleFolder & "behaviors/" into moduleBehaviorFolder
+   if there is not a folder moduleBehaviorFolder then 
+      return merge ("Error, behavior folder '[[moduleBehaviorFolder]]' does not exist!")
+   end if
+   
+   put moduleBehaviorFolder & newShortBehaviorFile into newBehaviorStackPath
+   -- put project_DefaultBehaviorName (newBehaviorName) into newModuleStackName
+   -- put module_ConstructBehaviorPath (newBehaviorName, pModuleFolder) into newBehaviorStackPath
    --
    breakpoint
    module_RenameBehavior oldBehaviorStackPath, newBehaviorName
@@ -439,7 +449,7 @@ command module_CreateBehavior moduleFolder, pBehaviorStackName, pBehaviorScript
       put item -1 of moduleFolder into shortFolderName
       put project_DefaultBehaviorName (shortFolderName) into pBehaviorStackName
    end if
-   if pBehaviorScript is emppty then
+   if pBehaviorScript is empty then
       put module_ConstructBehaviorScript (pBehaviorStackName) into pBehaviorScript
    end if
    --
@@ -454,42 +464,6 @@ function module_ConstructBehaviorScript bName
    put merge (tScript) into behaviorScript
    return behaviorScript
 end module_ConstructBehaviorScript
-
-function module_ConstructBehaviorShortFile moduleStackName
-   put project_DefaultBehaviorName (moduleStackName) & ".livecodescript" into shortFile
-   return shortFile
-end module_ConstructBehaviorShortFile
-
-function project_DefaultBehaviorName moduleStackName
-   _CleanModuleStackName moduleStackName
-   replace "_" with empty in moduleStackName
-   --
-   put "behavior_" & moduleStackName into behaviorStackName
-   return behaviorStackName
-end project_DefaultBehaviorName
-
-private command _CleanModuleStackName @moduleStackName
-   view_NormalizePiped moduleStackName -- just in case
-   replace "|" with empty in moduleStackName
-end _CleanModuleStackName
-
-
---> Module | Author
--
-function module_ConstructBehaviorPath moduleName, moduleFolder, pShortFile
-   if pShortFile is empty then
-      put module_ConstructBehaviorShortFile (moduleName) into pShortFile
-   end if
-   put folder_AddShort (moduleFolder, "behaviors") into moduleControllerFolder
-   put moduleControllerFolder & pShortFile into moduleControllerPath
-   return moduleControllerPath
-end module_ConstructBehaviorPath
-
-function module_GetControllerStackPath controllerStackName, rootModuleFolder
-   put controllerStackName & ".livecodescript" into shortControllerPath
-   put rootModuleFolder & "controllers/" & shortControllerPath into moduleControllerStackPath
-   return moduleControllerStackPath
-end module_GetControllerStackPath
 
 
 --> Module | Behavior
@@ -537,12 +511,6 @@ command module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
       return moduleBehaviorStackPath
    end if
 end module_MoveBehavior
-
-function module_GetBehaviorStackPath behaviorStackName, rootModuleFolder
-   put behaviorStackName & ".livecodescript" into shortBehaviorPath
-   put rootModuleFolder & "behaviors/" & shortBehaviorPath into moduleBehaviorStackPath
-   return moduleBehaviorStackPath
-end module_GetBehaviorStackPath
 
 command module_SetCardBehavior moduleStackName
    -- lets name the views card for convenience

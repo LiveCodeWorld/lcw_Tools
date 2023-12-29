@@ -143,6 +143,24 @@ end _refresh
 
 --> Global | View | Behavior | Menu
 -
+on menu_SetDefaultBehavior cardObject
+   put _FirstControl (cardObject) into viewObject
+   
+   # Get Module Behavior path
+   put the stack_Folder of viewObject into moduleFolder
+   put module_BehaviorPathFromFolder (moduleFolder) into bPath
+   if exists (stack bPath) is false then
+      breakpoint
+      exit to top
+   end if
+   
+   # Set behavior
+   put the name of stack bPath into bObject
+   set the behavior of viewObject to bObject
+   --
+   display_ObjectProperties viewObject
+end menu_SetDefaultBehavior
+
 on menu_ListBehaviorObjects viewObject
    put the behavior_Objects of viewObject into bObjects
    --
@@ -419,3 +437,4 @@ getprop disabled_AddViewBehavior [mTarget]
       return false
    end if
 end disabled_AddViewBehavior
+

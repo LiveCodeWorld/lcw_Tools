@@ -116,10 +116,10 @@ on mDoubleUp_Environment displayView, projectName
          breakpoint
       case the title_Text of displayView = "Not Up-to-Date"
       case the shiftKey is "Down" 
-         -- display_ProjectLibs projectName
-         
          project_Start projectName
          display_GitProjectStatus projectName
+         display_Project projectName
+         display_Environment
          break
       default
          display_Project projectName

@@ -12,17 +12,6 @@ version: 0.1
 local ViewIsObject, ViewIsOld
 
 
---> Display | Menus | Old
--
-command display_ActiveMenuArray
-   global gLCW
-   
-   put gLCW ["activeMenuArray"] into activeMenuArray
-   -- put "Recursion:" && pMenuTitle & ",menu_CheckRecursionOnExtract" into someTitle
-   display_Array activeMenuArray, "gLCW ['activeMenuArray']"
-end display_ActiveMenuArray
-
-
 --> Global | View | Update | Menu
 -
 on menu_CreateNewComponent someView
