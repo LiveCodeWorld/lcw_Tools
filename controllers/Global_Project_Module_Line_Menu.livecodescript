@@ -115,12 +115,14 @@ on menu_CreateModuleMenu moduleStackName
    end if
 end menu_CreateModuleMenu
 
-on menu_MoveModule oldModuleName, newProjectName
-   module_Move oldModuleName, newProjectName
-end menu_MoveModule
-
 private on __
 end __
+
+on menu_EditModuleBehavior moduleName
+   put view_GetTemplateObject (moduleName) into viewObject
+   put the behavior of viewObject into bObject
+   edit the script of bObject
+end menu_EditModuleBehavior
 
 on menu_ExportModuleJson
    put _GetModuleFolder() into moduleFolder
@@ -142,6 +144,13 @@ on menu_EditModuleHome moduleName
    go to stack mStackName
    edit the script of stack mStackName
 end menu_EditModuleHome
+
+private on ___
+end ___
+
+on menu_MoveModule oldModuleName, newProjectName
+   module_Move oldModuleName, newProjectName
+end menu_MoveModule
 
 on menu_TrashModule moduleName
    put LocalArray ["displayView"] into displayView

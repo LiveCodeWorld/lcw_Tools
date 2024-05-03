@@ -100,19 +100,15 @@ command display_View viewName, pData, pStackLabel, pStackRect, pDataProp, pStack
    
    # Clone invisible
    display_Clone viewName, pStackLabel, pData, pDataProp, pStackRect, pStackStyle
-   put the result into pCloneName
-   --
-   if exists (control 1 of cd 1 of stack pCloneName) then
-      put the long id of control 1 of cd 1 of stack pCloneName into viewObject
-   else
-      -- problem copying view?
-      breakpoint
-      show stack pCloneName
-      return the name of stack pCloneName
-   end if
-   
    put the result into viewObject
-   return viewObject
+   --
+   if exists (viewObject) then
+      return viewObject
+   else
+      # Problem copying view?
+      breakpoint
+      return "Error, cloning:" && viewName,viewObject
+   end if
 end display_View
 
 command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStackStyle

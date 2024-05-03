@@ -118,7 +118,7 @@ on mDoubleUp_Environment displayView, projectName
       case the shiftKey is "Down" 
          project_Start projectName
          display_GitProjectStatus projectName
-         display_Project projectName
+         -- display_Project projectName
          display_Environment
          break
       default
