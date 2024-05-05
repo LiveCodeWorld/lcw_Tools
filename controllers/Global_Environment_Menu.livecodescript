@@ -48,6 +48,49 @@ on menu_NotUpToDate dView
    set the displayed_Index ["Not Up-to-Date"] of dView to needsUpdating
 end menu_NotUpToDate
 
+on menu_AutoCommit dView
+   put lcw_Ask ("Comment for multiple commits...", "", "Git", dView) into someComment
+   
+   # Save all edited
+   stack_SaveEdited "all"
+   lcw_Notify "Save everything first..."
+   
+   put git_ListNotUpToDate() into needsUpdating
+   repeat for each line projectName in needsUpdating
+      set the cursor to watch
+      put "Updating project" && projectName && "..." into sComment
+      lcw_Notify sComment
+      
+      put env_ConstructProjectFolder (projectName) into projectFolder
+      put git_GetCheckoutFolder (projectFolder) into gitFolder
+      if gitFolder is empty then
+         breakpoint
+         next repeat
+      end if
+      
+      # Add everything
+      git_AddEverything gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+      
+      # Stage then commit
+      git_CommitChanges someComment, gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+      
+      # Push
+      git_PushBranch gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+   end repeat
+end menu_AutoCommit
+
 on _
 end _
 

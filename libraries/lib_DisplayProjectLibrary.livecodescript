@@ -122,7 +122,7 @@ command display_ProjectArray projectName, pConstruct
       display_Data projectArray, projectName, "Constructed Project Array"
    else
       put project_GetFolder (projectName) into projectFolder
-      put project_FetchArray (projectFolder) into projectArray
+      put project_GetArrayFromFolder (projectFolder) into projectArray
       display_Data projectArray, projectName, "Project Array"
    end if
    put the result into displayView
@@ -140,7 +140,7 @@ on mDouble_DisplayProjectTree displayView, stackName
    else
       show stack stackName
       toplevel stack stackName
-      set the loc of stack stackName to the loc of displayView
+      -- set the loc of stack stackName to the loc of displayView
    end if
    --
    if the shiftKey is "Down" then

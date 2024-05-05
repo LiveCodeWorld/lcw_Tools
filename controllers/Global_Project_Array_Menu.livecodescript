@@ -25,10 +25,16 @@ end menu_Target
 
 --> Global | Project | Array | Menu
 -
-on menu_Experiment displayView
-   put displayView
-end menu_Experiment
+on menu_GetProjectArray displayView
+   put the title_Text of displayView into projectName
+   --
+   put project_GetArray (projectName, false) into projectArray
+   set the displayed_Data of displayView to projectArray
+end menu_GetProjectArray
 
-
---> Deps
--
+on menu_ReconstructProjectArray displayView
+   put the title_Text of displayView into projectName
+   --
+   put project_GetArray (projectName, true) into projectArray
+   set the displayed_Data of displayView to projectArray
+end menu_ReconstructProjectArray
