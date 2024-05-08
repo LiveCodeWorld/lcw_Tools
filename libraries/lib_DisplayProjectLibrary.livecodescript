@@ -17,6 +17,25 @@ Key handler =  "project_CreateStack"
 
 --> Working on
 -
+
+--> Ask
+-
+command ask_TrashProjectStack stackObject
+   if exists (stackObject) is false then
+      display_DebugHistory pDisplayTitle, pAlsoArray
+      lcw_AnswerWarning "Stack does not exist!"
+   end if
+   put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
+   lcw_Answer someQuestion
+   --
+   put the project_Name of stackObject into projectName
+   --
+   project_TrashStack stackObject
+   put the result into trashedStackFile
+   --
+   display_ProjectLibs projectName
+end ask_TrashProjectStack
+
 command ask_CreateProjectBehavior projectName, pQuestion, pSuggestedAnswer
    if pSuggestedAnswer is empty then put "behavior_XXX" into pSuggestedAnswer
    if pQuestion is empty then
@@ -34,16 +53,6 @@ command ask_CreateProjectBehavior projectName, pQuestion, pSuggestedAnswer
    -- finder_Reveal projectFolder
    return sPath
 end ask_CreateProjectBehavior
-
-command project_CreateBehavior bName, projectName
-   put project_GetFolder (projectName) into projectFolder
-   put scaffold_Get ("View Behavior Template") into tScript
-   put merge (tScript) into tScript
-   --
-   project_CreateStack projectFolder, bName, "behaviors", "behavior", tScript
-   put the result into sPath
-   return sPath
-end project_CreateBehavior
 
 command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    if pSuggestedAnswer is empty then put "lib_XXX" into pSuggestedAnswer
@@ -75,21 +84,94 @@ command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    -- finder_Reveal projectFolder
 end ask_CreateProjectLibrary
 
-command ask_TrashProjectStack stackObject
-   if exists (stackObject) is false then
-      display_DebugHistory pDisplayTitle, pAlsoArray
-      lcw_AnswerWarning "Stack does not exist!"
+
+--> Mouse
+-
+on mDoubleUp_ProjectArray displayView, someLine
+   breakpoint
+   put the title_Text of displayView into someTitle
+end mDoubleUp_ProjectArray
+
+on mDoubleUp_ProjectTree displayView, stackName
+   if the optionkey is "Down" then breakpoint
+   --
+   if the scriptonly of stack stackName is true then
+      edit the script of stack stackName
+   else
+      show stack stackName
+      toplevel stack stackName
+      -- set the loc of stack stackName to the loc of displayView
    end if
-   put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
-   lcw_Answer someQuestion
    --
-   put the project_Name of stackObject into projectName
+   if the shiftKey is "Down" then
+      put the name of stack stackName into stackObject
+      display_StackDeps stackObject
+   end if
+end mDoubleUp_ProjectTree
+
+
+--> Display | Project
+-
+command display_ProjectArray projectName, pReconstruct
+   if pReconstruct is true then
+      project_UpdateArray projectName
+      put the result into projectArray
+      --
+      display_Project projectName, true
+      display_EnvironmentMenus true
+      display_GitRefreshProjectName projectName
+   else
+      -- put project_ConstructArray (projectName) into projectArray
+      put project_GetArray (projectName) into projectArray
+   end if
+   
+   display_Data projectArray, projectName, "Project Array"
+   put the result into displayView
    --
-   project_TrashStack stackObject
-   put the result into trashedStackFile
+   set the data_MenuBit [projectName] of displayView to "Project | Array"
+   return displayView
+end display_ProjectArray
+
+on display_UpdateProjectArray projectName
+   project_UpdateArray projectName
+   put the result into projectArray
    --
-   display_ProjectLibs projectName
-end ask_TrashProjectStack
+   display_ProjectArray projectName
+   display_Project projectName, true
+   display_EnvironmentMenus true
+   display_GitRefreshProjectName projectName
+end display_UpdateProjectArray
+
+command display_ScriptDiff scriptObject, pContextLineNums
+   put the script_Diff [pContextLineNums] of scriptObject into uDiff
+   --
+   put the name of scriptObject into sTitle
+   display_Data uDiff, sTitle, "UnifiedDiff"
+   display_Text uDiff, sTitle, "UnifiedDiff"
+   return the result
+end display_ScriptDiff
+
+command display_ScriptIsDifferent scriptObject, pDiffAlso
+   if pDiffAlso is true then
+      display_ScriptDiff scriptObject
+   end if
+   --
+   put the script of scriptObject into controlScript
+   put the exported_Script of scriptObject into exportedScript
+   terminal_Diff exportedScript, controlScript, "exported.txt", "control.txt"
+   return the result
+end display_ScriptIsDifferent
+
+
+command project_CreateBehavior bName, projectName
+   put project_GetFolder (projectName) into projectFolder
+   put scaffold_Get ("View Behavior Template") into tScript
+   put merge (tScript) into tScript
+   --
+   project_CreateStack projectFolder, bName, "behaviors", "behavior", tScript
+   put the result into sPath
+   return sPath
+end project_CreateBehavior
 
 
 --> Display | Project
@@ -111,43 +193,10 @@ command display_Project projectName, pRefreshOnly, pExpandedItems
    set the title_Menu of displayView to titleMenuTable
    --
    set the line_Menu of displayView to "Global | Project | Line | Menu"
-   set the mouse_DoubleUp of displayView to "mDouble_DisplayProjectTree"
+   set the mouse_DoubleUp of displayView to "mDoubleUp_ProjectTree"
    --
    return displayView
 end display_Project
-
-command display_ProjectArray projectName, pConstruct
-   if pConstruct is true then
-      put project_ConstructArray (projectName) into projectArray
-      display_Data projectArray, projectName, "Constructed Project Array"
-   else
-      put project_GetFolder (projectName) into projectFolder
-      put project_GetArrayFromFolder (projectFolder) into projectArray
-      display_Data projectArray, projectName, "Project Array"
-   end if
-   put the result into displayView
-   --
-   display_SetInteractions displayView, "Project | Array", "mDoubleUp_ProjectArray", "lib_DisplayProject"
-   --
-   return displayView
-end display_ProjectArray
-
-on mDouble_DisplayProjectTree displayView, stackName
-   if the optionkey is "Down" then breakpoint
-   --
-   if the scriptonly of stack stackName is true then
-      edit the script of stack stackName
-   else
-      show stack stackName
-      toplevel stack stackName
-      -- set the loc of stack stackName to the loc of displayView
-   end if
-   --
-   if the shiftKey is "Down" then
-      put the name of stack stackName into stackObject
-      display_StackDeps stackObject
-   end if
-end mDouble_DisplayProjectTree
 
 command display_ProjectLibs projectName, pRefreshOnly
    display_Project projectName

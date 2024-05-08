@@ -105,6 +105,24 @@ end menu_StartProject
 private on _
 end _
 
+on menu_LoadProject projectName
+   lcw_Notify "Loading projectName '[[projectName]] without dependencies..."
+   
+   project_Load projectName
+end menu_LoadProject
+
+on menu_UpdateProjectArray projectName
+   display_UpdateProjectArray projectName
+   display_ProjectArray projectName, true
+end menu_UpdateProjectArray
+
+on menu_DisplayProjectArray projectName
+   display_ProjectArray projectName, false
+end menu_DisplayProjectArray
+
+private on __
+end __
+
 on menu_DisplayProject projectName
    display_Project projectName
 end menu_DisplayProject
@@ -113,8 +131,15 @@ on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName
 end menu_DisplayProjectLibs
 
-private on __
-end __
+private on ___
+end ___
+
+on menu_DisplayProjectArray projectName
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   put the project_Array of stack homeStackPath
+   --
+   display_ProjectArray
+end menu_DisplayProjectArray
 
 on menu_EditProjectHome projectName
    put project_GetHomeStackPath (projectName) into homeStackPath
@@ -122,10 +147,6 @@ on menu_EditProjectHome projectName
    --
    edit the script of stack homeStackPath
 end menu_EditProjectHome
-
-on menu_FixProjectStackFiles projectName
-   display_FixProjectStackFiles projectName
-end menu_FixProjectStackFiles
 
 on menu_RevealProjectFolder projectName
    put the project_Folder of stack projectName into projectFolder
@@ -142,8 +163,8 @@ on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
 
-private on ___
-end ___
+private on ____
+end ____
 
 on menu_RevealProjectFolder projectName
    put the project_Folder of stack projectName into projectFolder

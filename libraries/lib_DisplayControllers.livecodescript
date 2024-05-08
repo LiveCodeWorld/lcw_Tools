@@ -291,7 +291,7 @@ command display_ProjectControllers projectName, pRefreshOnly
    # Display Controllers
    display_Data gMenuTitles, projectName, "Project Controllers"
    put the result into displayView
-   set the tool_Menus of displayView to "Controllers | Tree" 
+   set the data_MenuBit of displayView to "Controllers | Tree" 
    --
    put displayView & CR after displayViews
    delete char -1 of displayViews
