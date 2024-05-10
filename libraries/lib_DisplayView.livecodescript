@@ -31,15 +31,9 @@ command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDa
          display_ViewTemplate moduleName
          put the result into pDisplayView
       case exists (pDisplayView)
-         if the view_Name of pDisplayView = moduleName then
-            set the pDataProp of pDisplayView to pData
-            set the stack_Label of pDisplayView to pStackLabel
-            return pDisplayView
-         else
-            breakpoint
-            return empty
-         end if
-         break
+         set the pDataProp of pDisplayView to pData
+         set the stack_Label of pDisplayView to pStackLabel
+         return pDisplayView
       default
          display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle
          put the result into clonedViewObject

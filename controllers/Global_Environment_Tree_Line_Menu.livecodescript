@@ -113,7 +113,7 @@ end menu_LoadProject
 
 on menu_UpdateProjectArray projectName
    display_UpdateProjectArray projectName
-   display_ProjectArray projectName, true
+   -- display_ProjectArray projectName, true
 end menu_UpdateProjectArray
 
 on menu_DisplayProjectArray projectName

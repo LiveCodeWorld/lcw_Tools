@@ -7,10 +7,15 @@ type: controller
 version: 0.1
 
 
---> Menu | Porps
+--> Menu | Props
 -
 getprop menu_Target [tObject]
-   return the card_Object of tObject
+   put the displayed_Object of tObject into dView
+   if exists (dView) then
+      return the card_Object of dView
+   else
+      return the card_Object of tObject
+   end if
 end menu_Target
 
 getprop disabled_ViewScript [cardObject]
@@ -60,10 +65,12 @@ private function _FirstControl cardObject
 end _FirstControl
 
 getprop checked_MakeFirstControlAView [cardObject]
-   if exists (control 1 of cardObject) is false then return false
+   put _FirstControl (cardObject) into viewObject
+   if exists (control 1 of cardObject) is false then return empty
    
-   put the view_Object of control 1 of cardObject into viewObject
-   return exists (viewObject)
+   put the stack_Name of viewObject into stackName
+   put the view_Name of viewObject into viewName
+   return stackName = viewName
 end checked_MakeFirstControlAView
 
 
