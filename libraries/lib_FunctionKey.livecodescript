@@ -30,6 +30,7 @@ on functionKey keyNumber
          end if
          break
       case 5
+         camera_ToggleLoaded
          breakpoint
          
          global gLCW
@@ -44,7 +45,11 @@ on functionKey keyNumber
          end switch
          break
       case 6
-         camera_ToggleLoaded
+         if the shiftKey is "Down" then
+            display_Wiki "thought.garden"
+         else
+            display_Wiki "livecode.world"
+         end if
          break
       case 8
          put line 1 to 3 of stack_OpenIndex() into stackNames

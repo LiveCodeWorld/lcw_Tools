@@ -12,6 +12,29 @@ This stack is for displaying tools that go with views.
 Their should be an easy default, with teh ability to customise.
 */
 
+--> Working on
+-
+private command _SetModuleToolsMenus stackName, displayView
+   if exists (control 1 of cd 1 of stack stackName) is false then return false
+   
+   put the long id of control 1 of cd 1 of stack stackName into viewObject   
+   set the displayed_Object of displayView to viewObject
+   --
+   put view_ConstructToolMenu (viewObject, true) into mTitles
+   set the itemdelimiter to tab
+   put item 1 of line 1 of mTitles into mTitle
+   --
+   if menu_GlobalControllerExists (mTitle) is false then
+      put "Global | Module | Tree | Menu" into line 1 of mTitles
+      display_SetInteractions displayView, "Module | Tree", "mDouble_EditModuleProp"
+   else
+      set the title_Menu of displayView to mTitles
+      set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
+      set the mouse_DoubleUp of displayView to "mDouble_EditModuleProp"
+   end if
+   return true
+end _SetModuleToolsMenus
+
 
 --> Display | Template
 -
@@ -87,27 +110,6 @@ on mDouble_EditModuleProp displayView, shortFile
          breakpoint
    end switch
 end mDouble_EditModuleProp
-
-private command _SetModuleToolsMenus stackName, displayView
-   if exists (control 1 of cd 1 of stack stackName) is false then return false
-   
-   put the long id of control 1 of cd 1 of stack stackName into viewObject   
-   set the displayed_Object of displayView to viewObject
-   --
-   put view_ConstructToolMenu (viewObject, true) into mTitles
-   set the itemdelimiter to tab
-   put item 1 of line 1 of mTitles into mTitle
-   --
-   if menu_GlobalControllerExists (mTitle) is false then
-      put "Global | Module | Tree | Menu" into line 1 of mTitles
-      display_SetInteractions displayView, "Module | Tree", "mDouble_EditModuleProp"
-   else
-      set the title_Menu of displayView to mTitles
-      set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
-      set the mouse_DoubleUp of displayView to "mDouble_EditModuleProp"
-   end if
-   return true
-end _SetModuleToolsMenus
 
 command display_ModuleToolScripts moduleName, projectName
    -- put library_FetchProjectFolder (projectName) into projectFolder

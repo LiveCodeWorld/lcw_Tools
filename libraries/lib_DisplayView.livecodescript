@@ -9,6 +9,64 @@ version: 0.4
 
 --> Working on
 -
+function display_FirstOpenView viewName, pStackLabel, pViewTitle
+   view_NormalizeName viewName
+   put "|" after viewName
+   --
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      # Check exists
+      if exists (control 1 of card 1 of stack dStackName) is false then next repeat
+      put the long id of control 1 of card 1 of stack dStackName into displayView
+      put the view_Name of displayView into testViewName
+      put "|" after testViewName
+      
+      # Check viewName is stem of text view name
+      if testViewName begins with viewName is false then next repeat
+      
+      # Refine test
+      put the label of stack dStackName into stackLabel
+      if stackLabel is empty then
+         put dStackName into stackLabel
+      end if
+      switch
+         case pStackLabel is empty
+            return displayView
+         case stackLabel begins with pStackLabel
+            if pViewTitle is empty then
+               return displayView
+            else if the title_Text of displayView = pViewTitle then
+               return displayView
+            else
+               next repeat
+            end if
+         default
+            -- next repeat
+      end switch
+   end repeat
+   return empty
+end display_FirstOpenView
+
+function display_FindView displayStackLabel, pDisplayViewTitle, pTypes
+   -- Looks for Display Array, and Display Index views depending on pTypes
+   if pTypes is empty then put "Display Index,Display Array" into pTypes
+   
+   put revLoadedStacks ("application") into dStackNames
+   repeat for each line dStackName in dStackNames
+      get word 1 to 2 of dStackName
+      if it is not among the items of pTypes then next repeat
+      if the label of stack dStackName = displayStackLabel then
+         put the long id of group 1 of stack dStackName into displayView
+         if pDisplayViewTitle is empty then
+            return displayView
+         else if the title_Text of displayView = pDisplayViewTitle then
+            return displayView
+         end if
+      end if
+   end repeat
+   return empty
+end display_FindView
+
 
 --> Display | Image
 -
@@ -295,26 +353,6 @@ function display_FindCloned vName, displayStackLabel, pDisplayViewTitle
    end repeat
    return empty
 end display_FindCloned
-
-function display_FindView displayStackLabel, pDisplayViewTitle, pTypes
-   -- Looks for Display Array, and Display Index views depending on pTypes
-   if pTypes is empty then put "Display Index,Display Array" into pTypes
-   
-   put revLoadedStacks ("application") into dStackNames
-   repeat for each line dStackName in dStackNames
-      get word 1 to 2 of dStackName
-      if it is not among the items of pTypes then next repeat
-      if the label of stack dStackName = displayStackLabel then
-         put the long id of group 1 of stack dStackName into displayView
-         if pDisplayViewTitle is empty then
-            return displayView
-         else if the title_Text of displayView = pDisplayViewTitle then
-            return displayView
-         end if
-      end if
-   end repeat
-   return empty
-end display_FindView
 
 function display_FindStackNameArray pSearchStackLabel, pSearchViewTitle, pPretty
    -- looks for Dispay Array, and Display Index views
