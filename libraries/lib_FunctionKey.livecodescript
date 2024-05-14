@@ -9,6 +9,27 @@ version: 0.2
 
 --> FunctionKey
 -
+private command _SearchContext
+   put the name of the topStack into sInfo
+   put CR & the defaultStack after sInfo
+   --
+   put CR & the name of the top_Card of the topStack after sInfo
+   put CR after sInfo
+   
+   put CR & the openstacks after sInfo
+   
+   put sInfo
+end _SearchContext
+
+private command _TopCard
+   put the top_Card of the topStack into topCard
+   if the shiftKey is "Down" then
+      _TopCardViewDisplays topCard
+   else
+      _TopViewDisplays topCard
+   end if
+end _TopCard
+
 on functionKey keyNumber
    if the optionKey is "Down" then breakpoint
    switch keyNumber
@@ -22,12 +43,7 @@ on functionKey keyNumber
       case 3
          break
       case 4
-         put the top_Card of the topStack into topCard
-         if the shiftKey is "Down" then
-            _TopCardViewDisplays topCard
-         else
-            _TopViewDisplays topCard
-         end if
+         _SearchContext
          break
       case 5
          camera_ToggleLoaded
