@@ -35,63 +35,15 @@ end disabled_SaveEditedStacks
 
 --> Global | Environment | Menu
 -
-on menu_CreateLevureProject
-   go stack url "https://raw.githubusercontent.com/trevordevore/levure/master/utils/create-levure-application.livecode"
-end menu_CreateLevureProject
-
-on menu_SaveEditedStacks
-   stack_SaveEdited "all"
-end menu_SaveEditedStacks
-
 on menu_NotUpToDate dView
-   put git_ListNotUpToDate() into needsUpdating
-   set the displayed_Index ["Not Up-to-Date"] of dView to needsUpdating
+   display_NotUpToDate true --, dView
 end menu_NotUpToDate
 
 on menu_AutoCommit dView
-   put lcw_Ask ("Comment for multiple commits...", "", "Git", dView) into someComment
-   
-   # Save all edited
-   stack_SaveEdited "all"
-   lcw_Notify "Save everything first..."
-   
-   put git_ListNotUpToDate() into needsUpdating
-   repeat for each line projectName in needsUpdating
-      set the cursor to watch
-      put "Updating project" && projectName && "..." into sComment
-      lcw_Notify sComment
-      
-      put env_ConstructProjectFolder (projectName) into projectFolder
-      put git_GetCheckoutFolder (projectFolder) into gitFolder
-      if gitFolder is empty then
-         breakpoint
-         next repeat
-      end if
-      
-      # Add everything
-      git_AddEverything gitFolder
-      put the result into shellResult
-      if shellResult is not empty then
-         lcw_Notify shellResult
-      end if
-      
-      # Stage then commit
-      git_CommitChanges someComment, gitFolder
-      put the result into shellResult
-      if shellResult is not empty then
-         lcw_Notify shellResult
-      end if
-      
-      # Push
-      git_PushBranch gitFolder
-      put the result into shellResult
-      if shellResult is not empty then
-         lcw_Notify shellResult
-      end if
-   end repeat
+   env_CommitAndPushEverything dView
 end menu_AutoCommit
 
-on _
+private on _
 end _
 
 on submenu_Display
@@ -132,6 +84,14 @@ on menu_RecentExports mTarget
    put 60 * 60 into howLong
    display_RecentExports howLong
 end menu_RecentExports
+
+on menu_SaveEditedStacks
+   stack_SaveEdited "all"
+end menu_SaveEditedStacks
+
+on menu_CreateLevureProject
+   go stack url "https://raw.githubusercontent.com/trevordevore/levure/master/utils/create-levure-application.livecode"
+end menu_CreateLevureProject
 
 on submenu_Dev
    return "Global | Environment | Dev | Menu"

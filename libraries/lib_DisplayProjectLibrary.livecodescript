@@ -5,7 +5,7 @@ copyright: David Bovill
 license: GPLv3
 name: lib_DisplayProjectLibrary
 type: library
-version: 0.2
+version: 0.3
 
 /*
 This library is for displaying and editing LCW project library stacks.
@@ -97,15 +97,13 @@ on mDoubleUp_ProjectTree displayView, stackName
    --
    if the scriptonly of stack stackName is true then
       edit the script of stack stackName
+   else if the shiftKey is "Down" then
+      -- put the name of stack stackName into stackObject
+      -- display_StackDeps stackObject
+      display_ModuleTools stackName
    else
       show stack stackName
       toplevel stack stackName
-      -- set the loc of stack stackName to the loc of displayView
-   end if
-   --
-   if the shiftKey is "Down" then
-      put the name of stack stackName into stackObject
-      display_StackDeps stackObject
    end if
 end mDoubleUp_ProjectTree
 
@@ -128,7 +126,7 @@ command display_ProjectArray projectName, pReconstruct
    display_Data projectArray, projectName, "Project Array"
    put the result into displayView
    --
-   set the data_MenuBit [projectName] of displayView to "Project | Array"
+   set the tool_MenuBit [projectName] of displayView to "Project | Array"
    return displayView
 end display_ProjectArray
 

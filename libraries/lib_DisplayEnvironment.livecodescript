@@ -13,21 +13,62 @@ see "lib_FunctionKey"
 
 --> Working on
 -
-command display_NotUpToDate pDisplayView
+command env_CommitAndPushEverything pDisplayView
+   put lcw_Ask ("Comment for multiple commits...", "", "Git", pDisplayView) into someComment
+   
+   # Save all edited
+   stack_SaveEdited "all"
+   lcw_Notify "Save everything first..."
+   
+   put git_ListNotUpToDate() into needsUpdating
+   repeat for each line projectName in needsUpdating
+      set the cursor to watch
+      put "Updating project" && projectName && "..." into sComment
+      lcw_Notify sComment
+      
+      put env_ConstructProjectFolder (projectName) into projectFolder
+      put git_GetCheckoutFolder (projectFolder) into gitFolder
+      if gitFolder is empty then
+         breakpoint
+         next repeat
+      end if
+      
+      # Add everything
+      git_AddEverything gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+      
+      # Stage then commit
+      git_CommitChanges someComment, gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+      
+      # Push
+      git_PushBranch gitFolder
+      put the result into shellResult
+      if shellResult is not empty then
+         lcw_Notify shellResult
+      end if
+   end repeat
+end env_CommitAndPushEverything
+
+command display_NotUpToDate pSaveEditedFirst, pDisplayView
+   if pSaveEditedFirst is true then
+      stack_SaveEdited "all"
+   end if
+   
    put git_ListNotUpToDate() into needsUpdating
    --
-   switch
-      case pDisplayView = "Environment"
-         put display_FindView ("Environment") into pDisplayView
-      case exists (pDisplayView)
-         set the displayed_Index ["Not Up-to-Date"] of pDisplayView to needsUpdating
-         return pDisplayView
-      default
-         display_Data needsUpdating, "Not Up-to-Date", "Environment"
-         put the result into dView
-         display_SetToolMenus "Environment", dView, "lcw_Tools"
-         return dView
-   end switch
+   -- display_Data needsUpdating, "Not Up-to-Date", "Environment"
+   -- display_SetToolMenus "Environment", dView, "lcw_Tools"
+   
+   display_Tool needsUpdating, "Not Up-to-Date", "Github Update", pDisplayView
+   put the result into dView
+   return dView
 end display_NotUpToDate
 
 command display_Environment pRefreshOnly, pProjectNames

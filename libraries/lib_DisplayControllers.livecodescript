@@ -85,7 +85,7 @@ command ask_CreateProjectMenu projectName, pGlobalMenuTitle, pDontAsk, pControll
    return mController
 end ask_CreateProjectMenu
 
-command ask_CreateMenuFromObject gMenuTitle, libObject, pControllerScript, pDisplay
+command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDisplay
    -- as this handler is called for most display creation code 
    -- we are careful and do a lot of checks before creating
    -- but we need to be fast in rejecting searches where we know that we dont need to create a menu as it already exists
@@ -95,8 +95,16 @@ command ask_CreateMenuFromObject gMenuTitle, libObject, pControllerScript, pDisp
    put menu_GetGlobalController (gMenuTitle) into mController -- usually a stackObject
    if exists (mController) then return merge ("Error, not creating menu as '[[mController]]' already exits!")
    
+   # Project name from library name
+   if exists (stack libName) is false then
+      put debug_CallingObject (3) into libObject
+      breakpoint
+      put the project_Name of libObject into projectName
+   else
+      put the project_Name of stack libName into projectName
+   end if
+   
    # Check path in case file not loaded
-   put the project_Name of libObject into projectName
    put the project_Folder of stack projectName into projectFolder
    if there is not a folder projectFolder then return "Error, no project_Folder:" && projectFolder
    put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
@@ -291,7 +299,7 @@ command display_ProjectControllers projectName, pRefreshOnly
    # Display Controllers
    display_Data gMenuTitles, projectName, "Project Controllers"
    put the result into displayView
-   set the data_MenuBit of displayView to "Controllers | Tree" 
+   set the tool_MenuBit of displayView to "Controllers | Tree" 
    --
    put displayView & CR after displayViews
    delete char -1 of displayViews

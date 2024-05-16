@@ -10,15 +10,29 @@ version: 0.2
 --> FunctionKey
 -
 private command _SearchContext
-   put the name of the topStack into sInfo
-   put CR & the defaultStack after sInfo
-   --
-   put CR & the name of the top_Card of the topStack after sInfo
-   put CR after sInfo
-   
-   put CR & the openstacks after sInfo
-   
-   put sInfo
+   switch
+      case the short name of the topStack begins with "View|Wiki|Browser"
+         put the long id of control 1 of cd 1 of the topStack into wikiView
+         --
+         put the wiki_Domain of wikiView into wikiDomain
+         -- put the lineUp_Info of wikiView
+         get the last_PageInfo of wikiView
+         put item 1 of it into wikiDomain
+         put item 2 of it into pSlug
+         --
+         put pageArray_FetchText (wikiDomain, pSlug)
+         break
+      default
+         put the name of the topStack into sInfo
+         put CR & the defaultStack after sInfo
+         --
+         put CR & the name of the top_Card of the topStack after sInfo
+         put CR after sInfo
+         
+         put CR & the openstacks after sInfo
+         
+         put sInfo
+   end switch
 end _SearchContext
 
 private command _TopCard
@@ -41,6 +55,7 @@ on functionKey keyNumber
          stack_ToggleDecorations cNames, empty
          break
       case 3
+         wikiServer_Toggle
          break
       case 4
          _SearchContext
@@ -78,7 +93,7 @@ on functionKey keyNumber
          -- stack_ToggleShrink
          break
       case 12
-         _SaveEverything
+         display_NotUpToDate true
          break
       default
          --
@@ -110,12 +125,6 @@ private command _TopViewDisplays topCard
       set the loc of stackObject to oLoc
    end repeat
 end _TopViewDisplays
-
-private command _SaveEverything
-   stack_SaveEdited "all"
-   --
-   display_NotUpToDate
-end _SaveEverything
 
 private command _DisplayBrokenBehaviors
    put the top_ViewObjects of topCard into topViewObjects
