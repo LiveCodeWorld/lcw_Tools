@@ -46,9 +46,14 @@ getprop disabled_EditViewBehavior [viewObject]
 end disabled_EditViewBehavior
 
 getprop disabled_SetViewCardBehavior [viewObject]
+   if exists (stack "behavior_ViewTemplateCard") is false then return true
+   --
    put the card_Object of viewObject into templateCardObject
    put the behavior of templateCardObject into bObject
-   put bObject = the name of stack "behavior_ViewTemplateCard" into behaviorIsSet
+   if exists (bObject) is false then return false
+   
+   put the name of stack "behavior_ViewTemplateCard" into defaultBehaviorStack
+   put the name of bObject = defaultBehaviorStack into behaviorIsSet
    return behaviorIsSet
 end disabled_SetViewCardBehavior
 
@@ -177,6 +182,12 @@ on menu_SetViewCardBehavior viewObject
    put the card_Object of viewObject into cardObject
    set the behavior of cardObject to the long id of stack "behavior_ViewTemplateCard"
 end menu_SetViewCardBehavior
+
+on menu_RemoveCardBehavior viewObject
+   lcw_Answer "Remove the behavior of the views card?"
+   put the card_Object of viewObject into cardObject
+   set the behavior of cardObject to empty
+end menu_RemoveCardBehavior
 
 private on ____
 end ____
