@@ -54,8 +54,8 @@ private function _AskMenuTitle projectName, pGlobalMenuTitle, pDisplayView
    end switch
    
    # Ask
-   put "What is the name of your global menu...." into someQuestion
-   put lcw_Ask (someQuestion, suggestedAnswer) into gMenuTitle
+   put "Give the menu for project '[[var]]' a name...." into someQuestion
+   put lcw_Ask (someQuestion, suggestedAnswer, pDisplayView, projectName) into gMenuTitle
    --
    if menu_Exists (gMenuTitle) then
       lcw_AnswerWarning "Menu [[gMenuTitle]] already exists!", pDisplayView, gMenuTitle
@@ -97,9 +97,9 @@ command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDispla
    
    # Project name from library name
    if exists (stack libName) is false then
-      put debug_CallingObject (3) into libObject
-      breakpoint
-      put the project_Name of libObject into projectName
+      -- put debug_CallingObject (1) into libObject
+      -- put the project_Name of libObject into projectName
+      put "lcw_Tools" into projectName
    else
       put the project_Name of stack libName into projectName
    end if
