@@ -7,8 +7,105 @@ type: library
 version: 0.2
 
 
+--> Working on
+-
+function module_CheckFirstView viewObject
+   if exists (viewObject) is false then return false
+   put module_FirstControl (viewObject) into firstObject
+   if viewObject is not firstObject then return false
+   
+   put the view_Name of firstObject into viewName
+   put the stack_Name of firstObject into stackName
+   return stackName is viewName
+end module_CheckFirstView
+
+function module_FirstControl viewObject
+   put the card_Object of viewObject into cardObject
+   if exists (control 1 of cardObject) then
+      put the long id of control 1 of cardObject into firstObject
+      return firstObject
+   else
+      return empty
+   end if
+end module_FirstControl
+
+
 --> FunctionKey
 -
+on functionKey keyNumber
+   if the optionKey is "Down" then breakpoint
+   switch keyNumber
+      case 1
+         display_Environment
+         break
+      case 2
+         put scriptEditor_Object() into sObject
+         if exists (sObject) is false then breakpoint
+         --
+         display_HelpDraft sObject
+         break
+      case 3
+         put scriptEditor_Object() into sObject
+         if exists (sObject) is false then breakpoint
+         --
+         display_ScriptDeps sObject
+         break
+      case 4
+         wikiServer_Toggle
+         break
+      case 5
+         _SearchContext
+         break
+      case 6
+         if the shiftKey is "Down" then
+            display_Wiki "thought.garden"
+         else
+            display_Wiki "livecode.world"
+         end if
+         break
+      case 8
+         put line 1 to 3 of stack_OpenIndex() into stackNames
+         stack_SetToMainScreen stackNames
+         break
+      case 9
+         display_GitStatus the topStack
+         break
+      case 10
+         -- stack_ToggleShrink
+         break
+      case 12
+         display_NotUpToDate true
+         break
+      default
+         --
+   end switch
+   pass functionKey
+end functionKey
+
+
+--> Private
+-
+private command _ToggleCameraDecorations
+   put stack_FindNames ("View|Camera") into cNames
+   stack_ToggleDecorations cNames, empty
+end _ToggleCameraDecorations
+
+private command _ToggleCamera
+   camera_ToggleLoaded
+   breakpoint
+   
+   global gLCW
+   put gLCW ["temp"]["Record"]["What"] into recordWhat
+   switch recordWhat
+      case "camera"
+         
+         break
+      case "screen"
+      default
+         screen_ToggleRecord "", true
+   end switch
+end _ToggleCamera
+
 private command _SearchContext
    switch
       case the short name of the topStack begins with "View|Wiki|Browser"
@@ -43,63 +140,6 @@ private command _TopCard
       _TopViewDisplays topCard
    end if
 end _TopCard
-
-on functionKey keyNumber
-   if the optionKey is "Down" then breakpoint
-   switch keyNumber
-      case 1
-         display_Environment
-         break
-      case 2
-         put stack_FindNames ("View|Camera") into cNames
-         stack_ToggleDecorations cNames, empty
-         break
-      case 3
-         wikiServer_Toggle
-         break
-      case 4
-         _SearchContext
-         break
-      case 5
-         camera_ToggleLoaded
-         breakpoint
-         
-         global gLCW
-         put gLCW ["temp"]["Record"]["What"] into recordWhat
-         switch recordWhat
-            case "camera"
-               
-               break
-            case "screen"
-            default
-               screen_ToggleRecord "", true
-         end switch
-         break
-      case 6
-         if the shiftKey is "Down" then
-            display_Wiki "thought.garden"
-         else
-            display_Wiki "livecode.world"
-         end if
-         break
-      case 8
-         put line 1 to 3 of stack_OpenIndex() into stackNames
-         stack_SetToMainScreen stackNames
-         break
-      case 9
-         display_GitStatus the topStack
-         break
-      case 10
-         -- stack_ToggleShrink
-         break
-      case 12
-         display_NotUpToDate true
-         break
-      default
-         --
-   end switch
-   pass functionKey
-end functionKey
 
 private command _TopCardViewDisplays topCard
    put the view_Objects of topCard into viewObjects

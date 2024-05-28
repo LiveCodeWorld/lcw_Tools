@@ -25,6 +25,39 @@ end menu_Target
 
 --> Global | Dev | ScriptEditor | List | Authoring | Menu
 -
+on menu_FetchGraphJson hkey
+   put dot_GetArray (hkey) into dotArray
+   display_Data dotArray, hkey
+   
+   -- finder_Reveal someFile
+   
+   -- put help_FetchHkeyPageArray (hKey) into pageArray
+   -- put pageArray_GetGraph (pageArray) into dotText
+   -- put dot_Convert (dotText) into dotJSON
+   --
+   --  display_JSON dotJSON, "dotJSON"
+   -- put dotJSON
+end menu_FetchGraphJson
+
+on menu_DisplayVersions hKey
+   hkeyLine_Deconstruct hKey, hName, hType, hObject
+   put the result into shortHkey
+   --
+   put the github_Permalink [shortHkey] of hObject into webPermalink
+   --
+   launch url webPermalink
+end menu_DisplayVersions
+
+on menu_TestRawPermalink hKey
+   -- not working
+   hkeyLine_Deconstruct hKey, hName, hType, hObject
+   put the result into shortHkey
+   --
+   put the github_RawPermalink of hObject into rawPermalink
+   --
+   launch url rawPermalink
+end menu_TestRawPermalink
+
 on submenu_HandlerLibrary
    return "Global | Handler | Library | Menu"
 end submenu_HandlerLibrary

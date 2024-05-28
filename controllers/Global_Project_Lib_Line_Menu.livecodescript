@@ -133,6 +133,10 @@ end disabled_DisplayModelData
 
 --> Global | Project | Lib | Line | Menu
 -
+on menu_LibraryHelp libraryStack
+   display_HelpDraft libraryStack
+end menu_LibraryHelp
+
 on menu_DisplayProject libraryStack
    put the project_Name of libraryStack into projectName
    --

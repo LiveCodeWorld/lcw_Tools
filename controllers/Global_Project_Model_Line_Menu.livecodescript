@@ -53,6 +53,10 @@ end moveModel_Params
 
 --> Global | Project | Model | Line | Menu
 -
+on menu_ModelHelp mStack
+   display_HelpDraft mStack
+end menu_ModelHelp
+
 on menu_RenameModel modelStack
    put the short name of modelStack into stackName
    --
