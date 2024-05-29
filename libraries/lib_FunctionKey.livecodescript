@@ -48,7 +48,9 @@ on functionKey keyNumber
          put scriptEditor_Object() into sObject
          if exists (sObject) is false then breakpoint
          --
-         display_ScriptDeps sObject
+         display_ScriptDeps sObject, "sfdp"
+         --
+         display_HelpDraft sObject
          break
       case 4
          wikiServer_Toggle

@@ -25,19 +25,24 @@ end menu_Target
 
 --> Global | Dev | ScriptEditor | List | Authoring | Menu
 -
-on menu_FetchGraphJson hkey
-   put dot_GetArray (hkey) into dotArray
-   display_Data dotArray, hkey
-   
-   -- finder_Reveal someFile
-   
-   -- put help_FetchHkeyPageArray (hKey) into pageArray
-   -- put pageArray_GetGraph (pageArray) into dotText
-   -- put dot_Convert (dotText) into dotJSON
+on _UpdateHandlerCode hKey
+   help_UpdateHandlerCode hKey
+   put the result into foundHandler
    --
-   --  display_JSON dotJSON, "dotJSON"
-   -- put dotJSON
-end menu_FetchGraphJson
+   if foundHandler is empty then
+      put LocalArray ["tObject"] into tObject
+      lcw_AnswerWarning "Could not locate 'code' section of handler page '[[hKey]]'!", tObject, hKey
+   else
+      launch_HkeyHelp hKey
+   end if
+end _UpdateHandlerCode
+
+on _UpdateCalls hKey
+   help_UpdateHandlerCalls hKey
+   put the result into mdCalls
+   --
+   launch_HkeyHelp hKey
+end _UpdateCalls
 
 on menu_DisplayVersions hKey
    hkeyLine_Deconstruct hKey, hName, hType, hObject

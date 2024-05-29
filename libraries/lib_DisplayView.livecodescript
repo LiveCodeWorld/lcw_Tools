@@ -9,6 +9,27 @@ version: 0.4
 
 --> Working on
 -
+--> Display | View | Examples
+-
+command display_SVG svgFile, pStackLabel, pStackStyle, pLocOrRect
+   stack_CloneInvisible "View|Image|SVG", "Display SVG"
+   put the result into cloneStackName
+   put the long id of widget 1 of cd 1 of stack cloneStackName into viewObject
+   --
+   if svgFile begins with "http" then
+      set the svg_URL [true] of viewObject to svgFile
+   else
+      set the svg_File [true] of viewObject to svgFile
+   end if
+   --
+   if pStackLabel is empty then
+      set the itemdelimiter to slash
+      put item -1 of svgFile into pStackLabel
+   end if
+   display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect
+   return viewObject
+end display_SVG
+
 function display_FirstOpenView viewName, pStackLabel, pViewTitle
    view_NormalizeName viewName
    put "|" after viewName
@@ -417,28 +438,6 @@ command display_Camera cameraDeviceName, sRect
    put the result into displayView
    return displayView
 end display_Camera
-
-
---> Display | View | Examples
--
-command display_SVG svgFile, pStackLabel, pStackStyle, pLocOrRect
-   stack_CloneInvisible "View|Image|SVG", "Display SVG"
-   put the result into cloneStackName
-   put the long id of widget 1 of cd 1 of stack cloneStackName into viewObject
-   --
-   if svgFile begins with "http" then
-      set the svg_URL [true] of viewObject to svgFile
-   else
-      set the svg_File [true] of viewObject to svgFile
-   end if
-   --
-   if pStackLabel is empty then
-      set the itemdelimiter to slash
-      put item -1 of svgFile into pStackLabel
-   end if
-   display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect
-   return viewObject
-end display_SVG
 
 function view_ConstructToolMenu viewObject, isaView
    put the view_MenuTitle [true] of viewObject into mTitle
