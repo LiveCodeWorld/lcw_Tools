@@ -195,7 +195,7 @@ command ask_FixMenuControllerStackName mController, pEditScript
    set the name of stack mControllerStackName to newStackName
    
    # Fix short file
-   put project_NameToShortFolder (newStackName) & ".livecodescript" into goodShortFile
+   put lcw_PipesToUnderscore (newStackName) & ".livecodescript" into goodShortFile
    project_ChangeStackShortFileName newStackName, goodShortFile
    put the result into newStackPath -- not renamed if short file is the same
    

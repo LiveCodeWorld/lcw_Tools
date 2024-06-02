@@ -18,6 +18,14 @@ getprop menu_Target [tObject]
    end if
 end menu_Target
 
+getprop menu_CheckTarget [mTarget]
+   if exists (mTarget) then
+      return true
+   else
+      return false
+   end if
+end menu_CheckTarget
+
 getprop disabled_ViewScript [cardObject]
    if exists (control 1 of cardObject) then
       return false
@@ -60,8 +68,16 @@ private command _TestLayoutControl viewObject
 end _TestLayoutControl
 
 private function _FirstControl cardObject
-   put the long id of control 1 of cardObject into viewObject
-   return viewObject
+   put the view_Object of cardObject into viewObject
+   switch
+      case viewObject = cardObject
+         return cardObject
+      case exists (control 1 of cardObject)
+         put the long id of control 1 of cardObject into viewObject
+         return viewObject
+      default
+         return cardObject
+   end switch
 end _FirstControl
 
 getprop checked_MakeFirstControlAView [cardObject]
@@ -148,11 +164,11 @@ end menu_FixBehaviorObjects
 private on ___
 end ___
 
-on submenu_Card
+-- on submenu_Card
    return "Global | Card | Menu"
 end submenu_Card
 
-on submenu_Dev
+-- on submenu_Dev
    return menu_DevTitle ("Global | View | Card | Create | Menu")
 end submenu_Dev
 

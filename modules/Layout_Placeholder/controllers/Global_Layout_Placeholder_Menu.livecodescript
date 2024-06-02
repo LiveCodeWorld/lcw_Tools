@@ -166,6 +166,14 @@ end menu_ChangeColour
 private on ___
 end ___
 
+getprop checked_Dragable [viewObject]
+   return the drag_Able of viewObject
+end checked_Dragable
+
+on menu_Dragable viewObject
+   set the drag_Able of viewObject to not the drag_Able of viewObject
+end menu_Dragable
+
 on menu_IsOpaque tObject
    put the view_IsOpaque of tObject into sBoolean
    set the view_IsOpaque of tObject to not sBoolean

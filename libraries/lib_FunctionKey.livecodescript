@@ -42,7 +42,7 @@ on functionKey keyNumber
          put scriptEditor_Object() into sObject
          if exists (sObject) is false then breakpoint
          --
-         display_HelpDraft sObject
+         draft_ScriptHelp sObject
          break
       case 3
          put scriptEditor_Object() into sObject
@@ -50,7 +50,7 @@ on functionKey keyNumber
          --
          display_ScriptDeps sObject, "sfdp"
          --
-         display_HelpDraft sObject
+         draft_ScriptHelp sObject
          break
       case 4
          wikiServer_Toggle

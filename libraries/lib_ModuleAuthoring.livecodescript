@@ -283,7 +283,7 @@ end module_RenameBehavior
 
 function module_GetHomePath moduleName, pProjectName
    if pProjectName is empty then
-      put project_NameToShortFolder (moduleName) into moduleFolderName
+      put lcw_PipesToUnderscore (moduleName) into moduleFolderName
       put env_GetModuleHomePath (moduleFolderName) into homeStackPath
    else
       put project_GetFolder (pProjectName) into projectFolder
@@ -357,7 +357,7 @@ command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, 
       exit to top
    end if
    
-   put project_NameToShortFolder (moduleStackName) into shortFolderName
+   put lcw_PipesToUnderscore (moduleStackName) into shortFolderName
    put rootModuleFolder & shortFolderName & slash into moduleFolder
    
    switch

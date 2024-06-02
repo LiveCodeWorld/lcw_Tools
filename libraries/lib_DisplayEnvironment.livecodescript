@@ -56,61 +56,6 @@ command env_CommitAndPushEverything pDisplayView
    end repeat
 end env_CommitAndPushEverything
 
-command display_NotUpToDate pSaveEditedFirst, pDisplayView
-   if pSaveEditedFirst is true then
-      stack_SaveEdited "all"
-   end if
-   
-   put git_ListNotUpToDate() into needsUpdating
-   --
-   -- display_Data needsUpdating, "Not Up-to-Date", "Environment"
-   -- display_SetToolMenus "Environment", dView, "lcw_Tools"
-   
-   display_Tool needsUpdating, "Not Up-to-Date", "Github Update", pDisplayView
-   put the result into dView
-   return dView
-end display_NotUpToDate
-
-command display_Environment pRefreshOnly, pProjectNames
-   if pRefreshOnly is true AND display_FindIndexView ("Environment") is empty then
-      return empty -- display is not open so do nothing
-   end if
-   if pProjectNames is empty then
-      put env_ListLocalProjects() into pProjectNames
-   end if
-   put "List of Projects,Environment" into pStackTitle
-   
-   put "mDoubleUp_Environment" into mDoubleClick
-   put empty into mUp
-   put empty into dragCommand
-   --
-   put "Global | Environment | Menu" into titleMenu
-   put "Global | Environment | Tree | Line | Menu" into lineMenu
-   
-   put display_FindView ("Environment") into displayView
-   if exists (displayView) is false then
-      display_Data pProjectNames, "Local Projects", "Environment"
-      put the result into displayView
-      --
-      set the title_Menu of displayView to titleMenu
-      set the line_Menu of displayView to lineMenu
-      --
-      set the field_Style of displayView to "click"
-      set the mouse_DoubleUp of displayView to mDoubleClick
-      set the drop_Command of displayView to dragCommand
-   else
-      --
-      lock screen
-      set the displayed_Index ["Local Projects"] of displayView to pProjectNames
-   end if
-   --
-   put env_ListStoppedProjects() into stoppedProjects
-   set the coloured_Lines ["red"] of displayView to stoppedProjects
-   unlock screen
-   --
-   return displayView
-end display_Environment
-
 command project_AskCreate
    put the stack_Folder of stack "LCW" into rootFolder
    set the itemdelimiter to slash
@@ -185,6 +130,62 @@ end mDoubleUp_Project
 
 --> Display | LCW
 -
+command display_NotUpToDate pSaveEditedFirst, pDisplayView
+   if pSaveEditedFirst is true then
+      stack_SaveEdited "all"
+   end if
+   
+   put git_ListNotUpToDate() into needsUpdating
+   --
+   -- display_Data needsUpdating, "Not Up-to-Date", "Environment"
+   -- display_SetToolMenus "Environment", dView, "lcw_Tools"
+   
+   display_Tool needsUpdating, "Not Up-to-Date", "Github Update", pDisplayView
+   put the result into dView
+   return dView
+end display_NotUpToDate
+
+command display_Environment pRefreshOnly, pProjectNames
+   if pRefreshOnly is true AND display_FindIndexView ("Environment") is empty then
+      return empty -- display is not open so do nothing
+   end if
+   if pProjectNames is empty then
+      put env_ListLocalProjects() into pProjectNames
+   end if
+   put "List of Projects,Environment" into pStackTitle
+   
+   put "mDoubleUp_Environment" into mDoubleClick
+   put empty into mUp
+   put empty into dragCommand
+   --
+   put "Global | Environment | Menu" into titleMenu
+   put "Global | Environment | Tree | Line | Menu" into lineMenu
+   
+   put display_FindView ("Environment") into displayView
+   if exists (displayView) is false then
+      display_Data pProjectNames, "Local Projects", "Environment"
+      put the result into displayView
+      --
+      set the title_Menu of displayView to titleMenu
+      set the line_Menu of displayView to lineMenu
+      --
+      set the field_Style of displayView to "click"
+      set the mouse_DoubleUp of displayView to mDoubleClick
+      set the drop_Command of displayView to dragCommand
+   else
+      --
+      lock screen
+      set the displayed_Index ["Local Projects"] of displayView to pProjectNames
+      stack_Show displayView
+   end if
+   --
+   put env_ListStoppedProjects() into stoppedProjects
+   set the coloured_Lines ["red"] of displayView to stoppedProjects
+   unlock screen
+   --
+   return displayView
+end display_Environment
+
 command display_EnvironmentLibs pFilterItems, pDisplayView
    -- put "Global | Project | Tree | Line | Menu" into mLineTitle
    

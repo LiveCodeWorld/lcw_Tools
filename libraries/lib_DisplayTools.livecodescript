@@ -14,12 +14,7 @@ Their should be an easy default, with teh ability to customise.
 
 --> Working on
 -
-private command _SetModuleToolsMenus stackName, displayView
-   if exists (control 1 of cd 1 of stack stackName) is false then return false
-   
-   put the long id of control 1 of cd 1 of stack stackName into viewObject   
-   set the displayed_Object of displayView to viewObject
-   --
+private command _SetModuleToolsMenus stackName, displayView, viewObject
    put view_ConstructToolMenu (viewObject, true) into mTitles
    set the itemdelimiter to tab
    put item 1 of line 1 of mTitles into mTitle
@@ -69,9 +64,29 @@ on display_ModuleTools stackName
    --
    set the displayed_ModuleFolder of displayView to moduleFolder
    --
-   _SetModuleToolsMenus stackName, displayView
+   put _ModuleViewObject (stackName) into moduleViewObject
+   if exists (moduleViewObject) is true then
+      set the displayed_Object of displayView to moduleViewObject
+      --
+      _SetModuleToolsMenus stackName, displayView, moduleViewObject
+   else
+      breakpoint
+   end if
    return displayView
 end display_ModuleTools
+
+private function _ModuleViewObject stackName
+   put the long id of cd 1 of stack stackName into cardObject
+   put the view_Object of cardObject into viewObject
+   if exists (viewObject) then
+      return viewObject
+   else if exists (control 1 of cardObject) then
+      put the long id of control 1 of cardObject into viewObject
+      return viewObject
+   else
+      return empty
+   end if
+end _ModuleViewObject
 
 on mDouble_EditModuleProp displayView, shortFile
    put the title_Text of displayView into moduleName
@@ -205,3 +220,4 @@ on mDoubleUp_GoToCard displayView, cardName
    --
    go to cd cardName of stack stackName
 end mDoubleUp_GoToCard
+

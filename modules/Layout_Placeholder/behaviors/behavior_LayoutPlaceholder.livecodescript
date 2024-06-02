@@ -42,6 +42,9 @@ on mouseDown pMouseBtnNum
    if pMouseBtnNum = 3 then
       menu_PopUp "Global | Layout | Placeholder | Menu"
    else
+      if the drag_Able of me is true then
+         grab me
+      end if
       pass mouseDown
    end if
 end mouseDown
@@ -53,6 +56,14 @@ end menu_Target
 
 --> Events | Drag
 -
+getprop drag_Able
+   return the drag_Able of me is true
+end drag_Able
+
+setprop drag_Able sBoolean
+   set the drag_Able of me to sBoolean is true
+end drag_Able
+
 on dragEnter
    put the dragdata ["private"] into privateFlag
    switch privateFlag

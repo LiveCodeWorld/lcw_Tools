@@ -160,7 +160,6 @@ command display_ScriptIsDifferent scriptObject, pDiffAlso
    return the result
 end display_ScriptIsDifferent
 
-
 command project_CreateBehavior bName, projectName
    put project_GetFolder (projectName) into projectFolder
    put scaffold_Get ("View Behavior Template") into tScript

@@ -102,6 +102,25 @@ on menu_StartProject projectName
    display_Environment true
 end menu_StartProject
 
+on menu_ProjectHelp projectName
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   put the help_PageArray of stack homeStackPath into pageArray
+   --
+   -- display_PageArray pageArray, projectName
+   draft_PageArray "project.livecode.world", pageArray
+   put the result into wikiView
+   return wikiView
+end menu_ProjectHelp
+
+command draft_ProjectHelp sObject
+   put the help_PageArray of sObject into helpPageArray
+   -- comment 
+   put the help_Domain of sObject into wikiDomain
+   draft_PageArray wikiDomain, helpPageArray
+   put the result into wikiBrowser
+   return wikiBrowser
+end draft_ProjectHelp
+
 private on _
 end _
 
