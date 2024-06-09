@@ -17,24 +17,34 @@ Key handler =  "project_CreateStack"
 
 --> Working on
 -
-
---> Ask
--
-command ask_TrashProjectStack stackObject
-   if exists (stackObject) is false then
-      display_DebugHistory pDisplayTitle, pAlsoArray
-      lcw_AnswerWarning "Stack does not exist!"
+command ask_CreateModuleBehavior moduleStackName, dView, pDefaultBehaviorName
+   if exists (stack moduleStackName) is false then
+      put merge ("Error, behavior stack [[moduleStackName]] does not exist") into someError
+      lcw_AnswerWarning someError
+      return moduleStackName
    end if
-   put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
-   lcw_Answer someQuestion
-   --
-   put the project_Name of stackObject into projectName
-   --
-   project_TrashStack stackObject
-   put the result into trashedStackFile
-   --
-   display_ProjectLibs projectName
-end ask_TrashProjectStack
+   put the module_Folder of stack moduleStackName into moduleFolder
+   if pDefaultBehaviorName is empty then put "behavior_New" into pDefaultBehaviorName
+   
+   # New Behavior short file
+   put lcw_Ask ("What name do you want to give this new behavior?", pDefaultBehaviorName) into newBehaviorName
+   if there is a stack newBehaviorName then
+      lcw_AnswerWarning "A stack named '[[newBehaviorName]]' already exists!", dView, newBehaviorName
+   end if
+   put newBehaviorName & ".livecodescript" into bShortFile
+   
+   # New behavior file
+   put module_ConstructBehaviorPath (newBehaviorName, moduleFolder, bShortFile) into newBehaviorStackPath
+   if there is a stack newBehaviorStackPath then
+      put newBehaviorStackPath
+      lcw_AnswerWarning "A stack at this path already exists!", dView
+   end if
+   
+   # Create
+   module_CreateBehavior moduleFolder, newBehaviorName
+   put the result into newBehaviorStackPath
+   return newBehaviorStackPath
+end ask_CreateModuleBehavior
 
 command ask_CreateProjectBehavior projectName, pQuestion, pSuggestedAnswer
    if pSuggestedAnswer is empty then put "behavior_XXX" into pSuggestedAnswer
@@ -53,6 +63,25 @@ command ask_CreateProjectBehavior projectName, pQuestion, pSuggestedAnswer
    -- finder_Reveal projectFolder
    return sPath
 end ask_CreateProjectBehavior
+
+
+--> Ask
+-
+command ask_TrashProjectStack stackObject
+   if exists (stackObject) is false then
+      display_DebugHistory pDisplayTitle, pAlsoArray
+      lcw_AnswerWarning "Stack does not exist!"
+   end if
+   put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
+   lcw_Answer someQuestion
+   --
+   put the project_Name of stackObject into projectName
+   --
+   project_TrashStack stackObject
+   put the result into trashedStackFile
+   --
+   display_ProjectLibs projectName
+end ask_TrashProjectStack
 
 command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    if pSuggestedAnswer is empty then put "lib_XXX" into pSuggestedAnswer
@@ -96,14 +125,15 @@ on mDoubleUp_ProjectTree displayView, stackName
    if the optionkey is "Down" then breakpoint
    --
    if the scriptonly of stack stackName is true then
-      edit the script of stack stackName
-   else if the shiftKey is "Down" then
-      -- put the name of stack stackName into stackObject
-      -- display_StackDeps stackObject
-      display_ModuleTools stackName
+      edit the script of stack stackName 
    else
       show stack stackName
       toplevel stack stackName
+   end if
+   
+   if the shiftKey is "Down" then
+      -- display_StackDeps the name of stack stackName
+      display_ModuleTools stackName
    end if
 end mDoubleUp_ProjectTree
 

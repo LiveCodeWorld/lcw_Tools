@@ -85,49 +85,6 @@ command ask_CreateProjectMenu projectName, pGlobalMenuTitle, pDontAsk, pControll
    return mController
 end ask_CreateProjectMenu
 
-command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDisplay
-   -- as this handler is called for most display creation code 
-   -- we are careful and do a lot of checks before creating
-   -- but we need to be fast in rejecting searches where we know that we dont need to create a menu as it already exists
-   
-   # Return mController (fast)
-   if there is a stack gMenuTitle then return merge ("Error, not creating menu as stack '[[gMenuTitle]]' already exits!")
-   put menu_GetGlobalController (gMenuTitle) into mController -- usually a stackObject
-   if exists (mController) then return merge ("Error, not creating menu as '[[mController]]' already exits!")
-   
-   # Project name from library name
-   if exists (stack libName) is false then
-      -- put debug_CallingObject (1) into libObject
-      -- put the project_Name of libObject into projectName
-      put "lcw_Tools" into projectName
-   else
-      put the project_Name of stack libName into projectName
-   end if
-   
-   # Check path in case file not loaded
-   put the project_Folder of stack projectName into projectFolder
-   if there is not a folder projectFolder then return "Error, no project_Folder:" && projectFolder
-   put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
-   --
-   if there is a file controllerPath then
-      put the short name of stack controllerPath into stackName
-      if stackName = gMenuTitle then
-         return empty
-      end if
-   end if
-   
-   # Ask Create
-   ask_CreateProjectMenu projectName, gMenuTitle, pControllerScript, pDisplay
-   put the result into mController
-   
-   # Edit the script
-   if pDisplay is true then
-      edit the script of mController
-   end if
-   
-   return mController
-end ask_CreateMenuFromObject
-
 command ask_MoveMenu mController, gMenuTitle, newProjectName, pDisplayView 
    scriptEditor_CloseTab mController
    

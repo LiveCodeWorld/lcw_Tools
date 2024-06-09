@@ -103,8 +103,8 @@ end _HandleDispatch
 --> Global | View | Geometry | Menu
 -
 on menu_Clone vObject
-   put the stack_Name of vObject into stackNameToClone
-   stack_Clone stackNameToClone
+   put the stack_Name of vObject into cStackName
+   display_CloneTools cStackName, vObject
 end menu_Clone
 
 on menu_SetCardMargin vObject
@@ -113,8 +113,8 @@ on menu_SetCardMargin vObject
    set the card_margin of vObject to newMargin
 end menu_SetCardMargin
 
-private on ___
-end ___
+private on _
+end _
 
 on menu_LayoutControl vObject
    if the shiftKey is "Down" then breakpoint
@@ -138,14 +138,3 @@ on menu_SetRect viewObject
    --
    set the rect of viewObject to vCardRect
 end menu_SetRect
-
-private on _
-end _
-
-on submenu_Card
-   return "Global | Card | Menu"
-end submenu_Card
-
-on submenu_MoreTests
-   return "Global | View | Test | Geometry | Menu"
-end submenu_MoreTests

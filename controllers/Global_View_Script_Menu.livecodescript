@@ -87,15 +87,42 @@ end disabled_EditViewBehavior
 private on __
 end __
 
-on menu_EditActiveBehavior mView, stackName
+on menu_DisplayBehaviors mView
+   display_ModuleBehaviors mView
+end menu_DisplayBehaviors
+
+on menu_ModuleBehavior mView, stackName
    edit the script of stack stackName
+end menu_ModuleBehavior
+
+getprop moduleBehavior_Param [mView]
+   return the behavior_StackNames of mView
+end moduleBehavior_Param
+
+getprop moduleBehavior_Params [mView]
+   put the template_Object of mView into tObject
+   put the module_BehaviorStackNames of tObject into sNames
+   return sNames
+end moduleBehavior_Params
+
+on menu_CreateModuleBehavior mView
+   put the stack_Name of mView into moduleStackName
+   --
+   ask_CreateModuleBehavior moduleStackName, mView
+   put the result into newBehaviorStackPath
+   --
+   display_ModuleTools moduleStackName
+end menu_CreateModuleBehavior
+
+-- on menu_EditActiveBehavior mView, stackName
+edit the script of stack stackName
 end menu_EditActiveBehavior
 
-getprop editActiveBehavior_Params [mView]
+-- getprop editActiveBehavior_Params [mView]
    return LocalArray ["behavior_StackNames"]
 end editActiveBehavior_Params
 
-getprop disabled_EditActiveBehavior [mView]
+-- getprop disabled_EditActiveBehavior [mView]
    return LocalArray ["behavior_StackNames"] is empty
 end disabled_EditActiveBehavior
 

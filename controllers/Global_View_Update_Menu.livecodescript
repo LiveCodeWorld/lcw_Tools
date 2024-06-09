@@ -118,39 +118,31 @@ on menu_Swap someView, vName
    set the view_Swap [false] of mTarget to vName
 end menu_Swap
 
-on menu_DisplayViewOutline someView
+getprop swap_Params [someView]
    put the view_NestedArray of someView into nestedViewArray
-   put nestedViewArray ["viewOutline"] into viewOutline
-   
+   put viewArray_GetInner (nestedViewArray) into innerViewArray
+   --
+   put keys (innerViewArray) into innerViewNames
+   return innerViewNames
+end swap_Params
+
+on menu_DisplayViewOutline someView, pDisplayView
+   put the view_NestedArray of someView into nestedViewArray
    put the name of someView into someTitle
-   put the title_Text of someView into projectName
-   put comma & projectName after someTitle
-   display_Lines viewOutline, someTitle, "mDoubleUp_View"
+   
+   put viewArray_GetInner (nestedViewArray) into innerViewArray
+   put nestedViewArray ["dictionary"][1] into metadataArray
+   --
+   display_Tool innerViewArray, someTitle, "View Outline", pDisplayView
+   --   
    put the result into displayView
+   set the displayed_Object of displayView to someView
    set the displayed_NestedViewArray of displayView to nestedViewArray
 end menu_DisplayViewOutline
 
-command mDoubleUp_View displayView, viewName
-   get the clickLine
-   put word 2 of it into lineNum
-   put the displayed_NestedViewArray of displayView into nestedViewArray
-   put nestedViewArray ["dictionary"] into viewDictionary
-   put viewDictionary [lineNum] into metaDataArray
-   put metaDataArray ["rObject"] into viewObject
-   put metaDataArray ["view"] into viewName
-   
-   answer merge ("What would you like to do with the view '[[viewName]]'?") with "Cancel" or "Placeholder" or "Update"
-   switch it
-      case "Placeholder"
-         set the control_Type of viewObject to "placeholder"
-         break
-      case "Update"
-         view_Update viewObject
-         break
-      default
-         exit to top
-   end switch
-end mDoubleUp_View
+on menu_DisplayNestedViewArray viewObject
+   display_NestedViewArray viewObject
+end menu_DisplayNestedViewArray
 
 private on ___
 end ___
