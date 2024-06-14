@@ -56,6 +56,9 @@ command env_CommitAndPushEverything pDisplayView
    end repeat
 end env_CommitAndPushEverything
 
+
+--> Env
+-
 command project_AskCreate
    put the stack_Folder of stack "LCW" into rootFolder
    set the itemdelimiter to slash
@@ -145,8 +148,12 @@ command display_NotUpToDate pSaveEditedFirst, pDisplayView
    return dView
 end display_NotUpToDate
 
+command display_RefreshEnvironment
+   display_Environment true
+end display_RefreshEnvironment
+
 command display_Environment pRefreshOnly, pProjectNames
-   if pRefreshOnly is true AND display_FindIndexView ("Environment") is empty then
+   if pRefreshOnly is true AND display_FindView ("Environment") is empty then
       return empty -- display is not open so do nothing
    end if
    if pProjectNames is empty then

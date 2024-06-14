@@ -54,7 +54,7 @@ on submenu_Projects
    return "Global | LCW | Projects | Menu"
 end submenu_Projects
 
-on __
+private on __
 end __
 
 on submenu_Gather
@@ -65,7 +65,7 @@ on submenu_Ide
    return "Global | ScriptEditor | Menu"
 end submenu_Ide
 
-on ___
+private on ___
 end ___
 
 on menu_SaveStartupProject dView
@@ -77,7 +77,7 @@ on menu_EditPluginScript
    edit the script of stack "lcw_Plugin"
 end menu_EditPluginScript
 
-on ____
+private on ____
 end ____
 
 on menu_RecentExports mTarget
@@ -89,9 +89,16 @@ on menu_SaveEditedStacks
    stack_SaveEdited "all"
 end menu_SaveEditedStacks
 
-on menu_CreateLevureProject
+-- on menu_CreateLevureProject
    go stack url "https://raw.githubusercontent.com/trevordevore/levure/master/utils/create-levure-application.livecode"
 end menu_CreateLevureProject
+
+private on _____
+end _____
+
+on menu_Refresh
+   display_RefreshEnvironment
+end menu_Refresh
 
 on submenu_Dev
    return "Global | Environment | Dev | Menu"

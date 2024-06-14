@@ -87,9 +87,15 @@ end disabled_EditViewBehavior
 private on __
 end __
 
-on menu_DisplayBehaviors mView
-   display_ModuleBehaviors mView
-end menu_DisplayBehaviors
+on menu_FixModuleBehavior mView
+   put the behavior of mView into bObject
+   if exists (bObject) then
+      set the behavior of mView to bObject
+      lcw_Notify "Got and (re)set existing behaviors!"
+   else
+      breakpoint
+   end if
+end menu_FixModuleBehavior
 
 on menu_ModuleBehavior mView, stackName
    edit the script of stack stackName
@@ -105,6 +111,37 @@ getprop moduleBehavior_Params [mView]
    return sNames
 end moduleBehavior_Params
 
+on menu_SetAllModuleBehaviors viewObject
+   put the view_Name of viewObject into vName
+   put merge ("Set the view behavior to all the module_Behaviors of '[[vName]]'") into sComment
+   lcw_Answer (sComment & "?"), viewObject
+   --
+   put the module_Behaviors of viewObject into moduleBehaviors
+   set the behavior_Objects of viewObject to moduleBehaviors
+   --
+   lcw_Notify (sComment & "!")
+end menu_SetAllModuleBehaviors
+
+getprop checked_SetAllModuleBehaviors [viewObject]
+   put the module_Behaviors of viewObject into moduleBehaviors
+   sort moduleBehaviors
+   --
+   put the behavior_Objects of viewObject into bObjects
+   sort bObjects
+   --
+   return bObjects = moduleBehaviors
+end checked_SetAllModuleBehaviors
+
+getprop disabled_SetAllModuleBehaviors [viewObject]
+   put the behavior_Objects of viewObject into bObjects
+   put the module_Behaviors of viewObject into mObjects
+   return bObjects = mObjects
+end disabled_SetAllModuleBehaviors
+
+on menu_DisplayBehaviors mView
+   display_ModuleBehaviors mView
+end menu_DisplayBehaviors
+
 on menu_CreateModuleBehavior mView
    put the stack_Name of mView into moduleStackName
    --
@@ -113,46 +150,6 @@ on menu_CreateModuleBehavior mView
    --
    display_ModuleTools moduleStackName
 end menu_CreateModuleBehavior
-
--- on menu_EditActiveBehavior mView, stackName
-edit the script of stack stackName
-end menu_EditActiveBehavior
-
--- getprop editActiveBehavior_Params [mView]
-   return LocalArray ["behavior_StackNames"]
-end editActiveBehavior_Params
-
--- getprop disabled_EditActiveBehavior [mView]
-   return LocalArray ["behavior_StackNames"] is empty
-end disabled_EditActiveBehavior
-
-on menu_SetModuleBehaviors viewObject
-   put the view_Name of viewObject into vName
-   put merge ("Set the view behavior to the module_Behaviors of '[[vName]]'") into sComment
-   lcw_Answer (sComment & "?"), viewObject
-   --
-   put the module_Behaviors of viewObject into moduleBehaviors
-   set the behavior_Objects of viewObject to moduleBehaviors
-   --
-   -- menu_EditModuleBehaviors viewObject
-   lcw_Notify (sComment & "!")
-end menu_SetModuleBehaviors
-
-getprop checked_SetModuleBehaviors [viewObject]
-   put the module_Behaviors of viewObject into moduleBehaviors
-   sort moduleBehaviors
-   --
-   put the behavior_Objects of viewObject into bObjects
-   sort bObjects
-   --
-   return bObjects = moduleBehaviors
-end checked_SetModuleBehaviors
-
-getprop disabled_SetModuleBehaviors [viewObject]
-   put the behavior_Objects of viewObject into bObjects
-   put the module_Behaviors of viewObject into mObjects
-   return bObjects = mObjects
-end disabled_SetModuleBehaviors
 
 private on ___
 end ___

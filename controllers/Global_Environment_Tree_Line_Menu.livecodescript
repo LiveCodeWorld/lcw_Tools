@@ -34,7 +34,9 @@ getprop menu_Target [tObject]
 end menu_Target
 
 getprop menu_CheckTarget [projectName]
-   put exists (stack projectName) into projectExists
+   put env_GetProjectHomePath (projectName) into homeStackPath
+   put homeStackPath into LocalArray ["homeStackPath"]
+   put exists (stack homeStackPath) into projectExists
    return projectExists
 end menu_CheckTarget
 
@@ -83,13 +85,26 @@ getprop disabled_RevealProjectFolder [projectName]
 end disabled_RevealProjectFolder
 
 getprop disabled_InitGit [projectName]
-   put the git_Folder of stack projectName into gitFolder
-   return gitFolder is not empty
+   if exists (stack projectName) is true then
+      put the git_Folder of stack projectName into gitFolder
+      return gitFolder is not empty
+   else
+      return true
+   end if
 end disabled_InitGit
 
 
 --> Global | Environment | Tree | Line | Menu
 -
+on menu_ProjectHelp projectName
+   put project_GetHomeStackPath (projectName) into homeStackPath
+   put the help_PageArray of stack homeStackPath into pageArray
+   --
+   draft_PageArray "project.livecode.world", pageArray
+   put the result into wikiView
+   return wikiView
+end menu_ProjectHelp
+
 on menu_StartProject projectName
    -- put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
    put env_ProjectIsActive (projectName) into isActive
@@ -101,25 +116,6 @@ on menu_StartProject projectName
    end if
    display_Environment true
 end menu_StartProject
-
-on menu_ProjectHelp projectName
-   put project_GetHomeStackPath (projectName) into homeStackPath
-   put the help_PageArray of stack homeStackPath into pageArray
-   --
-   -- display_PageArray pageArray, projectName
-   draft_PageArray "project.livecode.world", pageArray
-   put the result into wikiView
-   return wikiView
-end menu_ProjectHelp
-
-command draft_ProjectHelp sObject
-   put the help_PageArray of sObject into helpPageArray
-   -- comment 
-   put the help_Domain of sObject into wikiDomain
-   draft_PageArray wikiDomain, helpPageArray
-   put the result into wikiBrowser
-   return wikiBrowser
-end draft_ProjectHelp
 
 private on _
 end _

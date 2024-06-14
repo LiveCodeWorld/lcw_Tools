@@ -20,11 +20,27 @@ end menu_Target
 
 getprop menu_CheckTarget [mTarget]
    if exists (mTarget) then
+      put the top_Controls of cardObject into LocalArray ["topControls"]
+      --
       return true
    else
       return false
    end if
 end menu_CheckTarget
+
+private function _IsFirst cardObject
+   -- put the top_Controls of cardObject into topControls
+   put LocalArray ["topControls"] into topControls
+   --
+   switch the number of lines of topControls
+      case 1
+         return true
+      case 0
+         return false
+      default
+         return false
+   end switch
+end _IsFirst
 
 getprop disabled_ViewScript [cardObject]
    if exists (control 1 of cardObject) then
@@ -89,10 +105,18 @@ getprop checked_MakeFirstControlAView [cardObject]
    return stackName = viewName
 end checked_MakeFirstControlAView
 
+private function _FirstBehavior
+   
+end _FirstBehavior
+
+private function _StandardBehavior
+   
+end _StandardBehavior
+
 
 --> Global | View | Card | Create | Menu
 -
-on menu_MakeFirstControlAView cardObject
+on menu_MakeFirstView cardObject
    put _FirstControl (cardObject) into viewObject
    put the stack_Name of viewObject into viewName
    --
@@ -100,7 +124,23 @@ on menu_MakeFirstControlAView cardObject
    --   
    display_ObjectProperties viewObject
    edit the script of viewObject
-end menu_MakeFirstControlAView
+end menu_MakeFirstView
+
+getprop disabled_MakeFirstView [cardObject]
+   return _IsFirst (cardObject) is false
+end disabled_MakeFirstView
+
+on menu_MakeCardView cardObject
+   if _IsFirst (cardObject) then
+      set the behavior of cardObject to _FirstBehavior()
+   else
+      set the behavior of cardObject to _StandardBehavior()
+   end if
+end menu_MakeCardView
+
+getprop disabled_MakeCardView [cardObject]
+   return _IsFirst (cardObject) is false
+end disabled_MakeCardView
 
 private on _
 end _
@@ -165,11 +205,11 @@ private on ___
 end ___
 
 -- on submenu_Card
-   return "Global | Card | Menu"
+return "Global | Card | Menu"
 end submenu_Card
 
 -- on submenu_Dev
-   return menu_DevTitle ("Global | View | Card | Create | Menu")
+return menu_DevTitle ("Global | View | Card | Create | Menu")
 end submenu_Dev
 
 on menu_RefreshCard cardObject

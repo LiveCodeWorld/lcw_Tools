@@ -44,6 +44,20 @@ on _UpdateCalls hKey
    launch_HkeyHelp hKey
 end _UpdateCalls
 
+on menu_HandlerCurlyData hKey
+   put help_HkeyCurlyData (hKey, false) into curlyData
+   --
+   display_Data curlyData, hKey, "help_HkeyCurlyData()"
+end menu_HandlerCurlyData
+
+on menu_ObjectCurlyData hKey
+   hkey_Deconstruct hKey, hName, hType, hObject, hNum
+   --
+   put the curly_Data of hObject into curlyData
+   --
+   display_Data curlyData, hObject, "curly_Data()"
+end menu_ObjectCurlyData
+
 on menu_DisplayVersions hKey
    hkeyLine_Deconstruct hKey, hName, hType, hObject
    put the result into shortHkey

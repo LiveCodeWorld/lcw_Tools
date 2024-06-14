@@ -39,11 +39,13 @@ end disabled_Menu
 
 --> Global | Module | Tools | Menu
 -
-on submenu_ModuleMenu
-   -- return "Global | Wiki | Future | Menu"
+on submenu_DefaultMenu
    return LocalArray ["moduleMenu"]
-end submenu_ModuleMenu
+end submenu_DefaultMenu
 -
+private on _____
+end _____
+
 on submenu_Property
    return "Global | View | Property | Menu"
 end submenu_Property
@@ -63,16 +65,28 @@ on submenu_Card
    return "Global | Card | Menu"
 end submenu_Card
 
+on submenu_Stack
+   return "Global | Stack | Menu"
+end submenu_Stack
+
+on submenu_Version
+   return "Global | Stack | Tidy | Menu"
+end submenu_Version
+
 private on __
 end __
 
-on submenu_Update
-   return "Global | View | Update | Menu"
-end submenu_Update
+on submenu_Module
+   return "Global | Module | Tree | Menu"
+end submenu_Module
 
 on submenu_Menu
    return "Global | Menu | Group | Menu"
 end submenu_Menu
+
+on submenu_Update
+   return "Global | View | Update | Menu"
+end submenu_Update
 
 private on ___
 end ___

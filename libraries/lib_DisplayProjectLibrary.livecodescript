@@ -17,6 +17,27 @@ Key handler =  "project_CreateStack"
 
 --> Working on
 -
+function project_DisplayMenuTitles projectName
+   -- used by display local Environment 
+   put project_ConstructMenuTitle (projectName) & tab & "submenu" after projectMenuTitles
+   --
+   put CR & "-" after projectMenuTitles
+   if "Global | Project | Display | Menu" is not among the lines of projectMenuTitles then
+      put CR & "Global | Project | Display | Menu" & tab & "submenu" after projectMenuTitles
+   end if
+   if "Global | Project | Create | Menu" is not among the lines of projectMenuTitles then
+      put CR & "Global | Project | Create | Menu" & tab & "submenu" after projectMenuTitles
+   end if
+   if "Global | Project | Tree | Menu" is not among the lines of projectMenuTitles then
+      put CR & "-" after projectMenuTitles
+      put CR & "Global | Project | Tree | Menu" after projectMenuTitles
+   end if
+   return projectMenuTitles
+end project_DisplayMenuTitles
+
+
+--> Ask
+
 command ask_CreateModuleBehavior moduleStackName, dView, pDefaultBehaviorName
    if exists (stack moduleStackName) is false then
       put merge ("Error, behavior stack [[moduleStackName]] does not exist") into someError
@@ -250,15 +271,6 @@ command display_ProjectLibs projectName, pRefreshOnly
 end display_ProjectLibs
 
 
---> Display | Utils
--
-function display_FindProjectView projectName
-   -- this is the new array based view
-   put display_FindView ("Project", projectName) into displayView
-   return displayView
-end display_FindProjectView
-
-
 --> Project | Display
 -
 function project_GetFolderArray projectName, pRepoFolder
@@ -306,23 +318,6 @@ command project_TrashStack stackObject
    --
    return longStackFile
 end project_TrashStack
-
-function project_DisplayMenuTitles projectName
-   put project_ConstructMenuTitle (projectName) & tab & "submenu" after projectMenuTitles
-   --
-   put CR & "-" after projectMenuTitles
-   if "Global | Project | Display | Menu" is not among the lines of projectMenuTitles then
-      put CR & "Global | Project | Display | Menu" & tab & "submenu" after projectMenuTitles
-   end if
-   if "Global | Project | Create | Menu" is not among the lines of projectMenuTitles then
-      put CR & "Global | Project | Create | Menu" & tab & "submenu" after projectMenuTitles
-   end if
-   if "Global | Project | Tree | Menu" is not among the lines of projectMenuTitles then
-      put CR & "-" after projectMenuTitles
-      put CR & "Global | Project | Tree | Menu" after projectMenuTitles
-   end if
-   return projectMenuTitles
-end project_DisplayMenuTitles
 
 function project_ConstructMenuTitle homeStackName
    set the itemdelimiter to "_"
