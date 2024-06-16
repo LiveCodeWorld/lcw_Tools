@@ -4,7 +4,7 @@
 license: GPLv3
 name: lib_FunctionKey
 type: library
-version: 0.2
+version: 0.3
 
 
 --> Working on
