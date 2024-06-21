@@ -4,7 +4,11 @@
 license: GPLv3
 name: Global | View | Card | Create | Menu
 type: controller
-version: 0.1
+version: 0.2
+
+--> Variables
+-
+local LocalArray
 
 
 --> Menu | Props
@@ -18,10 +22,9 @@ getprop menu_Target [tObject]
    end if
 end menu_Target
 
-getprop menu_CheckTarget [mTarget]
-   if exists (mTarget) then
+getprop menu_CheckTarget [cardObject]
+   if exists (cardObject) then
       put the top_Controls of cardObject into LocalArray ["topControls"]
-      --
       return true
    else
       return false
@@ -96,15 +99,6 @@ private function _FirstControl cardObject
    end switch
 end _FirstControl
 
-getprop checked_MakeFirstControlAView [cardObject]
-   put _FirstControl (cardObject) into viewObject
-   if exists (control 1 of cardObject) is false then return empty
-   
-   put the stack_Name of viewObject into stackName
-   put the view_Name of viewObject into viewName
-   return stackName = viewName
-end checked_MakeFirstControlAView
-
 private function _FirstBehavior
    
 end _FirstBehavior
@@ -129,6 +123,15 @@ end menu_MakeFirstView
 getprop disabled_MakeFirstView [cardObject]
    return _IsFirst (cardObject) is false
 end disabled_MakeFirstView
+
+getprop checked_MakeFirstView [cardObject]
+   put _FirstControl (cardObject) into viewObject
+   if exists (control 1 of cardObject) is false then return empty
+   
+   put the stack_Name of viewObject into stackName
+   put the view_Name of viewObject into viewName
+   return stackName = viewName
+end checked_MakeFirstView
 
 on menu_MakeCardView cardObject
    if _IsFirst (cardObject) then

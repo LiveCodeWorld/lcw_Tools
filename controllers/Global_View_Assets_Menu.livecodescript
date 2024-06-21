@@ -43,7 +43,7 @@ command watch_FileChanged someFile, watchName
 end watch_FileChanged
 
 
---> Global | Assets | Menu | Props
+--> Menu | Props
 -
 getprop watch_Files [browserView]
    put watch_GetActive (LocalWatchName) into isActive
@@ -54,17 +54,6 @@ getprop short_Files [browserView]
    put LocalArray ["project_ShortHtmlFiles"] into shortFiles
    return shortFiles
 end short_Files
-
-getprop short_HtmlFile
-   put watch_ListShortWatchFiles (LocalWatchName) into shortWatchFiles
-   return shortWatchFiles
-end short_HtmlFile
-
-getprop short_HtmlFiles [browserView]
-   -- put the project_ShortHtmlFiles of browserView into shortFiles
-   put LocalArray ["project_ShortHtmlFiles"] into shortFiles
-   return shortFiles
-end short_HtmlFiles
 
 
 --> Global | Assets | Menu | Disabled
@@ -88,11 +77,6 @@ getprop disabled_WatchFile
    put LocalArray ["project_ShortHtmlFiles"] into shortFiles
    return shortFiles is empty
 end disabled_WatchFile
-
-getprop disabled_WatchFiles
-   put LocalArray ["project_ShortHtmlFiles"] into shortFiles
-   return shortFiles is empty
-end disabled_WatchFiles
 
 getprop disabled_DisplayLocalFile
    put LocalArray ["project_ShortHtmlFiles"] into shortFiles
@@ -135,6 +119,16 @@ on menu_WatchFile browserView, shortHtmlFile
    end if
 end menu_WatchFile
 
+getprop watchFile_Params
+   put LocalArray ["project_ShortHtmlFiles"] into shortFiles
+   return shortFiles
+end watchFile_Params
+
+getprop watchFile_Param
+   put watch_ListShortWatchFiles (LocalWatchName) into shortWatchFiles
+   return shortWatchFiles
+end watchFile_Param
+
 on menu_WatchFiles browserView, someBoolean
    if someBoolean is false then
       watch_Stop LocalWatchName
@@ -144,18 +138,13 @@ on menu_WatchFiles browserView, someBoolean
    end if
 end menu_WatchFiles
 
+getprop disabled_WatchFiles
+   put LocalArray ["project_ShortHtmlFiles"] into shortFiles
+   return shortFiles is empty
+end disabled_WatchFiles
+
 private on __
 end __
-
-on menu_ModuleAssetFolder browserView
-   put the module_AssetFolder of browserView into assetFolder
-   finder_Reveal assetFolder
-end menu_ModuleAssetFolder
-
-on menu_ProjectAssetFolder browserView
-   put the project_AssetFolder of browserView into assetFolder
-   finder_Reveal assetFolder
-end menu_ProjectAssetFolder
 
 on menu_DisplayLocalFile browserView, shortHtmlFile
    put the project_HtmlFile [shortHtmlFile] of browserView into localFile
@@ -188,3 +177,16 @@ on menu_CreateHtmlFile browserView
    put maybeText into url ("file:" & localFile)
    atom_DisplayFile localFile
 end menu_CreateHtmlFile
+
+private on ____
+end ____
+
+on menu_ModuleAssetFolder browserView
+   put the module_AssetFolder of browserView into assetFolder
+   finder_Reveal assetFolder
+end menu_ModuleAssetFolder
+
+on menu_ProjectAssetFolder browserView
+   put the project_AssetFolder of browserView into assetFolder
+   finder_Reveal assetFolder
+end menu_ProjectAssetFolder

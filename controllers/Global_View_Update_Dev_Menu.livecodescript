@@ -14,20 +14,33 @@ Full help text should be provided on the linked wiki.
 Consider improving by creating with same menu_Target as no-developer menu is is based on.
 */
 
---> Variables
+--> Menu | Props
 -
 local LocalArray
 
---> Menu | Props
--
 getprop menu_Target [tObject]
-   -- return display_MenuTarget(tObject)
-   return the display_View of tObject
+   put the display_View of tObject into displayView
+   --
+   if exists (displayView) then
+      put the displayed_Object of displayView into viewObject
+      put displayView into LocalArray ["displayView"]
+   else
+      put the module_ViewObject of tObject into viewObject
+      if exists (viewObject) is false then
+         return tObject
+      end if
+   end if
+   --
+   return viewObject
 end menu_Target
 
 getprop menu_CheckTarget [mTarget]
    return exists (mTarget)
 end menu_CheckTarget
+
+getprop disabled_Swap [mTarget]
+   return _isNotTemplate (mTarget) is false
+end disabled_Swap
 
 private function _isNotTemplate viewObject
    -- this would disable the entire menu if the mTarget was not a view.
@@ -50,13 +63,37 @@ end _isNotTemplate
 
 --> Global | View | Update | Dev | Menu
 -
+on menu_CreateStandAlone viewObject
+   breakpoint
+   put LocalArray ["displayView"] into displayView
+   --
+   put the view_Name of viewObject into vName
+   put view_GetTemplateObject (vName) into templateObject
+   if exists (templateObject) is false then
+      breakpoint
+   end if
+   
+   put the stack_Name of templateObject into stackName
+   clone stack stackName
+   put it into clonedStack
+   set the destroyStack of clonedStack to true
+   set the destroyWindow of clonedStack to true
+   
+   put the long id of cd 1 of clonedStack into clonedTemplateCard
+   put the long id of control 1 of clonedTemplateCard into clonedView
+   
+   set the imported_ViewBehaviors of clonedView to true
+   
+   display_ViewBehaviors clonedView, empty, clonedStack
+end menu_CreateStandAlone
+
 on menu_SaveAllViews
-   put view_StackNames() into stackNames
-   repeat for each line stackName in stackNames
-      if there is a stack stackName then
-         save stack stackName
-      end if
-   end repeat
+put view_StackNames() into stackNames
+repeat for each line stackName in stackNames
+   if there is a stack stackName then
+      save stack stackName
+   end if
+end repeat
 end menu_SaveAllViews
 
 on menu_TestViewToSwap mTarget
@@ -137,10 +174,6 @@ end disabled_FixBrokenBehaviors
 getprop disabled_GoAndCheckVersion [mTarget]
    return _isNotTemplate (mTarget) is false
 end disabled_GoAndCheckVersion
-
-getprop disabled_Swap [mTarget]
-   return _isNotTemplate (mTarget) is false
-end disabled_Swap
 
 getprop disabled_UpdateLibraryView [menuButtonObject]
    if _isNotTemplate (mTarget) is false then return true

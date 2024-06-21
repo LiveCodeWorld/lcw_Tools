@@ -12,89 +12,8 @@ This stack is for displaying tools that go with views.
 Their should be an easy default, with teh ability to customise.
 */
 
---> Private
--
-
---> Display | Events
--
-getprop card_ViewObject
-   -- assumes its the first control
-   -- can be a card
-   -- this is a default (should add this getprop to eveny modules card script/behavior)
-   -- unless overridden by card_ViewObject getprop
-   
-   put the long id of cd 1 of the defaultstack into cardObject
-   if exists (control 1 of cardObject) then
-      return the long id of control 1 of cardObject
-   else
-      return cardObject
-   end if
-end card_ViewObject
-
-
 --> Working on
 -
-command display_ModuleClone mName, pCloneName
-   if pCloneName is empty then
-      put mName into mWords
-      set the itemdelimiter to "|"
-      if item 1 of mWords = "View" then delete item 1 of mWords
-      replace "|" with space in mWords
-      put "Cloned" && mWords into pCloneName
-   end if
-   
-   # Clone
-   stack_Clone mName, pCloneName
-   put the result into cStack
-   if exists(cStack) is false then
-      lcw_AnswerWarning "Failed to clone stack '[[var]]'!", dView, mName
-   end if
-   
-   # Display Clone Tools
-   put the short name of cStack into cName
-   put the card_ViewObject of stack cName into vObject
-   
-   # Also display clone tools
-   display_CloneTools cName, vObject
-   return vObject
-end display_ModuleClone
-
-command display_CloneTools cStackName, pCardViewObject
-   if exists (stack cStackName) is false then
-      return "Error, cannot locate stack:" && stackName
-   end if
-   put the short name of stack cStackName into cStackName -- in case it's a stackPath
-   
-   # Use default if pCardViewObject is not specified
-   if exists (pCardViewObject) is false then
-      put the card_ViewObject of stack cStackName into pCardViewObject
-   end if
-   
-   # Module Directory Array
-   put the module_Folder of stack cStackName into moduleFolder
-   put the card_ViewObject of stack cStackName into moduleViewObject
-   put directory_NestedArray (moduleFolder) into dArray
-   
-   # Display 
-   display_Tool dArray, cStackName, "Clone Tools"
-   put the result into dView
-   
-   # Set Props
-   set the displayed_Object of displayView to pCardViewObject
-   set the displayed_ModuleFolder of displayView to moduleFolder
-   return dView
-end display_CloneTools
-
-command display_MenuBarData stackName
-   put the menubar_View of stack stackName into mGroup
-   put the menubar_TableData of mGroup into indexArray
-   put display_FindArrayView ("Menubar Data", stackName) into dView
-   --
-   display_Tool indexArray, stackName, "Menubar Data", "lcw_Menus", "m mName", dView
-   put the result into dView
-   set the displayed_Object of dView to mGroup
-   return dView
-end display_MenuBarData
 
 
 --> Ask | Create
@@ -143,6 +62,71 @@ command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDispla
 end ask_CreateMenuFromObject
 
 
+--> Display
+-
+command display_ModuleClone mName, pCloneName
+   if pCloneName is empty then
+      put mName into mWords
+      set the itemdelimiter to "|"
+      if item 1 of mWords = "View" then delete item 1 of mWords
+      replace "|" with space in mWords
+      put "Cloned" && mWords into pCloneName
+   end if
+   
+   # Clone
+   stack_Clone mName, pCloneName
+   put the result into cStack
+   if exists(cStack) is false then
+      lcw_AnswerWarning "Failed to clone stack '[[var]]'!", dView, mName
+   end if
+   
+   # Display Clone Tools
+   put the short name of cStack into cName
+   put the card_ViewObject of stack cName into vObject
+   
+   # Also display clone tools
+   display_CloneTools cName
+   return vObject
+end display_ModuleClone
+
+command display_CloneTools cStackName
+   if exists (stack cStackName) is false then
+      return "Error, cannot locate stack:" && cStackName
+   end if
+   put the short name of stack cStackName into cStackName -- in case it's a stackPath
+   put the original_ModuleName of stack cStackName into moduleName
+   
+   # Module Directory Array
+   put the module_Folder of stack moduleName into moduleFolder
+   put directory_NestedArray (moduleFolder) into dArray
+   
+   # Display 
+   display_Tool dArray, cStackName, "Clone Tools"
+   put the result into dView
+   
+   # Set Props
+   put the card_ViewObject of stack moduleName into originalView
+   put the card_ViewObject of stack cStackName into clonedView
+   --
+   set the displayed_Object of dView to clonedView
+   set the original_View of dView to originalView
+   set the displayed_ModuleFolder of dView to moduleFolder
+   --
+   return dView
+end display_CloneTools
+
+command display_MenuBarData stackName
+   put the menubar_View of stack stackName into mGroup
+   put the menubar_TableData of mGroup into indexArray
+   put display_FindArrayView ("Menubar Data", stackName) into dView
+   --
+   display_Tool indexArray, stackName, "Menubar Data", "lcw_Menus", "m mName", dView
+   put the result into dView
+   set the displayed_Object of dView to mGroup
+   return dView
+end display_MenuBarData
+
+
 --> Display | Tools
 -
 command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDisplayView
@@ -165,9 +149,6 @@ command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDis
    
    # Set menus and mouse_DoubleUp
    set the tool_MenuBit [pProjectName] of dView to toolPath
-   
-   -- ask_CreateMenuFromObject
-   -- ask_CreateMenuFromObject, ask_CreateMouseDoubleUpHandler -- if shiftKey
    return dView
 end display_Tool
 
@@ -175,9 +156,6 @@ command display_Tools someData, pTitle, pToolPath, pStackLabel, pProjectName, pP
    # Display data depending on ducktyping of content
    display_Data someData, pTitle, pStackLabel, "", pPalette, pTopLeft, pFoldedArray
    put the result into displayView
-   
-   -- put the stack_Name of displayView into dName
-   -- toplevel stack dName
    
    # Set menus and mouse_DoubleUp
    set the tool_MenuBit [pProjectName] of displayView to pToolPath
@@ -206,31 +184,14 @@ command display_ObjectTools sObject, someData, sTitle, sLabel, menuBit, pDoubleU
 end display_ObjectTools
 
 
---> Display | Template
--
-command display_ViewTemplate viewName, pStackLoc, pRepoFolder
-   put view_GetTemplateObject (viewName, pRepoFolder) into tObject
-   --
-   object_GoTo tObject, true
-   --
-   put the stack_Name of tObject into stackName
-   if pStackLoc is not a point then
-      put the screenloc into pStackLoc
-   end if
-   set the loc of stack stackName to pStackLoc
-   --
-   return tObject
-end display_ViewTemplate
-
-
 --> Display | Tools
 -
 on display_ModuleTools stackName
    if exists (stack stackName) is false then
       return "Error, cannot locate stack:" && stackName
    end if
-   
    put the short name of stack stackName into stackName -- in case it's a stackPath
+   
    put the module_Folder of stack stackName into moduleFolder
    put the card_ViewObject of stack stackName into moduleViewObject
    --
@@ -246,6 +207,13 @@ on display_ModuleTools stackName
    -- set the mouse_DoubleUp of displayView to "mDoubleUp_ModuleTools"
    return displayView
 end display_ModuleTools
+
+put the stack_View of cd 1 of clonedStack into mView
+if exists (mView) then
+   set the displayed_Object of mView to moduleName
+else
+   breakpoint
+end if
 
 command display_ModuleToolScripts moduleName, projectName
    -- put library_FetchProjectFolder (projectName) into projectFolder

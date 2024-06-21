@@ -48,7 +48,7 @@ end _DodgyView
 -
 on menu_Clone vObject
    put the stack_Name of vObject into cStackName
-   display_CloneTools cStackName, vObject
+   display_CloneTools cStackName
 end menu_Clone
 
 on menu_SetCardMargin vObject
@@ -72,19 +72,17 @@ on menu_LayoutViewOnCard viewObject
    
    if the shiftKey is "Down" then breakpoint
    dispatch "LayoutControl" to viewObject with vCardRect
-   --
-   -- _HandleDispatch it, viewObject, cardObject
 end menu_LayoutViewOnCard
 
-getprop disabled_LayoutViewOnCard [viewObject]
-   put the view_Name of viewObject into viewName
-   switch
-      case viewName is not empty
-         return false
-      default
-         return true
-   end switch
-end disabled_LayoutViewOnCard
+on menu_LayoutCard viewObject
+   put the card_Object of viewObject into cardObject
+   
+   if the shiftKey is "Down" then breakpoint
+   dispatch "LayoutCard" to cardObject
+end menu_LayoutCard
+
+private on __
+end __
 
 on menu_SetRect viewObject
    put the card_Object of viewObject into cardObject
@@ -93,8 +91,8 @@ on menu_SetRect viewObject
    set the rect of viewObject to vCardRect
 end menu_SetRect
 
-private on __
-end __
+private on ___
+end ___
 
 on submenu_Dev
    return "Global | View | Test | Geometry | Menu"

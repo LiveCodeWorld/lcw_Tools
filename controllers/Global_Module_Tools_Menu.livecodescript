@@ -42,20 +42,52 @@ end disabled_Menu
 on submenu_DefaultMenu
    return LocalArray ["moduleMenu"]
 end submenu_DefaultMenu
--
-private on _____
-end _____
 
-on submenu_Property
-   return "Global | View | Property | Menu"
-end submenu_Property
+on menu_ModuleHelp moduleView
+   put the view_Name of moduleView into moduleName
+   --
+   draft_ModuleHelp moduleName
+end menu_ModuleHelp
+
+private on _
+end _
+
+on submenu_Module
+   return "Global | Module | Tree | Menu"
+end submenu_Module
+
+on submenu_ModuleAssets
+   return "Global | Module | Assets | Menu"
+end submenu_ModuleAssets
+
+private on __
+end __
 
 on submenu_Geometry
    return "Global | View | Geometry | Menu"
 end submenu_Geometry
 
-private on _
-end _
+on submenu_Property
+   return "Global | View | Property | Menu"
+end submenu_Property
+
+on submenu_Menu
+   return "Global | Menu | Group | Menu"
+end submenu_Menu
+
+private on ___
+end ___
+
+on submenu_Update
+   return "Global | View | Update | Menu"
+end submenu_Update
+
+on submenu_Version
+   return "Global | Stack | Tidy | Menu"
+end submenu_Version
+
+private on ____
+end ____
 
 on submenu_Script
    return "Global | View | Script | Menu"
@@ -69,42 +101,16 @@ on submenu_Stack
    return "Global | Stack | Menu"
 end submenu_Stack
 
-on submenu_Version
-   return "Global | Stack | Tidy | Menu"
-end submenu_Version
-
-private on __
-end __
-
-on submenu_Module
-   return "Global | Module | Tree | Menu"
-end submenu_Module
-
-on submenu_Menu
-   return "Global | Menu | Group | Menu"
-end submenu_Menu
-
-on submenu_Update
-   return "Global | View | Update | Menu"
-end submenu_Update
-
-private on ___
-end ___
-
-on submenu_Assets
-   return "Global | View | Assets | Menu"
-end submenu_Assets
+private on _____
+end _____
 
 on submenu_MoreTests
    return "Global | View | Test | Geometry | Menu"
 end submenu_MoreTests
 
-private on ____
-end ____
-
 on menu_ModuleTools dView
-   put the view_Name of dView into viewName
-   display_ModuleTools viewName
+   put the view_Name of dView into moduleName
+   display_ModuleTools moduleName
 end menu_ModuleTools
 
 on submenu_Dev

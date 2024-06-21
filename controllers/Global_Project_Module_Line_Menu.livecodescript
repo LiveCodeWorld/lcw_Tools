@@ -71,6 +71,19 @@ end moveModule_Params
 
 --> Global | Project | Module | Line | Menu
 -
+on menu_ModuleHelp
+   put _GetModuleStackPath() into stackPath
+   put LocalArray ["moduleName"] into moduleName
+   --
+   draft_ModuleHelp moduleName
+end menu_ModuleHelp
+
+on menu_DisplayModuleTools
+   put _GetModuleStackPath() into stackPath
+   --
+   display_ModuleTools stackPath
+end menu_DisplayModuleTools
+
 on menu_DisplayModule
    put _GetModuleStackPath() into stackPath
    --
@@ -80,12 +93,6 @@ on menu_DisplayModule
    put LocalArray ["displayView"] into displayView
    set the loc of stack stackPath to the loc of displayView
 end menu_DisplayModule
-
-on menu_DisplayModuleTools
-   put _GetModuleStackPath() into stackPath
-   --
-   display_ModuleTools stackPath
-end menu_DisplayModuleTools
 
 private on _
 end _

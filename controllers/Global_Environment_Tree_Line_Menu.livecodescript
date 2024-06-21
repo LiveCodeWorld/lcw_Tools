@@ -16,6 +16,27 @@ Full help text should be provided on the linked wiki.*/
 local LocalArray
 
 
+--> Events
+-
+on mDoubleUp_Environment displayView, projectName
+   switch
+      case the title_Text of displayView = "Not Up-to-Date"
+      case the shiftKey is "Down" 
+         project_Start projectName
+         display_GitProjectStatus projectName
+         -- display_Project projectName
+         display_Environment
+         break
+      default
+         if env_ProjectIsActive (projectName) is false then
+            project_Start projectName
+            display_Environment true
+         end if
+         display_Project projectName
+   end switch
+end mDoubleUp_Environment
+
+
 --> Menu | Init
 -
 getprop menu_Target [tObject]

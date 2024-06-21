@@ -9,6 +9,41 @@ version: 0.4
 
 --> Working on
 -
+
+--> Display | Template
+-
+command viewTemplate_Go viewName, pStackLoc, pRepoFolder
+   put view_GetTemplateObject (viewName, pRepoFolder) into tObject
+   --
+   object_GoTo tObject, true
+   --
+   put the stack_Name of tObject into stackName
+   if pStackLoc is not a point then
+      put the screenloc into pStackLoc
+   end if
+   set the loc of stack stackName to pStackLoc
+   --
+   return tObject
+end viewTemplate_Go
+
+command display_Template viewObject, pStackLabel, pData, pDataProp
+   local sRect
+   put the view_Name of viewObject into vName
+   
+   # Clone invisible
+   display_Clone vName, pStackLabel, pData, pDataProp, sRect, "toplevel"
+   put the result into clonedView
+   --
+   if exists (clonedView) then
+      return clonedView
+   else
+      # Problem copying view?
+      breakpoint
+      return "Error, cloning:" && vName,clonedView
+   end if
+end display_Template
+
+
 --> Display | View | Examples
 -
 command display_SVG svgFile, pStackLabel, pStackStyle, pLocOrRect
@@ -35,8 +70,8 @@ end display_SVG
 -
 command display_Image imageOrURL, pStackLabel, pDisplayView, pStackStyle, pStackRect
    display_ModuleInstance "View|Image", imageOrURL, pStackLabel, pDisplayView, "displayed_Data", pStackStyle
-   put the result into displayView
-   return displayView
+   put the result into dView
+   return dView
 end display_Image
 
 
@@ -49,7 +84,7 @@ command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDa
    
    switch
       case pDisplayView is true
-         display_ViewTemplate moduleName
+         viewTemplate_Go moduleName
          put the result into pDisplayView
       case exists (pDisplayView)
          set the pDataProp of pDisplayView to pData
@@ -65,7 +100,11 @@ end display_ModuleInstance
 command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pStackLocOrRect, pViewRect
    # Find Template View
    put view_GetTemplateObject (moduleName) into moduleObject
-   if exists (moduleObject) is false then throw "Error, no template object found for:" && moduleName
+   if exists (moduleObject) is false then
+      put "Error, no template object found for:" && moduleName into sError
+      -- throw sError -- bug: hangs with supress messages true
+      return sError
+   end if
    
    # Defaults
    if pStackLabel is empty then put moduleName into pStackLabel
@@ -258,7 +297,7 @@ on mDouble_DisplayView indexView, viewName
          break
       default
          -- display_ModuleInstance viewName
-         display_ViewTemplate viewName
+         viewTemplate_Go viewName
    end switch
 end mDouble_DisplayView
 

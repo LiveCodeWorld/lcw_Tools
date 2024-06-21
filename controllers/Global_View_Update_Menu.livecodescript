@@ -14,6 +14,28 @@ local ViewIsObject, ViewIsOld
 
 --> Menu | Props
 -
+local LocalArray
+
+getprop menu_Target [tObject]
+   put the display_View of tObject into displayView
+   --
+   if exists (displayView) then
+      put the displayed_Object of displayView into viewObject
+      put displayView into LocalArray ["displayView"]
+   else
+      put the module_ViewObject of tObject into viewObject
+      if exists (viewObject) is false then
+         return tObject
+      end if
+   end if
+   --
+   return viewObject
+end menu_Target
+
+getprop menu_CheckTarget [sView]
+   return _isTemplate (sView)
+end menu_CheckTarget
+
 private function library_AskNewViewName vName
    put lcw_Ask ("Give the cloned view a name...", vName) into vName
    if exists (stack vName) then
@@ -26,109 +48,46 @@ private function library_AskNewViewName vName
    return vName
 end library_AskNewViewName
 
-getprop disabled_InsertMenuGroup [sView]
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) then
-      return "delete"
-   else
+private function _isTemplate viewObject
+   if exists (viewObject )is false then return false
+   
+   put the view_Name of viewObject into vName
+   if vName = empty then
       return false
+   else
+      put the view_Template of viewObject into templateObject
+      return templateObject = viewObject
    end if
-end disabled_InsertMenuGroup
+end _isTemplate
 
-getprop disabled_DeleteMenuGroup [sView]
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) then
-      return false
-   else
-      return "delete"
-   end if
-end disabled_DeleteMenuGroup
+function view_ListNestedNames tObject
+   put the view_NestedArray of tObject into nestedViewArray
+   put viewArray_GetInner (nestedViewArray) into innerViewArray
+   put keys (innerViewArray) into innerViewNames
+   return innerViewNames   
+end view_ListNestedNames
 
 
 --> Global | View | Update | Menu
 -
-on menu_InsertMenuGroup sView
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) is true then
-      breakpoint
-   end if
-   
-   put the card_Object of sView into cardObject
-   lcw_Answer "Sure you want to create a menubar view on this card?", cardObject
-   --
-   view_InsertFromPath "View|Menu|Group", cardObject
-   put the result into mGroup
-   set the topleft of mGroup to 0,0
-   --
-   set the show_menu of mGroup to true
-end menu_InsertMenuGroup
-
-on menu_ShowMenu sView
-   put the menubar_View of sView into mGroup
-   --
-   menuBar_ToggleShowMenu mGroup
-end menu_ShowMenu
-
-getprop disabled_ShowMenu [sView]
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) then
-      return false
-   else
-      return "delete"
-   end if
-end disabled_ShowMenu
-
-getprop checked_ShowMenu [sView]
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) is false then return false
-   --
-   put the show_Menu of mGroup into sBoolean
-   return sBoolean
-end checked_ShowMenu
-
-on menu_DeleteMenuGroup sView
-   put the menubar_View of sView into mGroup
-   if exists (mGroup) is false then
-      breakpoint
-   end if
-   --
-   put the stack_Name of mGroup into stackName
-   save stack stackName
-   --
-   delete mGroup
-   --
-   set the menuBar of stack stackName to empty
-   set the defaultMenuBar to ide_DefaultMenuGroup()
-end menu_DeleteMenuGroup
-
-private on __
-end __
-
-on menu_CreateNewComponent someView
-   put the view_Name of someView into vName
-   put library_AskNewViewName (vName) into vName
-   
-   library_CreateComponent vName, someView
-   put the result into copiedView
-   put the filename of stack vName into someFile
-end menu_CreateNewComponent
-
-on menu_Swap someView, vName
-   put the mobile_Name of someView into mTarget
+on menu_Swap sView, vName
+   put the mobile_Name of sView into mTarget
    set the view_Swap [false] of mTarget to vName
 end menu_Swap
 
-getprop swap_Params [someView]
-   put the view_NestedArray of someView into nestedViewArray
-   put viewArray_GetInner (nestedViewArray) into innerViewArray
-   --
-   put keys (innerViewArray) into innerViewNames
-   return innerViewNames
+getprop swap_Params [sView]
+   return LocalArray ["nestedViews"]
 end swap_Params
 
-on menu_DisplayViewOutline someView, pDisplayView
-   put the view_NestedArray of someView into nestedViewArray
-   put the name of someView into someTitle
+getprop disabled_Swap [sView]
+   put view_ListNestedNames (sView) into nestedViews
+   put nestedViews into LocalArray ["nestedViews"]
+   return nestedViews is empty
+end disabled_Swap
+
+on menu_DisplayViewOutline sView, pDisplayView
+   put the view_NestedArray of sView into nestedViewArray
+   put the name of sView into someTitle
    
    put viewArray_GetInner (nestedViewArray) into innerViewArray
    put nestedViewArray ["dictionary"][1] into metadataArray
@@ -136,7 +95,7 @@ on menu_DisplayViewOutline someView, pDisplayView
    display_Tool innerViewArray, someTitle, "View Outline", pDisplayView
    --   
    put the result into displayView
-   set the displayed_Object of displayView to someView
+   set the displayed_Object of displayView to sView
    set the displayed_NestedViewArray of displayView to nestedViewArray
 end menu_DisplayViewOutline
 
@@ -162,8 +121,17 @@ end menu_UpdateToLibraryView
 on ____
 end ____
 
-on menu_DefaultBahaviorScript someView
-   put the template_DefaultScript of someView
+on menu_CreateNewComponent sView
+   put the view_Name of sView into vName
+   put library_AskNewViewName (vName) into vName
+   
+   library_CreateComponent vName, sView
+   put the result into copiedView
+   put the filename of stack vName into someFile
+end menu_CreateNewComponent
+
+on menu_DefaultBahaviorScript sView
+   put the template_DefaultScript of sView
 end menu_DefaultBahaviorScript
 
 on submenu_Development
