@@ -1,7 +1,7 @@
 ﻿script "Global | Environment | Tree | Line | Menu"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: Global | Environment | Tree | Line | Menu
 type: controller
