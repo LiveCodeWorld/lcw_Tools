@@ -9,6 +9,17 @@ version: 0.3
 
 --> Working on
 -
+setprop module_AddBehavior vName
+   put the long id of the target into tObject
+   --
+   put the module_Behaviors of tObject into moduleBehaviors
+   --
+   put view_GetTemplateBehavior (vName) into bObject
+   line_Add bObject, moduleBehaviors
+   --
+   set the behavior_Objects of tObject to moduleBehaviors
+   return moduleBehaviors
+end module_AddBehavior
 
 
 --> Module | Metadata

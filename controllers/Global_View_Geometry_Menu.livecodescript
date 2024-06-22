@@ -13,8 +13,6 @@ local LocalArray
 getprop menu_Target [tObject]
    put the displayed_Object of tObject into viewObject
    return viewObject
-   
-   return tObject (tObject)
 end menu_Target
 
 getprop menu_CheckTarget [viewObject]
