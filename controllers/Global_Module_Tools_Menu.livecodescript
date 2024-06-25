@@ -108,10 +108,10 @@ on submenu_MoreTests
    return "Global | View | Test | Geometry | Menu"
 end submenu_MoreTests
 
-on menu_ModuleTools dView
+on menu_Refresh dView
    put the view_Name of dView into moduleName
    display_ModuleTools moduleName
-end menu_ModuleTools
+end menu_Refresh
 
 on submenu_Dev
    return menu_DevTitle ("Global | Module | Tools | Menu")

@@ -43,8 +43,12 @@ end _NoCardBehavior
 
 --> Global | View | Script | Menu
 -
-on menu_GoToView scriptObject
-   put the object_MetaData ["name"] of scriptObject into viewName
+on menu_ModuleDepScript sObject
+   display_ScriptDeps sObject
+end menu_ModuleDepScript
+
+on menu_GoToView sObject
+   put the object_MetaData ["name"] of sObject into viewName
    put view_GetTemplateObject (viewName) into templateObject
    switch
       case templateObject = empty
