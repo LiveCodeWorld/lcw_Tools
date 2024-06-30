@@ -14,6 +14,11 @@ Their should be an easy default, with teh ability to customise.
 
 --> Working on
 -
+command ask_CreateTreeFieldMenu lineTitle
+   breakpoint
+   put the tool_LibName of the target into libName
+   ask_CreateMenuFromObject lineTitle, libName
+end ask_CreateTreeFieldMenu
 
 
 --> Ask | Create

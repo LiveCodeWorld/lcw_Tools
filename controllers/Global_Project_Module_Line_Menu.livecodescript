@@ -131,18 +131,26 @@ on menu_EditModuleBehavior moduleName
    edit the script of bObject
 end menu_EditModuleBehavior
 
-on menu_ExportModuleJson
+on menu_ExportModuleJson moduleName
+   -- put _GetStackName (displayView) into moduleName
    put _GetModuleFolder() into moduleFolder
    if there is not a folder moduleFolder then
       breakpoint
       exit to top
    end if
    
+   # Create and export json
    project_ExportMenusAndStackFiles moduleFolder
-   put the result into projectArray
-   --
-   put _GetStackName (displayView) into moduleName
-   display_Data projectArray, moduleName, "Module Array"  
+   put the result into moduleArray
+   put the module_Array of stack moduleName into moduleArray
+   
+   # Set stackfiles
+   put moduleArray ["stackFileArray"] into sfArray
+   set the stackFile_Array of stack moduleName to sfArray
+   
+   # Display Data
+   display_Data moduleArray, moduleName, "Module Array"  
+   
 end menu_ExportModuleJson
 
 on menu_EditModuleHome moduleName

@@ -70,13 +70,6 @@ on menu_EditViewScript viewObject
    edit the script of viewObject
 end menu_EditViewScript
 
-getprop disabled_EditCardScript [viewObject]
-   put the card_Object of viewObject into cardObject
-   put the revAvailableHandlers of cardObject into hTable
-   put hTable is empty into noHandlers
-   return noHandlers
-end disabled_EditCardScript
-
 on menu_EditViewBehavior viewObject
    edit the script of the behavior of viewObject
 end menu_EditViewBehavior
@@ -120,7 +113,8 @@ on menu_SetAllModuleBehaviors viewObject
    put merge ("Set the view behavior to all the module_Behaviors of '[[vName]]'") into sComment
    lcw_Answer (sComment & "?"), viewObject
    --
-   put the module_Behaviors of viewObject into moduleBehaviors
+   breakpoint
+   put module_ListBehaviorStackPaths (vName) into moduleBehaviors
    set the behavior_Objects of viewObject to moduleBehaviors
    --
    lcw_Notify (sComment & "!")
@@ -162,6 +156,12 @@ on menu_EditCardScript viewObject
    put the card_Object of viewObject into cardObject
    edit the script of cardObject
 end menu_EditCardScript
+
+getprop checked_EditCardScript [viewObject]
+   put the card_Object of viewObject into cardObject
+   put the revAvailableHandlers of cardObject into hTable
+   return hTable is not empty
+end checked_EditCardScript
 
 on menu_EditCardBehavior viewObject
    put the card_Object of viewObject into cardObject

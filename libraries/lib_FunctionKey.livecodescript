@@ -7,29 +7,6 @@ type: library
 version: 0.3
 
 
---> Working on
--
-function module_CheckFirstView viewObject
-   if exists (viewObject) is false then return false
-   put module_FirstControl (viewObject) into firstObject
-   if viewObject is not firstObject then return false
-   
-   put the view_Name of firstObject into viewName
-   put the stack_Name of firstObject into stackName
-   return stackName is viewName
-end module_CheckFirstView
-
-function module_FirstControl viewObject
-   put the card_Object of viewObject into cardObject
-   if exists (control 1 of cardObject) then
-      put the long id of control 1 of cardObject into firstObject
-      return firstObject
-   else
-      return empty
-   end if
-end module_FirstControl
-
-
 --> FunctionKey
 -
 on functionKey keyNumber
