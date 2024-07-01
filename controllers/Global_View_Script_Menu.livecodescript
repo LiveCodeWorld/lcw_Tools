@@ -43,9 +43,20 @@ end _NoCardBehavior
 
 --> Global | View | Script | Menu
 -
-on menu_ModuleDepScript sObject
-   display_ScriptDeps sObject
-end menu_ModuleDepScript
+on menu_ScriptTools viewObject
+   put the module_Behaviors of viewObject into bObjects
+   repeat for each line bObject in bObjects
+      display_ScriptTools bObject
+   end repeat
+end menu_ScriptTools
+
+on menu_BehaviorDeps viewObject
+   -- put the module_DefaultBehavior of viewObject into bObject
+   put the module_Behaviors of viewObject into bObjects
+   repeat for each line bObject in bObjects
+      display_ScriptDeps bObject
+   end repeat
+end menu_BehaviorDeps
 
 on menu_GoToView sObject
    put the object_MetaData ["name"] of sObject into viewName
@@ -84,16 +95,6 @@ end disabled_EditViewBehavior
 private on __
 end __
 
-on menu_FixModuleBehavior mView
-   put the behavior of mView into bObject
-   if exists (bObject) then
-      set the behavior of mView to bObject
-      lcw_Notify "Got and (re)set existing behaviors!"
-   else
-      breakpoint
-   end if
-end menu_FixModuleBehavior
-
 on menu_ModuleBehavior mView, stackName
    edit the script of stack stackName
 end menu_ModuleBehavior
@@ -110,11 +111,12 @@ end moduleBehavior_Params
 
 on menu_SetAllModuleBehaviors viewObject
    put the view_Name of viewObject into vName
-   put merge ("Set the view behavior to all the module_Behaviors of '[[vName]]'") into sComment
+   put merge ("Set the behavior_Objects to all the module_Behaviors of '[[vName]]'") into sComment
    lcw_Answer (sComment & "?"), viewObject
    --
+   -- put module_ListBehaviorStackPaths (vName) into moduleBehaviors
    breakpoint
-   put module_ListBehaviorStackPaths (vName) into moduleBehaviors
+   put the module_OrderedBehaviors of viewObject into moduleBehaviors
    set the behavior_Objects of viewObject to moduleBehaviors
    --
    lcw_Notify (sComment & "!")
@@ -130,7 +132,7 @@ getprop checked_SetAllModuleBehaviors [viewObject]
    return bObjects = moduleBehaviors
 end checked_SetAllModuleBehaviors
 
-getprop disabled_SetAllModuleBehaviors [viewObject]
+--getprop disabled_SetAllModuleBehaviors [viewObject]
    put the behavior_Objects of viewObject into bObjects
    put the module_Behaviors of viewObject into mObjects
    return bObjects = mObjects

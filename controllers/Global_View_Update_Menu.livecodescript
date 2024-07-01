@@ -70,6 +70,44 @@ end view_ListNestedNames
 
 --> Global | View | Update | Menu
 -
+on menu_UpdateProjectArray sView
+   put the project_Name of sView into projectName
+   display_UpdateProjectArray projectName
+   display_ProjectArray projectName, true
+end menu_UpdateProjectArray
+
+on menu_UpdateModuleArray viewObject
+   set the cursor to watch
+   put the module_Name of viewObject into moduleStackName
+   put the module_ShortFolder of viewObject into shortModuleFolder
+   put the module_Folder of viewObject into moduleFolder
+   
+   # Set module stackfiles
+   put the folder_StackFileArray of viewObject into stackFileArray
+   set the stackFile_Array of viewObject to stackFileArray
+   save stack moduleStackName
+   --
+   module_ExportMenusAndStackFiles moduleFolder
+   put the result into moduleArray
+   
+   # Check
+   put project_GetArrayFromFolder (moduleFolder) into moduleArray
+   display_Data moduleArray, moduleStackName, "Module Array"     
+end menu_UpdateModuleArray
+
+getprop checked_UpdateModuleArray [viewObject]
+   put the module_JsonFile of viewObject into moduleJsonFile
+   return there is a file moduleJsonFile   
+end checked_UpdateModuleArray
+
+getprop disabled_UpdateModuleArray [viewObject]
+   put the module_Name of viewObject into moduleStackName
+   return moduleStackName is empty
+end disabled_UpdateModuleArray
+   
+private on _
+end _
+
 on menu_Swap sView, vName
    put the mobile_Name of sView into mTarget
    set the view_Swap [false] of mTarget to vName

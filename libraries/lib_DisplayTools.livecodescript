@@ -191,15 +191,14 @@ end display_ObjectTools
 
 --> Display | Tools
 -
-on display_ModuleTools stackName
+on display_ModuleTools stackName, pDisplayView
    if exists (stack stackName) is false then
       return "Error, cannot locate stack:" && stackName
    end if
-   put the short name of stack stackName into stackName -- in case it's a stackPath
    
+   put the short name of stack stackName into stackName -- in case it's a stackPath
    put the module_Folder of stack stackName into moduleFolder
    put the card_ViewObject of stack stackName into moduleViewObject
-   --
    put directory_NestedArray (moduleFolder) into dArray
    --
    display_Tool dArray, stackName, "Module Tools"
@@ -208,8 +207,6 @@ on display_ModuleTools stackName
    set the displayed_Object of displayView to moduleViewObject
    set the displayed_ModuleFolder of displayView to moduleFolder
    --
-   -- set the line_Menu of displayView to "Global | Module | Tree | Line | Menu"
-   -- set the mouse_DoubleUp of displayView to "mDoubleUp_ModuleTools"
    return displayView
 end display_ModuleTools
 
