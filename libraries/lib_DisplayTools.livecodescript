@@ -69,6 +69,28 @@ end ask_CreateMenuFromObject
 
 --> Display
 -
+on display_RenameMenu mTitle, mController, mModel
+   -- put "Rename menu:" && kwote (mTitle) && "of" && mController
+   put mTitle into dArray ["mTitle"]
+   put mController into dArray ["mController"]
+   put mModel into dArray ["mModel"]
+   --
+   if exists (mController) then
+      put the project_Name of mController into projectName
+      put projectName into dArray ["projectName"]
+      --
+      put the module_Name of mController into moduleName
+      if moduleName is not empty then
+         put moduleName into dArray ["moduleName"]
+      end if
+   end if
+   
+   display_Tool dArray, mTitle, "Rename Menu"
+   if the shiftKey is "Down" then
+      display_DebugHistory "menu_GetGlobalController()"
+   end if
+end display_RenameMenu
+
 command display_ModuleClone mName, pCloneName
    if pCloneName is empty then
       put mName into mWords
