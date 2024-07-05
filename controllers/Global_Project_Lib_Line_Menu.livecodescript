@@ -11,6 +11,57 @@ version: 0.1
 Full help text should be provided on the linked wiki.*/
 
 
+--> Dev | Menu
+-
+on _DisplayScriptObject libraryStack
+   display_ScriptObject libraryStack
+end _DisplayScriptObject
+
+on _DisplayStackDeps libraryStack
+   display_StackDeps libraryStack
+end _DisplayStackDeps
+
+on _
+end _
+
+on _DisplayModelData libraryStack, modelShortFile
+   put the short name of libraryStack into modelName
+   put the model_Array [modelShortFile] of libraryStack into modelArray
+   
+   put "model_Array" & comma & modelName into someTitle
+   display_Array modelArray, someTitle
+end _DisplayModelData
+
+on _ModelDataFolder libraryStack
+   put the model_DataFolder of libraryStack into modelDataFolder
+   finder_Reveal modelDataFolder
+end _ModelDataFolder
+
+on _
+end _
+
+on _DisplayScriptCallArray libraryStack
+   display_ScriptCallArray libraryStack
+end _DisplayScriptCallArray
+
+on _ScriptCalls libraryStack
+   put the script_Calls of libraryStack into scriptCalls
+   put merge ("the script_Calls,[[libraryStack]]") into someTitle
+   display_Index scriptCalls, someTitle, "Global | Handler | Calls | Menu"
+   put the result into displayView
+   set the multiple_Hilites of displayView to true
+end _ScriptCalls
+
+on _
+end _
+
+on _ExportHandlersAndCalls libraryStack
+   script_ExportHandlersAndCalls libraryStack, true
+   
+   menu_ShortHkeyArray libraryStack
+end _ExportHandlersAndCalls
+
+
 --> Variables
 -
 local LocalArray
@@ -137,11 +188,18 @@ on menu_LibraryHelp libraryStack
    display_HelpDraft libraryStack
 end menu_LibraryHelp
 
+on menu_ScriptTools libraryStack
+   display_ScriptTools libraryStack
+end menu_ScriptTools
+
 on menu_DisplayProject libraryStack
    put the project_Name of libraryStack into projectName
    --
    display_ProjectLibs projectName
 end menu_DisplayProject
+
+private on __
+end __
 
 on submenu_Controller
    return "Global | Project | Controllers | Line | Menu"
@@ -151,8 +209,8 @@ on submenu_ProjectStack
    return "Global | Project | Stack | Menu"
 end submenu_ProjectStack
 
-on _
-end _
+private on __
+end __
 
 on menu_MoveUsed libraryStack, newProjectName
    put the project_Name of libraryStack into oProjectName
@@ -203,68 +261,13 @@ on menu_StackIsUsed libraryStack, someBoolean
    end if
 end menu_StackIsUsed
 
-on _
-end _
+private on ___
+end ___
 
 on menu_TrashStack libraryStack
    display_AskProjectTrashStack libraryStack
 end menu_TrashStack
 
-on _
-end _
-
 on submenu_Dev
-   return "Dev | Menu"
+   return menu_DevTitle("Global | Project | Lib | Line | Menu")
 end submenu_Dev
-
-
---> Dev | Menu
--
-on _DisplayScriptObject libraryStack
-   display_ScriptObject libraryStack
-end _DisplayScriptObject
-
-on _DisplayStackDeps libraryStack
-   display_StackDeps libraryStack
-end _DisplayStackDeps
-
-on _
-end _
-
-on _DisplayModelData libraryStack, modelShortFile
-   put the short name of libraryStack into modelName
-   put the model_Array [modelShortFile] of libraryStack into modelArray
-   
-   put "model_Array" & comma & modelName into someTitle
-   display_Array modelArray, someTitle
-end _DisplayModelData
-
-on _ModelDataFolder libraryStack
-   put the model_DataFolder of libraryStack into modelDataFolder
-   finder_Reveal modelDataFolder
-end _ModelDataFolder
-
-on _
-end _
-
-on _DisplayScriptCallArray libraryStack
-   display_ScriptCallArray libraryStack
-end _DisplayScriptCallArray
-
-on _ScriptCalls libraryStack
-   put the script_Calls of libraryStack into scriptCalls
-   put merge ("the script_Calls,[[libraryStack]]") into someTitle
-   display_Index scriptCalls, someTitle, "Global | Handler | Calls | Menu"
-   put the result into displayView
-   set the multiple_Hilites of displayView to true
-end _ScriptCalls
-
-on _
-end _
-
-on _ExportHandlersAndCalls libraryStack
-   script_ExportHandlersAndCalls libraryStack, true
-   
-   menu_ShortHkeyArray libraryStack
-end _ExportHandlersAndCalls
-

@@ -110,9 +110,9 @@ command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    --
    if pQuestion is empty then
       put merge ("Create a new library in project '[[projectName]]'?") into pQuestion
-      replace "'" with quote in someQuestion
+      replace "'" with quote in pQuestion
    end if
-   put lcw_Ask (someQuestion, pSuggestedAnswer) into libStackName
+   put lcw_Ask (pQuestion, pSuggestedAnswer) into libStackName
    
    put project_GetFolder (projectName) into projectFolder
    put scaffold_Get ("LCW Library") into libTemplateScript
@@ -124,7 +124,7 @@ command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    put merge (libTemplateScript) into libScript
    --
    project_CreateStack projectFolder, libStackName, "libraries", "library", libScript
-   put the result into homeStackPath
+   put the result into sPath
    
    start using stack libStackName
    lcw_Notify ("Stack" && kwote (libStackName) && "is now known and used!")
@@ -132,6 +132,8 @@ command ask_CreateProjectLibrary projectName, pQuestion, pSuggestedAnswer
    --
    display_Project projectName
    -- finder_Reveal projectFolder
+   --
+   return libStackName
 end ask_CreateProjectLibrary
 
 

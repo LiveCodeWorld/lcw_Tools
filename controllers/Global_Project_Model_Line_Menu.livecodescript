@@ -57,13 +57,11 @@ on menu_ModelHelp mStack
    display_HelpDraft mStack
 end menu_ModelHelp
 
-on menu_RenameModel modelStack
-   put the short name of modelStack into stackName
-   --
-   ask_RenameProjectStack stackName
-end menu_RenameModel
+on menu_ScriptTools modelStack
+   display_ScriptTools modelStack
+end menu_ScriptTools
 
-on _
+private on _
 end _
 
 on menu_CreateProjectModel modelStack
@@ -100,8 +98,8 @@ on menu_MoveModel modelStack, newProjectName
    display_Project newProjectName
 end menu_MoveModel
 
-
-on _EditProjectLibMenu
-   menu_Edit "Global | Project | Lib | Line | Menu"
-end _EditProjectLibMenu
-
+on menu_RenameModel modelStack
+   put the short name of modelStack into stackName
+   --
+   ask_RenameProjectStack stackName
+end menu_RenameModel
