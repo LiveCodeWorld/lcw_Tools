@@ -540,7 +540,10 @@ function spotlight_ListRecentlyExportedObjects pSeconds
    put spotlight_ListRecentlyExportedScriptFiles (pSeconds) into somePaths
    put script_FileToObject (somePaths) into longIDObjects
    repeat for each line longIDObject in longIDObjects
-      put revRuggedID (longIDObject) & CR after rObjects
+      if exists (longIDObject) then
+         -- put the name of longIDObject & CR after rObjects
+         put revRuggedID (longIDObject) & CR after rObjects
+      end if
    end repeat
    delete char -1 of rObjects
    return rObjects

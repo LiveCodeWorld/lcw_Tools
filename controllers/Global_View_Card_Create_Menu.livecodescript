@@ -31,11 +31,26 @@ getprop menu_CheckTarget [cardObject]
    end if
 end menu_CheckTarget
 
-private function _IsFirst cardObject
+on viewTemplate_SetCardBehavior cardObject
+   -- need to send as can;t set behavior from menu that was called from behavior
+   if _IsFirst (cardObject) then
+      set the behavior of cardObject to _FirstBehavior()
+   else
+      set the behavior of cardObject to _StandardBehavior()
+   end if
+end viewTemplate_SetCardBehavior
+
+private function _CardControlNum cardObject
    -- put the top_Controls of cardObject into topControls
    put LocalArray ["topControls"] into topControls
    --
-   switch the number of lines of topControls
+   return the number of lines of topControls
+end _CardControlNum
+   
+private function _IsFirst cardObject
+   put _CardControlNum(cardObject) into tNum
+   --
+   switch tNum
       case 1
          return true
       case 0
@@ -100,11 +115,13 @@ private function _FirstControl cardObject
 end _FirstControl
 
 private function _FirstBehavior
-   
+   get behavior_GetObject ("behavior_CardModule")
+   return it
 end _FirstBehavior
 
 private function _StandardBehavior
-   
+   get behavior_GetObject ("behavior_ViewTemplateCard")
+   return it
 end _StandardBehavior
 
 
@@ -134,15 +151,14 @@ getprop checked_MakeFirstView [cardObject]
 end checked_MakeFirstView
 
 on menu_MakeCardView cardObject
-   if _IsFirst (cardObject) then
-      set the behavior of cardObject to _FirstBehavior()
-   else
-      set the behavior of cardObject to _StandardBehavior()
-   end if
+   -- need to send as can;t set behavior from menu that was called from behavior
+   send "viewTemplate_SetCardBehavior cardObject" to me in 10 ticks
 end menu_MakeCardView
 
 getprop disabled_MakeCardView [cardObject]
-   return _IsFirst (cardObject) is false
+   put _CardControlNum(cardObject) into tNum
+   return tNum < 2
+   -- return _IsFirst (cardObject) is false
 end disabled_MakeCardView
 
 private on _

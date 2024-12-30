@@ -62,6 +62,8 @@ command display_SVG svgFile, pStackLabel, pStackStyle, pLocOrRect
       put item -1 of svgFile into pStackLabel
    end if
    display_ShowStack viewObject, cloneStackName, pStackLabel, pStackStyle, pLocOrRect
+   
+   -- put hKey_GetArray (hkey) into hkeyArray
    return viewObject
 end display_SVG
 
