@@ -121,7 +121,8 @@ on menu_ProjectHelp projectName
    put project_GetHomeStackPath (projectName) into homeStackPath
    put the help_PageArray of stack homeStackPath into pageArray
    --
-   draft_PageArray "project.livecode.world", pageArray
+   put platform_WikiDomain ("project") into wikiDomain
+   draft_PageArray wikiDomain, pageArray
    put the result into wikiView
    return wikiView
 end menu_ProjectHelp
