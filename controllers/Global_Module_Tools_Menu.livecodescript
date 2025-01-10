@@ -46,7 +46,13 @@ end submenu_DefaultMenu
 on menu_ModuleHelp moduleView
    put the view_Name of moduleView into moduleName
    --
-   draft_ModuleHelp moduleName
+   -- draft_ModuleHelp moduleName
+   put module_ConstructReadMeFile (moduleName) into readMeFile
+   if there is a file readMeFile then
+      display_ModuleReadme moduleName
+   else
+      tiddly_CreateModuleReadMe moduleName
+   end if
 end menu_ModuleHelp
 
 private on _
