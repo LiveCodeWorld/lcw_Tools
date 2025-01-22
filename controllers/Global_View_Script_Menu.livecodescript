@@ -114,10 +114,8 @@ on menu_SetAllModuleBehaviors viewObject
    put merge ("Set the behavior_Objects to all the module_Behaviors of '[[vName]]'") into sComment
    lcw_Answer (sComment & "?"), viewObject
    --
-   -- put module_ListBehaviorStackPaths (vName) into moduleBehaviors
    breakpoint
-   put the module_OrderedBehaviors of viewObject into moduleBehaviors
-   set the behavior_Objects of viewObject to moduleBehaviors
+   set the module_Behaviors of viewObject to true
    --
    lcw_Notify (sComment & "!")
 end menu_SetAllModuleBehaviors

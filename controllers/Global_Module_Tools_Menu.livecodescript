@@ -43,17 +43,32 @@ on submenu_DefaultMenu
    return LocalArray ["moduleMenu"]
 end submenu_DefaultMenu
 
-on menu_ModuleHelp moduleView
+on menu_ModuleReadme moduleView
+   display_ModuleReadme moduleName
+   return the result
+   
    put the view_Name of moduleView into moduleName
+   if the module_Name of moduleView is not moduleName then
+      breakpoint
+      return "Error, module is not named well"
+   end if
    --
    -- draft_ModuleHelp moduleName
    put module_ConstructReadMeFile (moduleName) into readMeFile
    if there is a file readMeFile then
-      display_ModuleReadme moduleName
+      if the shiftkey is "Down" then
+         put module_ConstructReadMeFile (moduleName) into readMeFile
+         put "file:///" & readMeFile into someURL
+         launch readMeFile with "/Applications/Firefox.app"
+      else
+         display_ModuleReadme moduleName
+      end if
    else
-      tiddly_CreateModuleReadMe moduleName
+      tiddly_CreateModuleReadMe moduleName, "projectify.html"
+      --
+      display_ModuleReadme moduleName
    end if
-end menu_ModuleHelp
+end menu_ModuleReadme
 
 private on _
 end _

@@ -117,6 +117,15 @@ end disabled_InitGit
 
 --> Global | Environment | Tree | Line | Menu
 -
+on menu_ProjectReadme projectName
+   display_Readme projectName
+end menu_ProjectReadme
+
+getprop checked_ProjectReadme [projectName]
+   put project_ConstructReadMeFile (projectName) into readMeFile
+   return there is a file readMeFile
+end checked_ProjectReadme
+
 on menu_ProjectHelp projectName
    put project_GetHomeStackPath (projectName) into homeStackPath
    put the help_PageArray of stack homeStackPath into pageArray

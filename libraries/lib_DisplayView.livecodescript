@@ -9,10 +9,16 @@ version: 0.4
 
 --> Working on
 -
+getprop module_View
+   -- default. Should be on modules card script or behavior
+   put the long id of control 1 of the target into clonedViewObject
+   return clonedViewObject
+end module_View
+
 
 --> Display | Template
 -
-command viewTemplate_Go viewName, pStackLoc, pRepoFolder
+command display_Template viewName, pStackLoc, pRepoFolder
    put view_GetTemplateObject (viewName, pRepoFolder) into tObject
    --
    object_GoTo tObject, true
@@ -24,23 +30,6 @@ command viewTemplate_Go viewName, pStackLoc, pRepoFolder
    set the loc of stack stackName to pStackLoc
    --
    return tObject
-end viewTemplate_Go
-
-command display_Template viewObject, pStackLabel, pData, pDataProp
-   local sRect
-   put the view_Name of viewObject into vName
-   
-   # Clone invisible
-   display_Clone vName, pStackLabel, pData, pDataProp, sRect, "toplevel"
-   put the result into clonedView
-   --
-   if exists (clonedView) then
-      return clonedView
-   else
-      # Problem copying view?
-      breakpoint
-      return "Error, cloning:" && vName,clonedView
-   end if
 end display_Template
 
 
@@ -79,27 +68,27 @@ end display_Image
 
 --> Display | Module
 -
-command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDataProp, pStackStyle
+command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDataProp, pStackStyle, pTickNum
    if pStackLabel is empty then put moduleName into pStackLabel
    if pDataProp is empty then put "displayed_Data" into pDataProp
    if pStackStyle is empty then put "toplevel" into pStackStyle
    
    switch
       case pDisplayView is true
-         viewTemplate_Go moduleName
+         display_Template moduleName
          put the result into pDisplayView
       case exists (pDisplayView)
          set the pDataProp of pDisplayView to pData
          set the stack_Label of pDisplayView to pStackLabel
          return pDisplayView
       default
-         display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle
+         display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, empty, pTickNum
          put the result into clonedViewObject
          return clonedViewObject
    end switch 
 end display_ModuleInstance
 
-command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pStackLocOrRect, pViewRect
+command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pStackLocOrRect, pTickNum
    # Find Template View
    put view_GetTemplateObject (moduleName) into moduleObject
    if exists (moduleObject) is false then
@@ -116,13 +105,16 @@ command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackSty
    # Clone
    stack_CloneInvisible moduleName
    put the result into clonedStackName
-   put the long id of control 1 of cd 1 of stack clonedStackName into clonedViewObject
+   put the module_View of cd 1 of stack clonedStackName into clonedViewObject
    
    # Set the data to display
    set the pDataProp of clonedViewObject to pData
    
    # Show And Position
-   display_ShowStack clonedViewObject, clonedStackName, pStackLabel, pStackStyle, pStackLocOrRect, pViewRect
+   if pTickNum is a number then
+      wait pTickNum ticks
+   end if
+   display_ShowStack clonedViewObject, clonedStackName, pStackLabel, pStackStyle, pStackLocOrRect
    
    return clonedViewObject
 end display_CloneModule
@@ -206,38 +198,6 @@ command display_Clone viewName, pCloneName, pData, pDataProp, pLocOrRect, pStack
 end display_Clone
 
 
-
---> Display | functions
--
-function display_List pViewNames, pStackLabel
-   # List open stacks with a UX
-   put stack_ListOpen() into dStackNames
-   -- put revLoadedStacks ("application") into loadedStackNames
-   
-   # Filter
-   repeat for each line dStackName in dStackNames
-      get the label of stack dStackName
-      if (pStackLabel is not empty) AND (it is not pStackLabel) then
-         next repeat
-      end if
-      -- 
-      if exists (control 1 of card 1 of stack dStackName) then
-         put the long id of control 1 of card 1 of stack dStackName into sView
-         if pViewNames is empty then
-            put sView & CR after foundViews
-         else
-            put the view_Name of sView into testViewName
-            if testViewName is among the items of pViewNames then
-               put sView & CR after foundViews
-            end if
-         end if
-      end if
-   end repeat
-   delete char -1 of foundViews
-   return foundViews
-end display_List
-
-
 --> Display | View
 -
 command display_NewViewStack viewName, pCloneName, pData, pDataProp, pStackRect, pStackStyle
@@ -299,7 +259,7 @@ on mDouble_DisplayView indexView, viewName
          break
       default
          -- display_ModuleInstance viewName
-         viewTemplate_Go viewName
+         display_Template viewName
    end switch
 end mDouble_DisplayView
 

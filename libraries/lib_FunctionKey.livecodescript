@@ -6,8 +6,17 @@ name: lib_FunctionKey
 type: library
 version: 0.3
 
+--> Private
+-
+private command _DraftScriptHelp
+   put scriptEditor_Object() into sObject
+   if exists (sObject) is false then breakpoint
+   --
+   draft_ScriptHelp sObject
+end _DraftScriptHelp
 
---> FunctionKey
+
+--> FKey
 -
 on functionKey keyNumber
    if the optionKey is "Down" then breakpoint
@@ -16,10 +25,8 @@ on functionKey keyNumber
          display_Environment
          break
       case 2
-         put scriptEditor_Object() into sObject
-         if exists (sObject) is false then breakpoint
-         --
-         draft_ScriptHelp sObject
+         put display_GetHidden() is empty into sBoolean
+         display_SetHidden sBoolean
          break
       case 3
          put scriptEditor_Object() into sObject

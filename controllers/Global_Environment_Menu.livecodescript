@@ -90,11 +90,26 @@ on menu_SaveEditedStacks
 end menu_SaveEditedStacks
 
 -- on menu_CreateLevureProject
-   go stack url "https://raw.githubusercontent.com/trevordevore/levure/master/utils/create-levure-application.livecode"
+go stack url "https://raw.githubusercontent.com/trevordevore/levure/master/utils/create-levure-application.livecode"
 end menu_CreateLevureProject
 
 private on _____
 end _____
+
+on menu_MyGithubOrgs
+   display_GithubOrgs
+end menu_MyGithubOrgs
+
+on menu_MyGithubRepos
+   display_GithubOrgRepos
+end menu_MyGithubRepos
+
+on menu_GithubShell
+   dispatch display_GithubShell to me with "David"
+end menu_GithubShell
+
+private on ______
+end ______
 
 on menu_Refresh
    display_RefreshEnvironment

@@ -77,22 +77,15 @@ on menu_UpdateProjectArray sView
 end menu_UpdateProjectArray
 
 on menu_UpdateModuleArray viewObject
-   set the cursor to watch
    put the module_Name of viewObject into moduleStackName
-   put the module_ShortFolder of viewObject into shortModuleFolder
-   put the module_Folder of viewObject into moduleFolder
-   
-   # Set module stackfiles
-   put the folder_StackFileArray of viewObject into stackFileArray
-   set the stackFile_Array of viewObject to stackFileArray
-   save stack moduleStackName
-   --
-   module_ExportMenusAndStackFiles moduleFolder
+   module_Update moduleStackName
    put the result into moduleArray
    
    # Check
    put project_GetArrayFromFolder (moduleFolder) into moduleArray
-   display_Data moduleArray, moduleStackName, "Module Array"     
+   display_Data moduleArray, moduleStackName, "Module Array"
+   put the result into dView
+   return  dView
 end menu_UpdateModuleArray
 
 getprop checked_UpdateModuleArray [viewObject]
