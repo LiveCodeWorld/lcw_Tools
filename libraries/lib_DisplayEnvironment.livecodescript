@@ -21,7 +21,11 @@ command env_CommitAndPushEverything pDisplayView
    lcw_Notify "Save everything first..."
    
    put git_ListNotUpToDate() into needsUpdating
-   repeat for each line projectName in needsUpdating
+   repeat with lineNum = 1 to the number of lines of needsUpdating
+      -- for each line projectName in needsUpdating
+      put line lineNum of needsUpdating into projectName
+      display_Spin projectName, pDisplayView, "green"
+      
       set the cursor to watch
       put "Updating project" && projectName && "..." into sComment
       lcw_Notify sComment
@@ -52,6 +56,8 @@ command env_CommitAndPushEverything pDisplayView
       put the result into shellResult
       if shellResult is not empty then
          lcw_Notify shellResult
+      else
+         set the deleted_Line of pDisplayView to lineNum
       end if
    end repeat
 end env_CommitAndPushEverything
