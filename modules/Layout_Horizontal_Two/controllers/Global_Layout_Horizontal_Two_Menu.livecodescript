@@ -114,7 +114,7 @@ on menu_BackgroundColour layoutView
    set the backgroundColor of layoutView to someColour
 end menu_BackgroundColour
 
-on _
+private command _
 end _
 
 on menu_ReplaceLeftView layoutView, leftPath
@@ -131,20 +131,17 @@ on menu_ReplaceRightView layoutView, rightPath
    set the view_Swap of someView to rightPath
 end menu_ReplaceRightView
 
-on _
-end _
+private command __
+end __
+
+on menu_PreOpenControl layoutView
+   dispatch "preOpenControl" to layoutView
+end menu_PreOpenControl
+
+on menu_StoreViewReferences layoutView
+   dispatch "StoreViewReferences" to layoutView with false
+end menu_StoreViewReferences
 
 on submenu_Dev
-   return "Dev | Menu"
+   return menu_DevTitle ("Global | Layout | Horizontal | Two | Menu")
 end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_Experiment displayView
-   put displayView
-end menu_Experiment
-
-
---> Deps
--

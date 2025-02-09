@@ -71,11 +71,21 @@ end moveModule_Params
 
 --> Global | Project | Module | Line | Menu
 -
-on menu_ModuleHelp
-   put _GetModuleStackPath() into stackPath
+on menu_ModuleReadme
    put LocalArray ["moduleName"] into moduleName
-   --
-   draft_ModuleHelp moduleName
+   display_ModuleReadme moduleName
+end menu_ModuleReadme
+
+on menu_RevealModuleFolder
+   put _GetModuleFolder() into moduleFolder
+   finder_Reveal moduleFolder
+end menu_RevealModuleFolder
+
+-- on menu_ModuleHelp
+put _GetModuleStackPath() into stackPath
+put LocalArray ["moduleName"] into moduleName
+--
+draft_ModuleHelp moduleName
 end menu_ModuleHelp
 
 on menu_DisplayModuleTools

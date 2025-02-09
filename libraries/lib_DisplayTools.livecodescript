@@ -142,8 +142,13 @@ command display_CloneTools cStackName
    return dView
 end display_CloneTools
 
-command display_MenuBarData stackName
-   put the menubar_View of stack stackName into mGroup
+command display_MenuBarData mGroup
+   if exists (the menubar_View of mGroup) is false then
+      breakpoint
+      return "Error, menubar_View does not exists:" && mGroup
+   end if
+   
+   put the stack_Name of mGroup into stackName
    put the menubar_TableData of mGroup into indexArray
    put display_FindArrayView ("Menubar Data", stackName) into dView
    --

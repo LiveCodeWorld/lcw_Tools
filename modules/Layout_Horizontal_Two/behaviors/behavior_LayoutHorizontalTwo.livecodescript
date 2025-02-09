@@ -20,88 +20,59 @@ local LocalArray
 local LeftView, RightView
 
 
---> Initialisation
+--> Working on
 -
-command view_IndexChildren
-   put the childcontrolids of me into childIDs
-   put word 3 of the vertical_Divider of me into verticalDividerID
-   
-   set the wholematches to true
-   put lineOffset (verticalDividerID, childIDs) into lineNum
-   delete line lineNum of childIDs
-   
-   put line 1 of childIDs into firstChildID
-   put line 2 of childIDs into secondChildID
-   
-   if exists (control id firstChildID of me) then
-      put the long id of control id firstChildID of me into LeftView
-   end if
-   if exists (control id secondChildID of me) then
-      put the long id of control id secondChildID of me into RightView
-   end if
-   return LeftView & CR & RightView
-end view_IndexChildren
-
-
---> Views
--
-getprop horizontal_Layout
-   return the long id of me
-end horizontal_Layout
-
-getprop layout_View
-   return the long id of me
-end layout_View
-
-getprop view_Object
-   return the long id of me
-end view_Object
-
-getprop left_View
-   if exists (LeftView) is false then view_IndexChildren
-   return LeftView
-end left_View
-
-getprop right_View
-   if exists (RightView) is false then view_IndexChildren
-   return RightView
-end right_View
-
-getprop vertical_Divider
-   if exists (control "_VerticalDivider View" of me) is false then return empty
-   return the long id of control "_VerticalDivider View" of me
-end vertical_Divider
-
-
---> Events
--
-on preOpenControl
-   view_IndexChildren
-end preOpenControl
-
-on resizeControl
-   if the long id of the target = the long id of me then
-      LayoutControl the rect of me
-   end if
-end resizeControl
-
-on refresh pHow
-   lock screen
-   view_IndexChildren
-   switch pHow
-      case "placeholders"
-         set the control_Type ["left_View"] of the left_View of me to "placeholder"
-         set the control_Type ["right_View"] of the right_View of me to "placeholder"
-         break
+getprop layout_ViewNames
+   put the view_Name of LeftView into firstViewName
+   put the view_Name of RightView into secondViewName
+   --
+   switch
+      case secondViewName is empty
+         return firstViewName
+      case firstViewName = secondViewName
+         return firstViewName
       default
+         return firstViewName,secondViewName
    end switch
-   LayoutControl
-   unlock screen
-   return the result
-end refresh
+end layout_ViewNames
 
---> Currently Working On
--
+getprop layout_Views
+   return LeftView & CR & RightView
+end layout_Views
+
+getprop view_Type
+   put label_ViewToCamelTitle (the view_Name of LeftView) into firstViewName
+   put label_ViewToCamelTitle (the view_Name of RightView) into secondViewName
+   --
+   switch
+      case secondViewName is empty
+         return firstViewName
+      case firstViewName = secondViewName
+         return firstViewName
+      default
+         return firstViewName,secondViewName
+   end switch
+end view_Type
+
+setprop view_Type camelTitle
+   put label_CamelTitleToView (camelTitle) into viewName
+   --
+   if viewName is empty then
+      put "placeholder" into firstViewName
+      put "placeholder" into secondViewName
+   else
+      put item 1 of viewName into firstViewName
+      put item 2 of viewName into secondViewName
+      if secondViewName is empty then
+         put firstViewName into secondViewName
+      end if
+   end if
+   
+   # Set (replace) views
+   set the control_Type ["left_View"] of LeftView to firstViewName
+   set the control_Type ["right_View"] of RightView to secondViewName
+end view_Type
+
 getprop layout_Elements
    if the long id of the target is not the long id of me then pass layout_Elements
    
@@ -117,11 +88,6 @@ getprop layout_Elements
    delete char -1 of layoutElements
    return layoutElements
 end layout_Elements
-
-getprop view_Children
-   -- view_IndexChildren
-   return HeaderView & CR & BodyView & CR & FooterView
-end view_Children
 
 getprop top_ControlNames
    put the childcontrolids of me into topIDs
@@ -142,19 +108,246 @@ getprop top_Controls
 end top_Controls
 
 
---> Geometry | Layout
+
+--> Props
 -
 getprop horizontal_Spacing
-   put LocalArray ["horizontal_Spacing"] into someSpacing
+   -- put LocalArray ["horizontal_Spacing"] into someSpacing
+   put the uOPN ["horizontal_Spacing"] of me into someSpacing
    if someSpacing is empty then put 4 into someSpacing
    return someSpacing
 end horizontal_Spacing
 
 setprop horizontal_Spacing [dontLayout] someSpacing
-   put someSpacing into LocalArray ["horizontal_Spacing"]
-   if dontLayout is not true then dispatch "LayoutControl" to me
+   set the uOPN ["horizontal_Spacing"] of me to someSpacing
+   if dontLayout is not true then
+      -- dispatch "LayoutControl" to me
+      LayoutControl
+   end if
 end horizontal_Spacing
 
+getprop fixed_View
+   -- put LocalArray ["fixed_View"] into leftOrRight
+   put the uOPN ["fixed_View"] of me into leftOrRight
+   if leftOrRight is empty then return "left"
+   return leftOrRight
+end fixed_View
+
+setprop fixed_View [dontLayout] leftOrRight
+   -- put leftOrRight into LocalArray ["fixed_View"]
+   set the uOPN ["fixed_View"] of me to leftOrRight
+   if dontLayout is not true then
+      LayoutControl
+   end if
+end fixed_View
+
+getprop left_View
+   return LeftView
+end left_View
+
+getprop right_View
+   return RightView
+end right_View
+
+setprop view_Rect someRect
+   -- this allows for nested views with or without "setprop view_Rect" handlers
+   if the long id of the target = the long id of me then
+      LayoutControl someRect
+   else
+      set the rect of the target to someRect
+   end if
+end view_Rect
+
+
+--> Events
+-
+on resizeControl
+   if the long id of the target is not the long id of me then pass resizeControl -- needed???
+   LayoutControl the rect of me
+end resizeControl
+
+on preOpenControl
+   if exists (LeftView) is false then
+      _SetLeftViewLocal
+   end if
+   
+   if exists (RightView) is false then
+      _SetRightViewLocal
+   end if
+   pass preOpenControl
+end preOpenControl
+
+private command _SetLeftViewLocal
+   put the uOPN ["LeftView"] of me into LeftView
+   if exists (LeftView) is false then
+      put _GetFirstView() into LeftView
+   end if
+end _SetLeftViewLocal
+
+private command _SetRightViewLocal
+   put the uOPN ["RightView"] of me into RightView
+   if exists (RightView) is false then
+      put _GetSecondView() into RightView
+   end if
+end _SetRightViewLocal
+
+
+--> Geometry
+-
+on Refresh
+   GuessViewReferences
+   --
+   preOpenControl
+   LayoutControl
+   --
+   ClearStoredViewReferences
+end Refresh
+
+on GuessViewReferences
+   put _GetFirstView() into LeftView
+   get _GetSecondView()
+   if it is not LeftView then
+      put it into RightView
+   else
+      breakpoint -- must be a bug???
+   end if
+end GuessViewReferences
+
+on StoreViewReferences pSaveStack
+   # Fix RightView
+   if exists (LeftView) then
+      set the uOPN ["LeftView"] of me to LeftView
+   else
+      breakpoint
+      set the uOPN ["LeftView"] of me to empty
+   end if
+   
+   # Fix RightView
+   if exists (RightView) then
+      set the uOPN ["RightView"] of me to RightView
+   else
+      breakpoint
+      set the uOPN ["RightView"] of me to empty
+   end if
+   
+   if pSaveStack is true then
+      put the stack_Name of me into stackName
+      save stack stackName
+   end if
+end StoreViewReferences
+
+on ClearStoredViewReferences pSaveStack
+   set the uOPN ["LeftView"] of me to empty
+   set the uOPN ["RightView"] of me to empty
+   
+   if pSaveStack is true then
+      put the stack_Name of me into stackName
+      save stack stackName
+   end if
+end ClearStoredViewReferences
+
+on LayoutControl pRect
+   if the long id of the target is not the long id of me then return empty -- this is important for nested datagrids at the moment.
+   if pRect is empty then put the the rect of me into pRect
+   
+   put the left_View of me into leftView
+   if exists (leftView) is false then return false
+   put the right_View of me into rightView
+   if exists (rightView) is false then return false
+   put the vertical_Divider of me into verticalDividerView
+   
+   put the inner_rect [pRect] of me into innerRect
+   --
+   switch
+      case the visible of leftView is false
+         put innerRect into leftViewRect
+         put innerRect into rightViewRect
+         put innerRect into verticalDividerRect
+         set the visible of verticalDividerView to false
+         break
+      case the visible of rightView is false
+         put innerRect into leftViewRect
+         put innerRect into rightViewRect
+         put innerRect into verticalDividerRect
+         set the visible of verticalDividerView to false
+         break
+      default -- they are both visible
+         set the visible of verticalDividerView to true
+         
+         put the horizontal_Spacing of me into viewSpacing
+         put item 3 of pRect - item 1 of pRect into newLayoutWidth
+         
+         put layout_GetLeftViewWidth (newLayoutWidth, leftView, rightView, verticalDividerView) into leftViewWidth
+         
+         -- left_View rect
+         put innerRect into leftViewRect
+         put item 1 of leftViewRect + leftViewWidth into leftViewRight
+         put leftViewRight into item 3 of leftViewRect
+         
+         -- vertical_Divider Rect
+         put innerRect into verticalDividerRect
+         put leftViewRight into item 1 of verticalDividerRect
+         put leftViewRight + viewSpacing into rightViewLeft
+         put rightViewLeft into item 3 of verticalDividerRect
+         
+         -- right_View rect
+         put innerRect into rightViewRect
+         put rightViewLeft into item 1 of rightViewRect
+         
+         put leftViewWidth into LocalArray ["lastLeft"]
+         put newLayoutWidth into LocalArray ["lastTotalWidth"]
+   end switch
+   
+   -- Set Rects
+   lock screen
+   set the rect of leftView to leftViewRect
+   set the rect of verticalDividerView to verticalDividerRect -- to rest locals for stability hack
+   -- set the view_Rect of verticalDividerView to verticalDividerRect -- to rest locals for stability hack
+   set the rect of rightView to rightViewRect
+   unlock screen   
+end LayoutControl
+
+
+--> Initialisation
+-
+getprop vertical_Divider
+   if exists (control "_VerticalDivider View" of me) is false then return empty
+   return the long id of control "_VerticalDivider View" of me
+end vertical_Divider
+
+setprop left_View vObject
+   if exists (vObject) is false then return empty
+   put revRuggedID (vObject) into LeftView
+   --
+   set the uOPN ["LeftView"] of me to LeftView
+   return LeftView
+end left_View
+
+setprop right_View vObject
+   if exists (vObject) is false then return empty
+   put revRuggedID (vObject) into RightView
+   set the uOPN ["RightView"] of me to RightView
+   return RightView
+end right_View
+
+
+--> Views
+-
+getprop horizontal_Layout
+   return the long id of me
+end horizontal_Layout
+
+getprop layout_View
+   return the long id of me
+end layout_View
+
+getprop view_Object
+   return the long id of me
+end view_Object
+
+
+--> Geometry | Layout
+-
 setprop layout_Margins someMargin
    lock screen
    put the rect of me into oRect
@@ -164,33 +357,23 @@ setprop layout_Margins someMargin
 end layout_Margins
 
 getprop layout_Margins
-    return the margins of me
+   return the margins of me
 end layout_Margins
-
-getprop fixed_View
-   put LocalArray ["fixed_View"] into leftOrRight
-   if leftOrRight is empty then return "left"
-   return leftOrRight
-end fixed_View
-
-setprop fixed_View leftOrRight
-   put leftOrRight into LocalArray ["fixed_View"]
-end fixed_View
 
 getprop fixed_Views
    return "left,right,formatted,proportional"
 end fixed_Views
 
 getprop layout_DividerStyle
-    return the divider_Style of the vertical_Divider of me
+   return the divider_Style of the vertical_Divider of me
 end layout_DividerStyle
 
 setprop layout_DividerStyle someStyle
-    set the divider_Style of the vertical_Divider of me to someStyle
+   set the divider_Style of the vertical_Divider of me to someStyle
 end layout_DividerStyle
 
 getprop layout_DividerStyles
-    return "invisible,transparent,opaque,icon"
+   return "invisible,transparent,opaque,icon"
 end layout_DividerStyles
 
 
@@ -243,79 +426,6 @@ setprop hidden_View whichView
 end hidden_View
 
 
---> Geometry
--
-setprop view_Rect someRect
-   -- this allows for nested views with or without "setprop view_Rect" handlers
-   if the long id of the target = the long id of me then
-      LayoutControl someRect
-   else
-      set the rect of the target to someRect
-   end if
-end view_Rect
-
-on LayoutControl pRect
-   if the long id of the target is not the long id of me then return empty -- this is important for nested datagrids at the moment.
-   if pRect is empty then put the the rect of me into pRect
-   
-   put the left_View of me into leftView
-   if exists (leftView) is false then return false
-   put the right_View of me into rightView
-   if exists (rightView) is false then return false
-   
-   put the vertical_Divider of me into verticalDividerView
-   
-   put the inner_rect [pRect] of me into innerRect
-   
-   switch
-      case the visible of leftView is false
-         put innerRect into leftViewRect
-         put innerRect into rightViewRect
-         put innerRect into verticalDividerRect
-         set the visible of verticalDividerView to false
-         break
-      case the visible of rightView is false
-         put innerRect into leftViewRect
-         put innerRect into rightViewRect
-         put innerRect into verticalDividerRect
-         set the visible of verticalDividerView to false
-         break
-      default -- they are both visible
-         set the visible of verticalDividerView to true
-         
-         put the horizontal_Spacing of me into viewSpacing
-         put item 3 of pRect - item 1 of pRect into newLayoutWidth
-         
-         put layout_GetLeftViewWidth (newLayoutWidth, leftView, rightView, verticalDividerView) into leftViewWidth
-         
-         -- left_View rect
-         put innerRect into leftViewRect
-         put item 1 of leftViewRect + leftViewWidth into leftViewRight
-         put leftViewRight into item 3 of leftViewRect
-         
-         -- vertical_Divider Rect
-         put innerRect into verticalDividerRect
-         put leftViewRight into item 1 of verticalDividerRect
-         put leftViewRight + viewSpacing into rightViewLeft
-         put rightViewLeft into item 3 of verticalDividerRect
-         
-         -- right_View rect
-         put innerRect into rightViewRect
-         put rightViewLeft into item 1 of rightViewRect
-         
-         put leftViewWidth into LocalArray ["lastLeft"]
-         put newLayoutWidth into LocalArray ["lastTotalWidth"]
-   end switch
-   
-   -- Set Rects
-   lock screen
-   set the rect of leftView to leftViewRect
-   set the view_Rect of verticalDividerView to verticalDividerRect -- to rest locals for stability hack
-   set the rect of rightView to rightViewRect
-   unlock screen   
-end LayoutControl
-
-
 --> Geometry | Right View | Width
 -
 /*
@@ -323,7 +433,7 @@ I think this needs tidying to work like title_Height
 */
 
 getprop right_Width
-    return the width of the right_Width of me
+   return the width of the right_Width of me
 end right_Width
 
 setprop right_Width someWidth
@@ -343,7 +453,7 @@ I think this needs tidying to work like title_Height
 */
 
 getprop left_Width
-    return the width of the left_View of me
+   return the width of the left_View of me
 end left_Width
 
 setprop left_Width someWidth
@@ -355,6 +465,16 @@ setprop left_Width someWidth
    unlock screen
 end left_Width
 
+
+--> Geometry | Subview Defaults
+-
+getprop formatted_Width
+   return the width of the target
+end formatted_Width
+
+
+--> Private
+-
 private function layout_GetLeftViewWidth newLayoutWidth, leftView, rightView, verticalDividerView
    put the fixed_View of me into fixedView
    switch fixedView
@@ -392,13 +512,36 @@ private function layout_GetLeftViewWidth newLayoutWidth, leftView, rightView, ve
    end switch
 end layout_GetLeftViewWidth
 
+private function _GetFirstView
+   _SetFirstAndSecond firstChildID, secondChildID
+   --
+   if exists (control id firstChildID of me) then
+      put the long id of control id firstChildID of me into firstView
+      return revRuggedId (firstView)
+   else
+      return empty
+   end if
+end _GetFirstView
 
---> Geometry | Subview Defaults
--
-getprop formatted_Width
-    return the width of the target
-end formatted_Width
+private function _GetSecondView
+   _SetFirstAndSecond firstChildID, secondChildID
+   --
+   if exists (control id secondChildID of me) then
+      put the long id of control id secondChildID of me into secondView
+      return revRuggedId (secondView)
+   else
+      return empty
+   end if
+end _GetSecondView
 
-
---> Deps
--
+private command _SetFirstAndSecond @firstChildID, @secondChildID
+   put the childcontrolids of me into childIDs
+   put word 3 of the vertical_Divider of me into verticalDividerID
+   
+   set the wholematches to true
+   put lineOffset (verticalDividerID, childIDs) into lineNum
+   delete line lineNum of childIDs
+   
+   put line 1 of childIDs into firstChildID
+   put line 2 of childIDs into secondChildID
+end _SetFirstAndSecond

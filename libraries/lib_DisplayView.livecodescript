@@ -68,7 +68,7 @@ end display_Image
 
 --> Display | Module
 -
-command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDataProp, pStackStyle, pTickNum
+command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDataProp, pStackStyle, pTickNum, pCloneName
    if pStackLabel is empty then put moduleName into pStackLabel
    if pDataProp is empty then put "displayed_Data" into pDataProp
    if pStackStyle is empty then put "toplevel" into pStackStyle
@@ -82,13 +82,13 @@ command display_ModuleInstance moduleName, pData, pStackLabel, pDisplayView, pDa
          set the stack_Label of pDisplayView to pStackLabel
          return pDisplayView
       default
-         display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, empty, pTickNum
+         display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pCloneName, pTickNum
          put the result into clonedViewObject
          return clonedViewObject
    end switch 
 end display_ModuleInstance
 
-command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pStackLocOrRect, pTickNum
+command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackStyle, pCloneName, pTickNum, pColour, pStackLocOrRect
    # Find Template View
    put view_GetTemplateObject (moduleName) into moduleObject
    if exists (moduleObject) is false then
@@ -103,12 +103,13 @@ command display_CloneModule moduleName, pData, pStackLabel, pDataProp, pStackSty
    if pStackStyle is empty then put "toplevel" into pStackStyle
    
    # Clone
-   stack_CloneInvisible moduleName
+   stack_CloneInvisible moduleName, pCloneName
    put the result into clonedStackName
    put the module_View of cd 1 of stack clonedStackName into clonedViewObject
    
    # Set the data to display
    set the pDataProp of clonedViewObject to pData
+   set the card_Colour of clonedViewObject to pColour
    
    # Show And Position
    if pTickNum is a number then
@@ -217,12 +218,6 @@ end display_NewViewStack
 
 --> Display | View
 -
-command display_Camera cameraDeviceName, sRect
-   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
-   put the result into displayView
-   return displayView
-end display_Camera
-
 function view_ConstructToolMenu viewObject, isaView
    put the view_MenuTitle [true] of viewObject into mTitle
    put view_MenuToolTitles (mTitle, isaView) into mTitles

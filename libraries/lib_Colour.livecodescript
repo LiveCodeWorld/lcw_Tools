@@ -1,4 +1,5 @@
 ﻿script "lib_Colour"
+
 --> MetaData
 -
 license: GPLv3
@@ -65,8 +66,28 @@ end colour_GetDarkOrLight
 
 --> Colour
 -
+getprop card_Colour
+   put the card_Object of the target to cObject
+   put the backgroundColor of cObject into tColour
+   return tColour
+end card_Colour
+
+setprop card_Colour sColour
+   put the card_Object of the target into cObject
+   switch sColour
+      case "random"
+         put colour_GetRandom() into sColour
+         break
+      default
+         -- can check for stuff
+   end switch
+   set the backgroundColor of cObject to sColour
+   return sColour
+end card_Colour
+
+
 getprop colour_Name
-   return the effective backgroundcolor of the target
+return the effective backgroundcolor of the target
 end colour_Name
 
 setprop colour_Name colourName

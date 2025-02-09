@@ -31,32 +31,48 @@ getprop menu_CheckTarget [dView]
    return exists (dView)
 end menu_CheckTarget
 
-on mDoubleUp_GithubProjects dView, projectName
-   put the title_Text of dView into repoName
-   breakpoint
-   
-   
+on mDoubleUp_GithubProjects dView, repoName
+   put _RepoFolder (dView) into repoFolder
+   put env_GetRepoFolder (repoName) into repoFolder
+   finder_Reveal repoFolder
 end mDoubleUp_GithubProjects
+
+private function _RepoFolder dView
+   put the selected_Line of dView into repoName
+   put env_GetRepoFolder (repoName) into repoFolder
+   return repoFolder
+end _RepoFolder
 
 
 --> Global | Github | Projects | Line | Menu
 -
-on menu_GithubProjectsLine dView
-   put the params
-end menu_GithubProjectsLine
+on menu_DownloadGithubRepo dView
+   put the title_text of dView into orgName
+   put the selected_Line of dView into repoName
+   --
+   lcw_Answer "Clone LiveCodeWorld repo '[[repoName]] from Github to your local environment folder?", dView, repoName
+   gh_CloneOrgRepo repoName, orgName
+   --
+   menu_RevealRepoFolder dView
+end menu_DownloadGithubRepo
+
+getprop disabled_DownloadGithubRepo [dView]
+   put _RepoFolder (dView) into repoFolder
+   return there is a folder repoFolder
+end disabled_DownloadGithubRepo
+
+getprop checked_DownloadGithubRepo [dView]
+   put _RepoFolder (dView) into repoFolder
+   return there is a folder repoFolder
+end checked_DownloadGithubRepo
 
 private on _
 end _
 
-on menu_Behavior dView
-   put the behavior of dView into bObject
-   edit the script of bObject
-end menu_Behavior
-
-on menu_ModuleTools dView
-   put the view_Name of dView into viewName
-   display_ModuleTools viewName
-end menu_ModuleTools
+on menu_RevealRepoFolder dView
+   put _RepoFolder (dView) into repoFolder
+   finder_Reveal repoFolder
+end menu_RevealRepoFolder
 
 private on __
 end __
@@ -64,3 +80,4 @@ end __
 on submenu_Dev
    return menu_DevTitle ("Global | Github | Projects | Line | Menu")
 end submenu_Dev
+

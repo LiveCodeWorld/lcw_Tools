@@ -9,7 +9,7 @@ version: 0.2
 
 --> Ask | Module
 -
-command ask_CreateModuleMenu moduleStackName, pDisplayView, pGlobalMenuTitle, pControllerScript
+command ask_CreateModuleMenu moduleStackName, pGlobalMenuTitle, pControllerScript, pDisplayView
    if pGlobalMenuTitle is empty then
       put module_ConstructGlobalMenuTitle (moduleStackName) into pGlobalMenuTitle
    end if
@@ -28,6 +28,29 @@ command ask_CreateModuleMenu moduleStackName, pDisplayView, pGlobalMenuTitle, pC
    --
    return mController
 end ask_CreateModuleMenu
+
+
+--> Menu | Create
+-
+function menu_Create gMenuTitle, pProjectName
+   # Return gMenuTitle if exists
+   put menu_GetGlobalController (gMenuTitle) into mController
+   if exists (mController) then return gMenuTitle
+   
+   # Get a default pProjectName
+   if pProjectName is empty then
+      put debug_CallingObject() into cObject
+      put the project_Name of cObject into pProjectName
+      if pProjectName is empty then
+         put "lcw_Tools" into pProjectName
+      end if
+   end if
+   
+   # Otherwise create menu 
+   ask_CreateProjectMenu pProjectName, gMenuTitle
+   put the result into mController
+   return mController
+end menu_Create
 
 
 --> Working on
@@ -179,29 +202,6 @@ command ask_FixMenuControllerStackName mController, pEditScript
    end if
    return newStackName
 end ask_FixMenuControllerStackName
-
-
---> Menu | Create
--
-function menu_Create gMenuTitle, pProjectName
-   # Return gMenuTitle if exists
-   put menu_GetGlobalController (gMenuTitle) into mController
-   if exists (mController) then return gMenuTitle
-   
-   # Get a default pProjectName
-   if pProjectName is empty then
-      put debug_CallingObject() into cObject
-      put the project_Name of cObject into pProjectName
-      if pProjectName is empty then
-         put "lcw_Tools" into pProjectName
-      end if
-   end if
-   
-   # Otherwise create menu 
-   ask_CreateProjectMenu pProjectName, gMenuTitle
-   put the result into mController
-   return mController
-end menu_Create
 
 
 --> Display | Menu

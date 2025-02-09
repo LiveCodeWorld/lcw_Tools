@@ -5,7 +5,7 @@ copyright: David Bovill
 license: GPLv3
 name: Global | Environment | Tree | Line | Menu
 type: controller
-version: 0.2
+version: 0.3
 
 /*Here you can describe this menu.
 Full help text should be provided on the linked wiki.*/
@@ -89,14 +89,6 @@ getprop disabled_DisplayProject [projectName]
    end if
 end disabled_DisplayProject
 
-getprop disabled_DisplayGitStatus [projectName]
-   if exists (stack projectName) is true then
-      return false
-   else
-      return true
-   end if
-end disabled_DisplayGitStatus
-
 getprop disabled_RevealProjectFolder [projectName]
    if exists (stack projectName) is true then
       return false
@@ -105,23 +97,14 @@ getprop disabled_RevealProjectFolder [projectName]
    end if
 end disabled_RevealProjectFolder
 
-getprop disabled_InitGit [projectName]
-   if exists (stack projectName) is true then
-      put the git_Folder of stack projectName into gitFolder
-      return gitFolder is not empty
-   else
-      return true
-   end if
-end disabled_InitGit
-
 
 --> Global | Environment | Tree | Line | Menu
 -
 on menu_ProjectReadme projectName
-   display_Readme projectName
+   display_ProjectReadme projectName
 end menu_ProjectReadme
 
-getprop checked_ProjectReadme [projectName]
+-- getprop checked_ProjectReadme [projectName]
    put project_ConstructReadMeFile (projectName) into readMeFile
    return there is a file readMeFile
 end checked_ProjectReadme
@@ -205,9 +188,17 @@ on menu_InitGit projectName
    display_GitProjectStatus projectName
 end menu_InitGit
 
+getprop disabled_InitGit [repoName]
+   return git_GetInit (repoName) is false
+end disabled_InitGit
+
 on menu_DisplayGitStatus projectName
    display_GitProjectStatus projectName
 end menu_DisplayGitStatus
+
+getprop disabled_DisplayGitStatus [projectName]
+  
+end disabled_DisplayGitStatus
 
 private on ____
 end ____
