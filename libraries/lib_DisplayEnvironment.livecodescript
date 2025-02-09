@@ -24,7 +24,7 @@ command env_CommitAndPushEverything pDisplayView
    repeat with lineNum = 1 to the number of lines of needsUpdating
       -- for each line projectName in needsUpdating
       put line lineNum of needsUpdating into projectName
-      display_Spin projectName, pDisplayView, "green"
+      display_Spin projectName, pDisplayView, "dark green"
       
       set the cursor to watch
       put "Updating project" && projectName && "..." into sComment
@@ -54,11 +54,29 @@ command env_CommitAndPushEverything pDisplayView
       # Push
       git_PushBranch gitFolder
       put the result into shellResult
-      if shellResult is not empty then
-         lcw_Notify shellResult
-      else
-         set the deleted_Line of pDisplayView to lineNum
-      end if
+      set the itemdelimiter to ":"
+      switch
+         case item 1 of shellResult = "To https"
+            /*
+            To https://github.com/LiveCodeWorld/lcw_Tools.git
+            f0c8cd6..270780e  master -> master
+            */
+            set the deleted_Line of pDisplayView to lineNum
+            break
+         case item 1 of shellResult = "fatal"
+            /*
+            fatal: 'origin' does not appear to be a git repository
+            fatal: Could not read from remote repository.
+            
+            Please make sure you have the correct access rights
+            and the repository exists.
+            */
+            set the line_Colour [lineNum] of pDisplayView to "red"
+            break
+         default
+            set the line_Colour [lineNum] of pDisplayView to "blue"
+            lcw_Notify shellResult
+      end switch
    end repeat
 end env_CommitAndPushEverything
 
