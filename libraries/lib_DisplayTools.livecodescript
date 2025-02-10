@@ -14,6 +14,64 @@ Their should be an easy default, with teh ability to customise.
 
 --> Working on
 -
+command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDisplayView
+   put "Display" && pStackLabel into cloneName
+   --
+   # Display data depending on ducktyping of content
+   if there is a stack cloneName then
+      put cloneName into cloneStackName
+   else
+      if pNameKey is empty then
+         -- display_Data someData, pTitle, pStackLabel, pDisplayView
+         -- stack_Clone "View|Tree|Widget with Title", pStackLabel, cloneName
+         stack_CloneInvisible "View|Tree|Widget with Title", cloneName
+      else
+         -- display_IndexArray someData, pTitle, pStackLabel, false, pNameKey, 2, pDisplayView
+         -- stack_Clone "View|Index|Simple", pStackLabel, cloneName
+         stack_CloneInvisible "View|Index|Simple", cloneName
+      end if
+      put the result into cloneStackName
+      
+      # Default stack style
+      set the style of stack cloneStackName to "palette"
+      -- stack_SetToMainScreen cloneStackName
+   end if
+   
+   # Find display_View
+   put _DisplayView (cloneStackName) into dView -- hacky
+   if exists (dView) is false then return "Error, could not find dView:" && cloneStackName
+   
+   # Display And Show
+   lock screen
+   set the displayed_Data [pTitle] of dView to someData
+   set the visible of stack cloneStackName to true
+   unlock screen
+   
+   # Guess menuBit from pStackLabel
+   put pStackLabel into toolPath
+   replace space with " | " in toolPath
+   
+   # Set menus and mouse_DoubleUp
+   _SetProjectName pProjectName, pStackLabel
+   set the tool_MenuBit [pProjectName] of dView to toolPath
+   return dView
+end display_Tool
+
+private command _SetProjectName @pProjectName, pStackLabel
+   if pProjectName is empty then
+      -- For creating menus we guess libName from pStackLabel
+      put "lib_" & word 1 of pStackLabel into pProjectName
+   end if
+end _SetProjectName
+
+private function _DisplayView cloneStackName
+   put the long id of cd 1 of stack cloneStackName into firstCard
+   
+   -- hacky (change to view_Object or displayed_Object of card?)
+   put the long id of control 1 of firstCard into displayView
+   return displayView
+end _DisplayView
+
 command ask_CreateTreeFieldMenu lineTitle
    breakpoint
    put the tool_LibName of the target into libName
@@ -161,29 +219,6 @@ end display_MenuBarData
 
 --> Display | Tools
 -
-command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDisplayView
-   # Display data depending on ducktyping of content
-   if pNameKey is empty then
-      display_Data someData, pTitle, pStackLabel, pDisplayView
-   else
-      display_IndexArray someData, pTitle, pStackLabel, false, pNameKey, 2, pDisplayView
-   end if
-   put the result into dView
-   
-   # Guess libName from pStackLabel
-   if pProjectName is empty then
-      put "lib_" & word 1 of pStackLabel into pProjectName
-   end if
-   
-   # Guess menuBit from pStackLabel
-   put pStackLabel into toolPath
-   replace space with " | " in toolPath
-   
-   # Set menus and mouse_DoubleUp
-   set the tool_MenuBit [pProjectName] of dView to toolPath
-   return dView
-end display_Tool
-
 command display_Tools someData, pTitle, pToolPath, pStackLabel, pProjectName, pPalette, pTopLeft, pFoldedArray
    # Display data depending on ducktyping of content
    display_Data someData, pTitle, pStackLabel, "", pPalette, pTopLeft, pFoldedArray
