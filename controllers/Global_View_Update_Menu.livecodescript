@@ -61,7 +61,7 @@ private function _isTemplate viewObject
 end _isTemplate
 
 function view_ListNestedNames tObject
-   put the view_NestedArray of tObject into nestedViewArray
+   put the view_NestedData of tObject into nestedViewArray
    put viewArray_GetInner (nestedViewArray) into innerViewArray
    put keys (innerViewArray) into innerViewNames
    return innerViewNames   
@@ -98,6 +98,10 @@ getprop disabled_UpdateModuleArray [viewObject]
    return moduleStackName is empty
 end disabled_UpdateModuleArray
    
+on menu_DisplayNestedViewArray viewObject
+   display_NestedViewArray viewObject
+end menu_DisplayNestedViewArray
+
 private on _
 end _
 
@@ -117,7 +121,7 @@ getprop disabled_Swap [sView]
 end disabled_Swap
 
 on menu_DisplayViewOutline sView, pDisplayView
-   put the view_NestedArray of sView into nestedViewArray
+   put the view_NestedData of sView into nestedViewArray
    put the name of sView into someTitle
    
    put viewArray_GetInner (nestedViewArray) into innerViewArray
@@ -129,10 +133,6 @@ on menu_DisplayViewOutline sView, pDisplayView
    set the displayed_Object of displayView to sView
    set the displayed_NestedViewArray of displayView to nestedViewArray
 end menu_DisplayViewOutline
-
-on menu_DisplayNestedViewArray viewObject
-   display_NestedViewArray viewObject
-end menu_DisplayNestedViewArray
 
 private on ___
 end ___

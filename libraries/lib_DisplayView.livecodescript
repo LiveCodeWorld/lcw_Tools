@@ -443,32 +443,31 @@ command display_ViewBehaviors viewObject, pIndexView, pStacklabel
 end display_ViewBehaviors
 
 command display_NestedViewArray viewObject
-   put the view_NestedArray of viewObject into nestedViewArray
+   put the view_NestedData of viewObject into nestedViewArray
    
    put the view_Name of viewObject into viewName
    put the module_Name of viewObject into moduleName
    put the project_Name of viewObject into projectName
-   
-   put view_ConstructToolMenu (viewObject, true) into mTitle
-   put viewName & comma & projectName into stackTitle
-   
-   display_Array nestedViewArray, stackTitle, mTitle
-   put the result into arrayView
-   
-   set the displayed_Object of arrayView to viewObject
-   set the displayed_ViewName of arrayView to viewName
-   
+   --
    put the module_Folder of viewObject into moduleFolder
    put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
    put the project_Folder of viewObject into projectFolder
+      
+   display_Tool nestedViewArray, viewName, "ViewData", "lcw_Tools"
+   -- display_Array nestedViewArray, stackTitle, mTitle
+   put the result into dView
    
-   set the displayed_ModuleFolder of arrayView to moduleFolder
-   set the displayed_ModuleName of arrayView to moduleFolderName
-   set the displayed_ModuleHomeStackPath of arrayView to moduleHomeStackPath
-   set the displayed_ProjectName of arrayView to projectName
-   set the displayed_ProjectFolder of arrayView to projectFolder
-   
-   return arrayView
+   # Set data
+   set the displayed_Object of dView to viewObject
+   set the displayed_ViewName of dView to viewName
+   --
+   set the displayed_ModuleFolder of dView to moduleFolder
+   set the displayed_ModuleName of dView to moduleFolderName
+   set the displayed_ModuleHomeStackPath of dView to moduleHomeStackPath
+   set the displayed_ProjectName of dView to projectName
+   set the displayed_ProjectFolder of dView to projectFolder
+   --
+   return displayView
 end display_NestedViewArray
 
 command display_ProjectViews projectName

@@ -31,11 +31,6 @@ getprop menu_CheckTarget [dView]
    return exists (dView)
 end menu_CheckTarget
 
--- getprop disabled_Menu [moduleView]
-   put the menubar_View of moduleView into mGroup
-   return exists (mGroup) is false
-end disabled_Menu
-
 
 --> Global | Module | Tools | Menu
 -

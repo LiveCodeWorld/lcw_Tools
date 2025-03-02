@@ -22,25 +22,21 @@ local LeftView, RightView
 
 --> Working on
 -
-getprop layout_ViewNames
-   put the view_Name of LeftView into firstViewName
-   put the view_Name of RightView into secondViewName
-   --
-   switch
-      case secondViewName is empty
-         return firstViewName
-      case firstViewName = secondViewName
-         return firstViewName
-      default
-         return firstViewName,secondViewName
-   end switch
-end layout_ViewNames
-
-getprop layout_Views
-   return LeftView & CR & RightView
-end layout_Views
+on view_Init
+   if exists (LeftView) is false then
+      _SetLeftViewLocal
+   end if
+   
+   if exists (RightView) is false then
+      _SetRightViewLocal
+   end if
+   pass view_Init
+end view_Init
 
 getprop view_Type
+   if exists (LeftView) is false then view_Init
+   if exists (RightView) is false then view_Init
+   
    put label_ViewToCamelTitle (the view_Name of LeftView) into firstViewName
    put label_ViewToCamelTitle (the view_Name of RightView) into secondViewName
    --
@@ -72,6 +68,81 @@ setprop view_Type camelTitle
    set the control_Type ["left_View"] of LeftView to firstViewName
    set the control_Type ["right_View"] of RightView to secondViewName
 end view_Type
+
+on layout_SetLastLeftViewWidth
+   -- used by divider
+   put the width of LeftView into leftViewWidth
+   _SetLastLeftViewWidth leftViewWidth
+end layout_SetLastLeftViewWidth
+
+private function _GetLastViewWidth
+   put LocalArray ["leftViewWidth"] into leftViewWidth
+   if leftViewWidth is empty then put the width of leftView into leftViewWidth
+   return leftViewWidth
+end _GetLastViewWidth
+
+private command _SetLastLeftViewWidth leftViewWidth
+   put leftViewWidth into LocalArray ["leftViewWidth"]
+end _SetLastLeftViewWidth
+
+private function _GetLastTotalWidth
+   put LocalArray ["lastTotalWidth"] into lastTotalWidth
+   if lastTotalWidth is empty then put the width of me into lastTotalWidth
+   return lastTotalWidth
+end _GetLastTotalWidth
+
+private command _SetLastTotalWidth newLayoutWidth
+   put newLayoutWidth into LocalArray ["lastTotalWidth"]
+end _SetLastTotalWidth
+
+
+--> Events
+-
+on resizeControl
+   if the long id of the target is not the long id of me then pass resizeControl -- needed???
+   LayoutControl the rect of me
+end resizeControl
+
+on preOpenControl
+   view_Init
+   --
+   pass preOpenControl
+end preOpenControl
+
+private command _SetLeftViewLocal
+   put the uOPN ["LeftView"] of me into LeftView
+   if exists (LeftView) is false then
+      put _GetFirstView() into LeftView
+   end if
+end _SetLeftViewLocal
+
+private command _SetRightViewLocal
+   put the uOPN ["RightView"] of me into RightView
+   if exists (RightView) is false then
+      put _GetSecondView() into RightView
+   end if
+end _SetRightViewLocal
+
+
+--> Layout
+-
+getprop layout_ViewNames
+   put the view_Name of LeftView into firstViewName
+   put the view_Name of RightView into secondViewName
+   --
+   switch
+      case secondViewName is empty
+         return firstViewName
+      case firstViewName = secondViewName
+         return firstViewName
+      default
+         return firstViewName,secondViewName
+   end switch
+end layout_ViewNames
+
+getprop layout_Views
+   return LeftView & CR & RightView
+end layout_Views
 
 getprop layout_Elements
    if the long id of the target is not the long id of me then pass layout_Elements
@@ -148,48 +219,6 @@ end left_View
 getprop right_View
    return RightView
 end right_View
-
-setprop view_Rect someRect
-   -- this allows for nested views with or without "setprop view_Rect" handlers
-   if the long id of the target = the long id of me then
-      LayoutControl someRect
-   else
-      set the rect of the target to someRect
-   end if
-end view_Rect
-
-
---> Events
--
-on resizeControl
-   if the long id of the target is not the long id of me then pass resizeControl -- needed???
-   LayoutControl the rect of me
-end resizeControl
-
-on preOpenControl
-   if exists (LeftView) is false then
-      _SetLeftViewLocal
-   end if
-   
-   if exists (RightView) is false then
-      _SetRightViewLocal
-   end if
-   pass preOpenControl
-end preOpenControl
-
-private command _SetLeftViewLocal
-   put the uOPN ["LeftView"] of me into LeftView
-   if exists (LeftView) is false then
-      put _GetFirstView() into LeftView
-   end if
-end _SetLeftViewLocal
-
-private command _SetRightViewLocal
-   put the uOPN ["RightView"] of me into RightView
-   if exists (RightView) is false then
-      put _GetSecondView() into RightView
-   end if
-end _SetRightViewLocal
 
 
 --> Geometry
@@ -294,8 +323,8 @@ on LayoutControl pRect
          put innerRect into rightViewRect
          put rightViewLeft into item 1 of rightViewRect
          
-         put leftViewWidth into LocalArray ["lastLeft"]
-         put newLayoutWidth into LocalArray ["lastTotalWidth"]
+         _SetLastLeftViewWidth leftViewWidth
+         _SetLastTotalWidth newLayoutWidth
    end switch
    
    -- Set Rects
@@ -386,7 +415,7 @@ getprop hidden_View
       case the visible of the right_View of me = false
          return "right"
       default
-         return empty
+         return "none"
    end switch      
 end hidden_View
 
@@ -409,16 +438,18 @@ setprop hidden_View whichView
          set the visible of rightView to false
          set the visible of verticalDivider to false
          break
-      default -- case "none" or empty or...
+      case "none"
+      default
          set the visible of leftView to true
          set the visible of rightView to true
          set the visible of verticalDivider to true
          
+         put _GetLastViewWidth() into lastLeft
          get item 1 of whichView
          if it is a number then
             set the width of leftView to it
-         else if LocalArray ["lastLeft"] is a number then
-            set the width of leftView to LocalArray ["lastLeft"]
+         else if lastLeft is a number then
+            set the width of leftView to lastLeft
          end if
    end switch
    LayoutControl oRect
@@ -497,11 +528,9 @@ private function layout_GetLeftViewWidth newLayoutWidth, leftView, rightView, ve
          return round(newLayoutWidth * widthProportion)
       case "half"
          return round(newLayoutWidth / 2)
-      case "proportional"	# free
-         put LocalArray ["lastLeft"] into lastLeft
-         if lastLeft is empty then put the width of leftView into lastLeft
-         put LocalArray ["lastTotalWidth"] into lastTotalWidth
-         if lastTotalWidth is empty then put the width of me into lastTotalWidth
+      case "proportional"
+         put _GetLastViewWidth() into lastLeft
+         put _GetLastTotalWidth() into lastTotalWidth
          
          put lastLeft / lastTotalWidth into widthProportion
          put round(newLayoutWidth * widthProportion) into newLeftWidth

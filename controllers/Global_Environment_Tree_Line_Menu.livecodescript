@@ -152,9 +152,9 @@ end menu_DisplayProjectArray
 private on __
 end __
 
-on menu_DisplayProject projectName
+on menu_DisplayProjectTools projectName
    display_Project projectName
-end menu_DisplayProject
+end menu_DisplayProjectTools
 
 on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName

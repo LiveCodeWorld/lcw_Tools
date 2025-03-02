@@ -72,26 +72,31 @@ end functionKey
 
 --> Private
 -
+command _ToggleCameras cameraViews
+   -- put camera_ListNames() into cameraViews
+   put stack_ListNamedView ("View|Camera") into cameraViews
+   if cameraViews is empty then return false
+   --
+   put line 1 of cameraViews into testView
+   put the camera_IsOpen of testView into isOpen
+   put isOpen is false into sBoolean
+   --
+   set the cursor to watch
+   repeat for each line cameraView in cameraViews
+      if exists (cameraView) is false then next repeat
+      --
+      set the camera_IsOpen of cameraView to sBoolean
+      put cameraView & CR after goodCameraViews
+   end repeat
+   delete char -1 of goodCameraViews
+   --
+   return goodCameraViews
+end _ToggleCameras
+
 private command _ToggleCameraDecorations
    put stack_FindNames ("View|Camera") into cNames
    stack_ToggleDecorations cNames, empty
 end _ToggleCameraDecorations
-
-private command _ToggleCamera
-   camera_ToggleLoaded
-   breakpoint
-   
-   global gLCW
-   put gLCW ["temp"]["Record"]["What"] into recordWhat
-   switch recordWhat
-      case "camera"
-         
-         break
-      case "screen"
-      default
-         screen_ToggleRecord "", true
-   end switch
-end _ToggleCamera
 
 private command _SearchContext
    switch
