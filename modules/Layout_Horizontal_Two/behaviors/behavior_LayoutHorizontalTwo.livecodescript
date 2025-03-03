@@ -22,7 +22,7 @@ local LeftView, RightView
 
 --> Working on
 -
-on view_Init
+private command _InitView
    if exists (LeftView) is false then
       _SetLeftViewLocal
    end if
@@ -30,12 +30,11 @@ on view_Init
    if exists (RightView) is false then
       _SetRightViewLocal
    end if
-   pass view_Init
-end view_Init
+end _InitView
 
 getprop view_Type
-   if exists (LeftView) is false then view_Init
-   if exists (RightView) is false then view_Init
+   if exists (LeftView) is false then _InitView
+   if exists (RightView) is false then _InitView
    
    put label_ViewToCamelTitle (the view_Name of LeftView) into firstViewName
    put label_ViewToCamelTitle (the view_Name of RightView) into secondViewName
@@ -104,7 +103,7 @@ on resizeControl
 end resizeControl
 
 on preOpenControl
-   view_Init
+   _InitView
    --
    pass preOpenControl
 end preOpenControl
@@ -419,24 +418,67 @@ getprop hidden_View
    end switch      
 end hidden_View
 
+setprop left_Only sBooelan
+   _SetViews leftView, rightView, verticalDivider
+   --
+   set the visible of leftView to sBooelan
+   set the visible of rightView to (sBooelan is false)
+   set the visible of verticalDivider to (sBooelan is false)
+end left_Only
+
+getprop left_Visible
+   put the visible of the left_View of me into sBooelan
+   return sBooelan
+end left_Visible
+
+setprop left_Visible sBooelan
+   put the rect of me into pRect
+   _SetViews leftView, rightView, verticalDivider
+   
+   lock screen
+   set the visible of leftView to sBooelan
+   put sBooelan AND the visible of verticalDivider into dividerVisible
+   set the visible of verticalDivider to dividerVisible
+   --
+   LayoutControl pRect
+   unlock screen
+end left_Visible
+
+getprop right_Visible
+   put the visible of the right_View of me into sBooelan
+   return sBooelan
+end right_Visible
+
+setprop right_Visible sBooelan
+   put the rect of me into pRect
+   _SetViews leftView, rightView, verticalDivider
+   
+   lock screen
+   set the visible of rightView to sBooelan
+   put sBooelan AND the visible of verticalDivider into dividerVisible
+   set the visible of verticalDivider to dividerVisible
+   --
+   LayoutControl pRect
+   unlock screen
+end right_Visible
+
+private command _SetViews @leftView, @rightView, @verticalDivider
+   put the left_View of me into leftView
+   put the right_View of me into rightView
+   put the vertical_Divider of me into verticalDivider
+end _SetViews
+
 setprop hidden_View whichView
    -- lcw_Notify whichView
    lock screen
    put the rect of me into oRect
-   put the left_View of me into leftView
-   put the right_View of me into rightView
-   put the vertical_Divider of me into verticalDivider
    
    switch word 1 of whichView
       case "left"
-         set the visible of leftView to false
-         set the visible of rightView to true
-         set the visible of verticalDivider to false
+         set the left_Only of me to true
          break
       case "right"
-         set the visible of leftView to true
-         set the visible of rightView to false
-         set the visible of verticalDivider to false
+         set the right_Visible of me to true
          break
       case "none"
       default
