@@ -19,11 +19,35 @@ local LocalArray
 --> Menu | Props
 -
 getprop menu_Target [tObject]
+   put the layout_View of tObject into layoutView
+   --
+   put _TopControlNames (layoutView) into LocalArray ["_TopControlNames"]
    put view_ListOpen ("Layout|Placeholder") into LocalArray ["openViews"]
    --
-   put the layout_View of tObject into layoutView
    return layoutView
 end menu_Target
+
+private function _TopControlNames layoutView
+   put the top_ControlNames of layoutView into cNames
+   line_Delete "_VerticalDivider View", cNames
+   return cNames
+end _TopControlNames
+
+getprop setLeftName_Param [layoutView]
+   return the left_Name of layoutView
+end setLeftName_Param
+
+getprop setRightName_Param [layoutView]
+   return the right_Name of layoutView
+end setRightName_Param
+
+getprop setLeftName_Params [layoutView]
+   return LocalArray ["_TopControlNames"]
+end setLeftName_Params
+
+getprop setRightName_Params [layoutView]
+   return LocalArray ["_TopControlNames"]
+end setRightName_Params
 
 getprop replaceLeftView_Param [mTarget]
    put the left_View of mTarget into someView
@@ -99,11 +123,6 @@ end right_MenuItems
 
 --> Global | Layout | Horizontal | Two | Menu
 -
-on submenu_View
-   return "Global | View | Property | Menu"
-   return "Global | View | Update | Menu"
-end submenu_View
-
 on menu_ShowBorder layoutView, someBoolean
    set the showborder of layoutView to someBoolean
 end menu_ShowBorder
@@ -134,13 +153,35 @@ end menu_ReplaceRightView
 private command __
 end __
 
-on menu_PreOpenControl layoutView
-   dispatch "preOpenControl" to layoutView
-end menu_PreOpenControl
+on menu_SetLeftName layoutView, cName
+   set the left_Name of layoutView to cName
+end menu_SetLeftName
 
-on menu_StoreViewReferences layoutView
-   dispatch "StoreViewReferences" to layoutView with false
-end menu_StoreViewReferences
+on menu_SetRightName layoutView, cName
+   set the right_Name of layoutView to cName
+end menu_SetRightName
+
+private command ___
+end ___
+
+on menu_PreopenControl layoutView
+   dispatch "preOpenControl" to layoutView
+end menu_PreopenControl
+
+on menu_CloneModule layoutView
+   put the stack_Name of layoutView into sName
+   stack_Clone sName
+   put the result into clonedStack
+   set the original_ModuleName of clonedStack to moduleName
+   put the stack_Name of clonedStack into cStackName
+   --
+   display_CloneTools cStackName
+end menu_CloneModule
+
+on submenu_View
+   return "Global | View | Property | Menu"
+   return "Global | View | Update | Menu"
+end submenu_View
 
 on submenu_Dev
    return menu_DevTitle ("Global | Layout | Horizontal | Two | Menu")

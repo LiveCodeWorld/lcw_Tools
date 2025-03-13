@@ -51,6 +51,7 @@ getprop menu_Target [tObject]
    end if
    --
    put the display_View of tObject into LocalArray ["displayView"]
+   put git_GetInit (projectName) into LocalArray ["isInit"]
    return projectName
 end menu_Target
 
@@ -119,6 +120,10 @@ on menu_ProjectHelp projectName
    return wikiView
 end menu_ProjectHelp
 
+on menu_DisplayProjectTools projectName
+   display_Project projectName
+end menu_DisplayProjectTools
+
 on menu_StartProject projectName
    -- put LocalArray ["oColour"] is not "255,0,0" into isActive -- red
    put env_ProjectIsActive (projectName) into isActive
@@ -152,10 +157,6 @@ end menu_DisplayProjectArray
 private on __
 end __
 
-on menu_DisplayProjectTools projectName
-   display_Project projectName
-end menu_DisplayProjectTools
-
 on menu_DisplayProjectLibs projectName
    display_ProjectLibs projectName
 end menu_DisplayProjectLibs
@@ -188,8 +189,12 @@ on menu_InitGit projectName
    display_GitProjectStatus projectName
 end menu_InitGit
 
-getprop disabled_InitGit [repoName]
-   return git_GetInit (repoName) is false
+getprop disabled_InitGit [projectName]
+   if LocalArray ["isInit"] is true then
+      return true
+   else
+      return false
+   end if
 end disabled_InitGit
 
 on menu_DisplayGitStatus projectName
@@ -197,7 +202,11 @@ on menu_DisplayGitStatus projectName
 end menu_DisplayGitStatus
 
 getprop disabled_DisplayGitStatus [projectName]
-  
+   if LocalArray ["isInit"] is true then
+      return false
+   else
+      return true
+   end if
 end disabled_DisplayGitStatus
 
 private on ____

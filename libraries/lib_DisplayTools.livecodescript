@@ -14,27 +14,163 @@ Their should be an easy default, with teh ability to customise.
 
 --> Working on
 -
-command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDisplayView
-   put "Display" && pStackLabel into cloneName
+
+command display_MenuBarData mGroup
+   if exists (the menubar_View of mGroup) is false then
+      breakpoint
+      return "Error, menubar_View does not exists:" && mGroup
+   end if
+   
+   put the stack_Name of mGroup && "Menubar Data" into stackName
+   put the menubar_TableData of mGroup into indexArray
+   
+   -- put display_FindArrayView ("Menubar Data", stackName) into dView
+   -- display_Tool indexArray, "Menubar Data", "Menubar Data" -- "lcw_Menus", "m mName"
+   
+   display_StandardTool indexArray, stackName, "Menubar Data"
+   put the result into dView
+   set the displayed_Object of dView to mGroup
+   
+   # Set menus and mouse_DoubleUp
+   set the tool_MenuBit ["lcw_Menus"] of dView to "Menubar | Data"
+   
+   return dView
+end display_MenuBarData
+
+command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey
+   if pTitle is empty then put "Data" into pTitle
    --
-   # Display data depending on ducktyping of content
-   if there is a stack cloneName then
+   display_StandardTool someData, pTitle, pStackLabel, pNameKey
+   put the result into dView
+   
+   # Guess menuBit from pStackLabel
+   if pStackLabel is empty then
+      put menu_Bit (pTitle) into pToolPath
+      breakpoint
+   else
+      put pStackLabel into pToolPath
+      replace space with " | " in pToolPath
+   end if
+   
+   # Set menus and mouse_DoubleUp
+   set the tool_MenuBit [pProjectName] of dView to pToolPath
+   
+   return dView
+end display_Tool
+
+
+--> Events (Move to Line menu)
+-
+on mDoubleUp_GoToCard displayView, cardName
+   breakpoint
+   put the displayed_Object of displayView into stackObject
+   put the title_Text of displayView into stackName
+   --
+   go to cd cardName of stack stackName
+end mDoubleUp_GoToCard
+
+
+--> Display
+-
+command display_Project projectName, pExpandedItems
+   local foldedArray
+   if pExpandedItems is empty then put "Modules" into pExpandedItems
+    
+   put project_GetStackNameArray (projectName) into dArray
+   --
+   put display_ConstructFoldState (pExpandedItems) into foldedArray
+   display_StandardTool dArray, projectName, "Project", foldedArray
+   put the result into displayView
+   
+   # Set Menus
+   put project_DisplayMenuTitles (projectName) into titleMenuTable
+   set the title_Menu of displayView to titleMenuTable
+   set the line_Menu of displayView to "Global | Project | Line | Menu"
+   set the mouse_DoubleUp of displayView to "mDoubleUp_ProjectTree"
+   --
+   return displayView
+end display_Project
+
+command display_ProjectArray projectName, pReconstruct
+   if pReconstruct is true then
+      project_UpdateArray projectName
+      put the result into projectArray
+      --
+      display_Project projectName
+      display_EnvironmentMenus true
+      display_GitRefreshProjectName projectName
+   else
+      put project_GetArray (projectName) into projectArray
+   end if
+   
+   /*
+   display_Data projectArray, projectName, "Project Array"
+   put the result into displayView
+   */
+   
+   display_StandardTool projectArray, projectName, "Project Array"
+   put the result into displayView
+   --
+   set the tool_MenuBit [projectName] of displayView to "Project | Array"
+   --
+   return displayView
+end display_ProjectArray
+
+command display_ModuleTools moduleStackName, pDisplayView
+   -- moduleStackName = "View|Guide"
+   if exists (stack moduleStackName) is false then
+      return "Error, cannot locate stack:" && moduleStackName
+   end if
+   
+   put the short name of stack moduleStackName into moduleStackName -- in case it's a stackPath
+   put the module_Folder of stack moduleStackName into moduleFolder
+   put the card_ViewObject of stack moduleStackName into moduleView
+   put directory_NestedArray (moduleFolder) into dArray
+   --
+   display_StandardTool dArray, moduleStackName
+   put the result into displayView
+   --
+   set the displayed_Object of displayView to moduleView
+   set the displayed_ModuleFolder of displayView to moduleFolder
+   put the module_MenuTitle of moduleView into moduleMenu
+   
+   # Set menus and mouse_DoubleUp
+   set the tool_MenuBit [projectName] of displayView to "Module | Tools"
+   --
+   put the stack_Name of displayView into displayStackName
+   show stack displayStackName -- just in case
+   --
+   return displayView
+end display_ModuleTools
+
+command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameKey
+   # Clone name
+   -- put "Display" && label_FromModuleName(pTitle) into cloneName
+   put "Display" && pTitle into cloneName
+   
+   # Ducktype
+   -- put pNameKey is empty into isArray
+   put someData is an array into isArray
+   put there is a stack cloneName into stackExisted
+   
+   # Display data
+   lock screen
+   if stackExisted then
       put cloneName into cloneStackName
    else
-      if pNameKey is empty then
-         -- display_Data someData, pTitle, pStackLabel, pDisplayView
-         -- stack_Clone "View|Tree|Widget with Title", pStackLabel, cloneName
+      if isArray then
          stack_CloneInvisible "View|Tree|Widget with Title", cloneName
       else
-         -- display_IndexArray someData, pTitle, pStackLabel, false, pNameKey, 2, pDisplayView
-         -- stack_Clone "View|Index|Simple", pStackLabel, cloneName
          stack_CloneInvisible "View|Index|Simple", cloneName
       end if
       put the result into cloneStackName
       
+      if pStackLabel is not empty then
+         set the label of stack cloneStackName to pStackLabel
+      end if
+      
       # Default stack style
       set the style of stack cloneStackName to "palette"
-      -- stack_SetToMainScreen cloneStackName
    end if
    
    # Find display_View
@@ -42,87 +178,38 @@ command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey, pDis
    if exists (dView) is false then return "Error, could not find dView:" && cloneStackName
    
    # Display And Show
-   lock screen
    set the displayed_Data [pTitle] of dView to someData
-   set the visible of stack cloneStackName to true
+   if pFoldedArray is an array then
+      set the fold_State of dView to pFoldedArray
+   end if
+   
+   # Title Colour
+   display_SetTitleColour dView
+   
+   # Auto Width
+   if isArray is false then
+      set the field_Style of dView to "click"
+      set the drop_Command of dView to empty
+      --
+      put the formatted_Width of dView into fWidth
+      set the stack_Width of dView to fWidth
+   end if
    unlock screen
    
-   # Guess menuBit from pStackLabel
-   put pStackLabel into toolPath
-   replace space with " | " in toolPath
-   
-   # Set menus and mouse_DoubleUp
-   _SetProjectName pProjectName, pStackLabel
-   set the tool_MenuBit [pProjectName] of dView to toolPath
-   return dView
-end display_Tool
-
-private command _SetProjectName @pProjectName, pStackLabel
-   if pProjectName is empty then
-      -- For creating menus we guess libName from pStackLabel
-      put "lib_" & word 1 of pStackLabel into pProjectName
-   end if
-end _SetProjectName
-
-private function _DisplayView cloneStackName
-   put the long id of cd 1 of stack cloneStackName into firstCard
-   
-   -- hacky (change to view_Object or displayed_Object of card?)
-   put the long id of control 1 of firstCard into displayView
-   return displayView
-end _DisplayView
-
-command ask_CreateTreeFieldMenu lineTitle
-   breakpoint
-   put the tool_LibName of the target into libName
-   ask_CreateMenuFromObject lineTitle, libName
-end ask_CreateTreeFieldMenu
-
-
---> Ask | Create
--
-command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDisplay
-   -- as this handler is called for most display creation code 
-   -- we are careful and do a lot of checks before creating
-   -- but we need to be fast in rejecting searches where we know that we dont need to create a menu as it already exists
-   
-   # Return mController (fast)
-   if there is a stack gMenuTitle then return merge ("Error, not creating menu as stack '[[gMenuTitle]]' already exits!")
-   put menu_GetGlobalController (gMenuTitle) into mController -- usually a stackObject
-   if exists (mController) then return merge ("Error, not creating menu as '[[mController]]' already exits!")
-   
-   # Project name from library name
-   if exists (stack libName) is false then
-      -- put debug_CallingObject (1) into libObject
-      -- put the project_Name of libObject into projectName
-      put "lcw_Tools" into projectName
-   else
-      put the project_Name of stack libName into projectName
-   end if
-   
-   # Check path in case file not loaded
-   put the project_Folder of stack projectName into projectFolder
-   if there is not a folder projectFolder then return "Error, no project_Folder:" && projectFolder
-   put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
-   --
-   if there is a file controllerPath then
-      put the short name of stack controllerPath into stackName
-      if stackName = gMenuTitle then
-         return empty
+   # Show
+   if stackExisted then
+      -- go visible to stack cloneStackName -- bug: same as go invisible
+      show stack cloneStackName
+      go to stack cloneStackName
+      if the result is not empty then
+         breakpoint
       end if
+   else
+      set the visible of stack cloneStackName to true
    end if
    
-   # Ask Create
-   ask_CreateProjectMenu projectName, gMenuTitle, pControllerScript, pDisplay
-   put the result into mController
-   
-   # Edit the script
-   if pDisplay is true then
-      edit the script of mController
-   end if
-   
-   return mController
-end ask_CreateMenuFromObject
+   return dView
+end display_StandardTool
 
 
 --> Display
@@ -200,22 +287,6 @@ command display_CloneTools cStackName
    return dView
 end display_CloneTools
 
-command display_MenuBarData mGroup
-   if exists (the menubar_View of mGroup) is false then
-      breakpoint
-      return "Error, menubar_View does not exists:" && mGroup
-   end if
-   
-   put the stack_Name of mGroup into stackName
-   put the menubar_TableData of mGroup into indexArray
-   put display_FindArrayView ("Menubar Data", stackName) into dView
-   --
-   display_Tool indexArray, stackName, "Menubar Data", "lcw_Menus", "m mName", dView
-   put the result into dView
-   set the displayed_Object of dView to mGroup
-   return dView
-end display_MenuBarData
-
 
 --> Display | Tools
 -
@@ -253,32 +324,6 @@ end display_ObjectTools
 
 --> Display | Tools
 -
-on display_ModuleTools stackName, pDisplayView
-   if exists (stack stackName) is false then
-      return "Error, cannot locate stack:" && stackName
-   end if
-   
-   put the short name of stack stackName into stackName -- in case it's a stackPath
-   put the module_Folder of stack stackName into moduleFolder
-   put the card_ViewObject of stack stackName into moduleViewObject
-   put directory_NestedArray (moduleFolder) into dArray
-   --
-   display_Tool dArray, stackName, "Module Tools"
-   put the result into displayView
-   --
-   set the displayed_Object of displayView to moduleViewObject
-   set the displayed_ModuleFolder of displayView to moduleFolder
-   --
-   return displayView
-end display_ModuleTools
-
-put the stack_View of cd 1 of clonedStack into mView
-if exists (mView) then
-   set the displayed_Object of mView to moduleName
-else
-   breakpoint
-end if
-
 command display_ModuleToolScripts moduleName, projectName
    -- put library_FetchProjectFolder (projectName) into projectFolder
    put env_ConstructProjectFolder (projectName) into projectFolder
@@ -344,11 +389,12 @@ command display_ViewTools viewName, pRepoFolder
 end display_ViewTools
 
 
---> Events (Move to Line menu)
+--> Private
 -
-on mDoubleUp_GoToCard displayView, cardName
-   put the displayed_Object of displayView into stackObject
-   put the title_Text of displayView into stackName
-   --
-   go to cd cardName of stack stackName
-end mDoubleUp_GoToCard
+private function _DisplayView cloneStackName
+   put the long id of cd 1 of stack cloneStackName into firstCard
+   
+   -- hacky (change to view_Object or displayed_Object of card?)
+   put the long id of control 1 of firstCard into displayView
+   return displayView
+end _DisplayView

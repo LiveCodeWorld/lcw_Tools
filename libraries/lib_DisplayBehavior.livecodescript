@@ -16,8 +16,9 @@ command display_ModuleBehaviors mView
    put the module_BehaviorStackNames of mView into sNames
    
    put the view_Name of mView into vName
+   put vName && "Behaviors" into pTitle
    --
-   display_Tool sNames, vName, "Behavior", "lcw_Tools"
+   display_Tool sNames, pTitle, "Display Behaviors"
    put the result into dView
    --
    set the displayed_Object of dView to mView

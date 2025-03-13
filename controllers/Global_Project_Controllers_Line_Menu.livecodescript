@@ -36,17 +36,62 @@ getprop menu_CheckTarget [dView]
    return exists (mController)
 end menu_CheckTarget
 
-private function _GetStackName dView
+
+--> Private
+-
+private function _GoodShortFile dView
+   put _GetStackName (dView) into gMenuTitle
+   put project_ConstructShortFile (gMenuTitle) into goodShortFile
+   return goodShortFile
+end _GoodShortFile
+
+private function _SelectedShortFile dView
+   put the selected_Line of dView into goodShortFile
+   return goodShortFile
+end _SelectedShortFile
+
+private function _GetProjectFolder dView
+   put the title_Text of dView into projectName
+   --
+   put env_ProjectFolder (projectName) into projectFolder
+   return projectFolder
+end _GetProjectFolder
+
+private function _GetRelPath dView
    put the selected_Path of dView into sPath
-   if the number of items of sPath = 1 then
-      return empty
+   replace comma with slash in sPath
+   return sPath
+end _GetRelPath
+
+private function _GetStackPath dView
+   put _GetRelPath (dView) into sPath
+   put _GetProjectFolder(dView) into projectFolder
+   put projectFolder & sPath into stackPath
+   if exists (stack stackPath) is true then
+      return stackPath
    else
-      return item -1 of sPath
-      -- put the selected_Line of dView into stackName
-      -- mTitle_Normalize gMenuTitle
-      -- return stackName
+      return empty
    end if
+end _GetStackPath
+
+private function _GetStackName dView
+   put _GetStackPath (dView) into stackPath
+   if stackPath is empty then return empty
+   --
+   put the short name of stack stackPath into stackName
+   return stackName
 end _GetStackName
+
+private function _GetControllerPath dView
+   put _GetStackName (dView) into gMenuTitle
+   if exists (stack gMenuTitle) then
+      put the filename of stack gMenuTitle into sPath
+      return sPath
+   else
+      breakpoint
+      return _GetStandardControllerPath (dView)
+   end if
+end _GetControllerPath
 
 private function _GetGlobalController dView
    put _GetStackName (dView) into gMenuTitle
@@ -58,6 +103,42 @@ private function _GetGlobalController dView
       return mController
    end if
 end _GetGlobalController
+
+private function _MenuController dView
+   put _GetControllerPath (dView) into cPath
+   if exists (stack cPath) is false then
+      put _GetStackName (dView) into gMenuTitle
+      put "mController path:" && cPath
+      lcw_AnswerWarning "Cannot locate file for global menu '[[gMenuTitle]]'!", dView, gMenuTitle
+   end if
+   
+   put the name of stack cPath into mController
+   return mController
+end _MenuController
+
+private function _SelectedMenuController dView
+   put _GetStackName (dView) into gMenuTitle
+   --
+   put the name of stack gMenuTitle into mController
+   return mController
+end _SelectedMenuController
+
+private function _GetStandardControllerPath dView
+   put _GetStackName (dView) into gMenuTitle
+   
+   put the title_Text of dView into projectName
+   put the project_Folder of stack projectName into projectFolder
+   put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
+   put there is a stack controllerPath into someBoolean
+   if someBoolean is false then return empty
+   return controllerPath
+end _GetStandardControllerPath
+
+private command _CloseSelectedScriptTab dView
+   put _SelectedMenuController (dView) into mController
+   scriptEditor_CloseTab mController
+   return mController
+end _CloseSelectedScriptTab
 
 getprop moveController_Param [dView]
    put _GetStackName (dView) into gMenuTitle
@@ -93,56 +174,9 @@ getprop disabled_MoveController [dView]
    return LocalArray ["menuExists"] is false
 end disabled_MoveController
 
-private function _MenuController dView
-   put _GetControllerPath (dView) into cPath
-   if exists (stack cPath) is false then
-      put _GetStackName (dView) into gMenuTitle
-      put "mController path:" && cPath
-      lcw_AnswerWarning "Cannot locate file for global menu '[[gMenuTitle]]'!", dView, gMenuTitle
-   end if
-   
-   put the name of stack cPath into mController
-   return mController
-end _MenuController
-
-private function _SelectedMenuController dView
-   put _GetStackName (dView) into gMenuTitle
-   --
-   put the name of stack gMenuTitle into mController
-   return mController
-end _SelectedMenuController
-
-private function _GetControllerPath dView
-   put _GetStackName (dView) into gMenuTitle
-   if exists (stack gMenuTitle) then
-      put the filename of stack gMenuTitle into sPath
-      return sPath
-   else
-      breakpoint
-      return _GetStandardControllerPath (dView)
-   end if
-end _GetControllerPath
-
-private function _GetStandardControllerPath dView
-   put _GetStackName (dView) into gMenuTitle
-   
-   put the title_Text of dView into projectName
-   put the project_Folder of stack projectName into projectFolder
-   put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
-   put there is a stack controllerPath into someBoolean
-   if someBoolean is false then return empty
-   return controllerPath
-end _GetStandardControllerPath
-
-private command _CloseSelectedScriptTab dView
-   put _SelectedMenuController (dView) into mController
-   scriptEditor_CloseTab mController
-   return mController
-end _CloseSelectedScriptTab
-
 getprop disabled_FixShortFile [dView]
    put _GetStackName (dView) into gMenuTitle
-   put project_NameToShortFolder (gMenuTitle) & ".livecodescript" into goodShortFile
+   put _GoodShortFile (dView) into goodShortFile
    put the short_File of stack gMenuTitle into oldShortFile
    
    switch
@@ -176,7 +210,7 @@ on menu_ReindexMenu dView
    menu_ReIndexController mController
    --
    put the project_Name of mController into projectName
-   display_Project projectName, true
+   display_Project projectName
    --
    put the menu_GlobalTitle of mController into gMenuTitle
    put menu_ConstructFilter (gMenuTitle, 2) into sFilter
@@ -193,9 +227,9 @@ on menu_FixControllerName dView
    put the result into newStackName
 end menu_FixControllerName
 
-on menu_FixShortFile dView
+on menu_FixShortFile dView   
    put _GetStackName (dView) into gMenuTitle
-   put project_NameToShortFolder (gMenuTitle) & ".livecodescript" into goodShortFile
+   put _GoodShortFile(dView) into goodShortFile
    put the project_Name of stack gMenuTitle into projectName
    --
    lcw_Answer "Fix controllers filename (change to '[[goodShortFile]]')?", dView, goodShortFile
@@ -210,6 +244,9 @@ on menu_FixShortFile dView
    display_Project projectName
 end menu_FixShortFile
 
+private on __
+end __
+
 on menu_MoveController dView, newProjectName
    put _GetStackName (dView) into gMenuTitle
    put _SelectedMenuController (dView) into mController
@@ -218,21 +255,21 @@ on menu_MoveController dView, newProjectName
 end menu_MoveController
 
 on menu_DeleteController dView
-   put _GetStackName (dView) into gMenuTitle
+   put _GetStackName (dView) into mStackName
    --
    _CloseSelectedScriptTab dView
    put the result into mController
    --
-   if exists (stack gMenuTitle) is false then
-      put merge ("Stack '[[gMenuTitle]]' does not exist!") into someQuestion
+   if exists (stack mStackName) is false then
+      put merge ("Stack '[[mStackName]]' does not exist!") into someQuestion
       lcw_AnswerWarning someQuestion, dView
    end if
    
-   put the hilited_Lines of dView into lineNum
+   -- put the hilited_Line of dView into lineNum
    put the displayed_Index of dView into stackNames
    --
-   put the fileName of stack gMenuTitle into controllerFile
-   put the project_Name of stack gMenuTitle into projectName
+   put the fileName of stack mStackName into controllerFile
+   put the project_Name of stack mStackName into projectName
    
    if controllerFile is empty then
       set the stackFile_RemovePaths of stack projectName to controllerFile
@@ -249,12 +286,13 @@ on menu_DeleteController dView
    --
    lcw_Answer "Are you sure you want to delete the controller '[[shortControllerFile]]'?", dView, shortControllerFile
    --
-   delete stack gMenuTitle
+   delete stack mStackName
    --
    set the stackFile_RemovePaths of stack projectName to controllerFile -- need to do this before deleting file
    delete file controllerFile
    --
    display_ProjectControllers projectName
+   display_Project projectName
 end menu_DeleteController
 
 on _

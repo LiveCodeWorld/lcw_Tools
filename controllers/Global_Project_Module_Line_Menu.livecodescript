@@ -179,8 +179,8 @@ end menu_MoveModule
 
 on menu_TrashModule moduleName
    put LocalArray ["displayView"] into displayView
-   --
    lcw_Answer "Move module folder '[[moduleName]]' to the Trash?", displayView, moduleName
+   
    module_Trash moduleName
    --
    display_ModuleFromStackName moduleName

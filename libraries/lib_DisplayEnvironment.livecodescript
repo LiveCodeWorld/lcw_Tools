@@ -169,27 +169,29 @@ command display_Environment pRefreshOnly, pProjectNames
    end if
    put "List of Projects,Environment" into pStackTitle
    
-   put "mDoubleUp_Environment" into mDoubleClick
-   put empty into mUp
-   put empty into dragCommand
+   lock screen
    --
-   put "Global | Environment | Menu" into titleMenu
-   put "Global | Environment | Tree | Line | Menu" into lineMenu
-   
    put display_FindView ("Environment") into displayView
    if exists (displayView) is false then
-      display_Data pProjectNames, "Local Projects", "Environment"
+      display_Tool pProjectNames, "Local Projects", "Environment"
       put the result into displayView
+      
+      /*
+      display_Data pProjectNames, "Local Projects", "Environment"
+      
+      put "mDoubleUp_Environment" into mDoubleClick
       --
+      put "Global | Environment | Menu" into titleMenu
+      put "Global | Environment | Tree | Line | Menu" into lineMenu
+      
       set the title_Menu of displayView to titleMenu
       set the line_Menu of displayView to lineMenu
-      --
-      set the field_Style of displayView to "click"
       set the mouse_DoubleUp of displayView to mDoubleClick
-      set the drop_Command of displayView to dragCommand
-   else
       --
-      lock screen
+      */
+      set the field_Style of displayView to "click"
+      set the drop_Command of displayView to empty
+   else
       set the displayed_Index ["Local Projects"] of displayView to pProjectNames
       stack_Show displayView
    end if

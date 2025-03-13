@@ -144,51 +144,15 @@ on mDoubleUp_ProjectArray displayView, someLine
    put the title_Text of displayView into someTitle
 end mDoubleUp_ProjectArray
 
-on mDoubleUp_ProjectTree displayView, stackName
-   if the optionkey is "Down" then breakpoint
-   --
-   if the scriptonly of stack stackName is true then
-      edit the script of stack stackName 
-   else
-      show stack stackName
-      toplevel stack stackName
-   end if
-   
-   if the shiftKey is "Down" then
-      -- display_StackDeps the name of stack stackName
-      display_ModuleTools stackName
-   end if
-end mDoubleUp_ProjectTree
-
 
 --> Display | Project
 -
-command display_ProjectArray projectName, pReconstruct
-   if pReconstruct is true then
-      project_UpdateArray projectName
-      put the result into projectArray
-      --
-      display_Project projectName, true
-      display_EnvironmentMenus true
-      display_GitRefreshProjectName projectName
-   else
-      -- put project_ConstructArray (projectName) into projectArray
-      put project_GetArray (projectName) into projectArray
-   end if
-   
-   display_Data projectArray, projectName, "Project Array"
-   put the result into displayView
-   --
-   set the tool_MenuBit [projectName] of displayView to "Project | Array"
-   return displayView
-end display_ProjectArray
-
 on display_UpdateProjectArray projectName
    project_UpdateArray projectName
    put the result into projectArray
    --
    display_ProjectArray projectName
-   display_Project projectName, true
+   display_Project projectName
    display_EnvironmentMenus true
    display_GitRefreshProjectName projectName
 end display_UpdateProjectArray
@@ -226,28 +190,6 @@ end project_CreateBehavior
 
 --> Display | Project
 -
-command display_Project projectName, pRefreshOnly, pExpandedItems
-   local foldedArray
-   if pRefreshOnly is true AND display_FindProjectView (projectName) is empty then
-      return empty -- display is not open so do nothing
-   end if
-   
-   if pExpandedItems is empty then put "Modules" into pExpandedItems
-   put project_GetStackNameArray (projectName) into stackNameArray
-   -- 
-   put display_ConstructFoldState (pExpandedItems) into foldedArray
-   display_Array stackNameArray, projectName, "Project", foldedArray
-   put the result into displayView
-   --
-   put project_DisplayMenuTitles (projectName) into titleMenuTable
-   set the title_Menu of displayView to titleMenuTable
-   --
-   set the line_Menu of displayView to "Global | Project | Line | Menu"
-   set the mouse_DoubleUp of displayView to "mDoubleUp_ProjectTree"
-   --
-   return displayView
-end display_Project
-
 command display_ProjectLibs projectName, pRefreshOnly
    display_Project projectName
    put the result into displayView
@@ -285,7 +227,7 @@ end project_GetFolderArray
 
 function project_GetStackNameArray projectName, pRepoFolder
    put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
-   --
+   /*
    repeat for each item shortFolder in "libraries,models,controllers,views,behaviors,stacks"
       put folder_AddShort (projectFolder, shortFolder) into sFolder
       get folder_GetStackNameArray (sFolder)
@@ -294,7 +236,7 @@ function project_GetStackNameArray projectName, pRepoFolder
          put it into stackNameArray [shortLabel]
       end if
    end repeat
-   --
+   
    put project_ListModuleFolders (projectName) into moduleFolders
    repeat for each line moduleFolder in moduleFolders
       put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
@@ -303,7 +245,22 @@ function project_GetStackNameArray projectName, pRepoFolder
       put the short name of stack moduleHomeStackPath into stackName
       put empty into stackNameArray ["Modules"][stackName]
    end repeat
+   */
+   put directory_NestedArray (projectFolder) into stackNameArray
    
+   # Fix ModuleArray (nested display not working?)
+   put stackNameArray ["modules"] into moduleArray
+   delete variable stackNameArray ["modules"]
+   --
+   -- put project_GetFolder (projectName, "modules") into moduleFolder
+   repeat for each key shortModuleFolder in moduleArray
+      -- put project_PathFromFolder (projectFolder) into moduleHomeStackPath
+      put module_GetHomeStackPath (shortModuleFolder, projectName) into moduleHomeStackPath
+      if exists (stack moduleHomeStackPath) is false then next repeat
+      
+      put the short name of stack moduleHomeStackPath into stackName
+      put empty into stackNameArray ["Modules"][stackName] -- bug: modules as a key does not display
+   end repeat   
    return stackNameArray
 end project_GetStackNameArray
 

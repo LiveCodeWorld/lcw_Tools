@@ -18,9 +18,9 @@ local LocalArray
 
 --> Menu | Props
 -
-getprop menu_IsSimple
-   return true
-end menu_IsSimple
+getprop menu_Target
+   return empty
+end menu_Target
 
 getprop disabled_SaveEditedStacks
    put stack_ListEditedNames() into editedStackNames

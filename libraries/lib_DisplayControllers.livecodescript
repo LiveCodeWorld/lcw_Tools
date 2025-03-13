@@ -9,6 +9,55 @@ version: 0.2
 
 --> Ask | Module
 -
+command ask_CreateMenuFromObject gMenuTitle, libName, pControllerScript, pDisplay
+   -- as this handler is called for most display creation code 
+   -- we are careful and do a lot of checks before creating
+   -- but we need to be fast in rejecting searches where we know that we dont need to create a menu as it already exists
+   
+   # Project name from library name
+   if exists (stack libName) is false then
+      -- put debug_CallingObject (1) into libObject
+      -- put the project_Name of libObject into projectName
+      put "lcw_Tools" into projectName
+   else
+      put the project_Name of stack libName into projectName
+   end if
+   
+   # Return mController (fast)
+   if there is a stack gMenuTitle then return merge ("Error, not creating menu as stack '[[gMenuTitle]]' already exits!")
+   put menu_GetGlobalController (gMenuTitle) into mController -- usually a stackObject
+   if exists (mController) then return merge ("Error, not creating menu as '[[mController]]' already exits!")
+   
+   # Check path in case file not loaded
+   put the project_Folder of stack projectName into projectFolder
+   if there is not a folder projectFolder then return "Error, no project_Folder:" && projectFolder
+   put project_ConstructStandardFile (gMenuTitle, projectFolder, "controllers") into controllerPath
+   --
+   if there is a file controllerPath then
+      put the short name of stack controllerPath into stackName
+      if stackName = gMenuTitle then
+         return empty
+      end if
+   end if
+   
+   # Ask Create
+   ask_CreateProjectMenu projectName, gMenuTitle, pControllerScript, pDisplay
+   
+   ask_CreateModuleMenu moduleStackName, pGlobalMenuTitle, pControllerScript, pDisplayView
+   put the result into mController
+   
+   if the shiftKey is "Down" then
+      dispatch "ask_CreateMouseDoubleUpHandler" to me with mDoubleUp
+   end if
+   
+   # Edit the script
+   if pDisplay is true then
+      edit the script of mController
+   end if
+   
+   return mController
+end ask_CreateMenuFromObject
+
 command ask_CreateModuleMenu moduleStackName, pGlobalMenuTitle, pControllerScript, pDisplayView
    if pGlobalMenuTitle is empty then
       put module_ConstructGlobalMenuTitle (moduleStackName) into pGlobalMenuTitle
@@ -28,6 +77,27 @@ command ask_CreateModuleMenu moduleStackName, pGlobalMenuTitle, pControllerScrip
    --
    return mController
 end ask_CreateModuleMenu
+
+command ask_CreateProjectMenu projectName, pGlobalMenuTitle, pDontAsk, pControllerScript
+   # Check we can find a project foldeer
+   put project_GetFolder (projectName) into projectFolder
+   if there is not a folder projectFolder then lcw_AnswerWarning "Project folder does not exists!"
+   
+   # Ask about gMenuTitle
+   if pDontAsk is not true then
+      put _AskMenuTitle (projectName, pGlobalMenuTitle) into pGlobalMenuTitle
+   end if
+   
+   # Create and index
+   project_CreateMenuFromFolder projectFolder, pGlobalMenuTitle, pControllerScript
+   put the result into mController
+   
+   # Update Project controllers or project display if needed
+   display_ProjectControllers projectName, true
+   display_Project projectName
+   --
+   return mController
+end ask_CreateProjectMenu
 
 
 --> Menu | Create
@@ -87,27 +157,6 @@ private function _AskMenuTitle projectName, pGlobalMenuTitle, pDisplayView
    return gMenuTitle
 end _AskMenuTitle
 
-command ask_CreateProjectMenu projectName, pGlobalMenuTitle, pDontAsk, pControllerScript
-   # Check we can find a project foldeer
-   put project_GetFolder (projectName) into projectFolder
-   if there is not a folder projectFolder then lcw_AnswerWarning "Project folder does not exists!"
-   
-   # Ask about gMenuTitle
-   if pDontAsk is not true then
-      put _AskMenuTitle (projectName, pGlobalMenuTitle) into pGlobalMenuTitle
-   end if
-   
-   # Create and index
-   project_CreateMenuFromFolder projectFolder, pGlobalMenuTitle, pControllerScript
-   put the result into mController
-   
-   # Update Project controllers or project display if needed
-   display_ProjectControllers projectName, true
-   display_Project projectName, true
-   --
-   return mController
-end ask_CreateProjectMenu
-
 command ask_MoveMenu mController, gMenuTitle, newProjectName, pDisplayView 
    scriptEditor_CloseTab mController
    
@@ -132,8 +181,9 @@ command ask_MoveMenu mController, gMenuTitle, newProjectName, pDisplayView
    project_MoveStackRelative gMenuTitle, newProjectName
    
    # Update displays
-   display_Project newProjectName
-   display_Project oldProjectName
+   display_Project newProjectName, "controllers"
+   display_Project oldProjectName, "controllers"
+   --
    put menu_ConstructFilter (gMenuTitle, 2) into sFilter
    display_EnvironmentMenus true, sFilter
 end ask_MoveMenu
@@ -240,9 +290,9 @@ end display_MenuHandlers
 
 --> Display | Project | Controllers
 -
-command display_ProjectControllers projectName, pRefreshOnly
+command display_ProjectControllers projectName
    if display_ViewExists ("Project", projectName) then
-      display_Project projectName, pRefreshOnly
+      display_Project projectName
       put the result & CR after displayViews
    end if
    put project_ListMenus (projectName) into gMenuTitles

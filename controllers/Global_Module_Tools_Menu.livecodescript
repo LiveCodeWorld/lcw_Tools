@@ -31,6 +31,17 @@ getprop menu_CheckTarget [dView]
    return exists (dView)
 end menu_CheckTarget
 
+private function _ModuleName
+   put display_View() into dView
+   put the title_Text of dView into moduleName
+   -- put the view_Name of dView into moduleName
+   return moduleName
+end _ModuleName
+
+getprop submenu_Target
+   return empty
+end submenu_Target
+
 
 --> Global | Module | Tools | Menu
 -
@@ -47,9 +58,15 @@ on submenu_ModuleAssets
 end submenu_ModuleAssets
 
 on menu_ModuleReadme moduleView
-   put the view_Name of moduleView into moduleName
-   display_ModuleReadme moduleName
-   return the result
+   put _ModuleName() into moduleName
+   get the view_Name of moduleView
+   if it = moduleName then
+      display_ModuleReadme moduleName
+   else
+      -- breakpoint -- named badly?
+      display_ModuleReadme moduleName
+      menu_RefreshModule dView
+   end if
 end menu_ModuleReadme
 
 private on _
@@ -120,6 +137,8 @@ getprop disabled_ModuleProperty [mTarget]
 end disabled_ModuleProperty
 
 on menu_RefreshModule dView
+   put display_View() into dView
+   --
    dispatch "Refresh" to dView
    switch it
       case "handled"
@@ -134,7 +153,7 @@ on menu_RefreshModule dView
 end menu_RefreshModule
 
 on menu_RefreshModuleTools dView
-   put the view_Name of dView into moduleName
+   put _ModuleName() into moduleName
    display_ModuleTools moduleName
 end menu_RefreshModuleTools
 

@@ -10,11 +10,6 @@ version: 0.2
 -
 local LocalArray
 
-getprop viewIsFluid_Params [layoutView]
-   put the layout_Views of layoutView into viewNames
-   return viewNames
-end viewIsFluid_Params
-
 getprop addControl_Params
    return "field,button,field,image,scrollbar,graphic,player"
 end addControl_Params
@@ -69,17 +64,16 @@ end menu_EmptyLayout
 on _
 end _
 
-on menu_ViewIsFluid layoutView, vewNames
-   put the fdsa of layoutView
+on menu_ViewIsFluid layoutView, vewName
+   breakpoint
+   put vewName
 end menu_ViewIsFluid
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
+getprop viewIsFluid_Params [layoutView]
+   put the layout_Views of layoutView into viewNames
+   return viewNames
+end viewIsFluid_Params
 
-
---> Dev | Menu
--
 on menu_TestAddViews layoutView
    put "View|Layout|Placeholder" & CR after viewNames
    put "View|Layout|Placeholder" & CR after viewNames

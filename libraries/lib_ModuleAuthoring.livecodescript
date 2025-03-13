@@ -4,11 +4,35 @@
 license: GPLv3
 name: lib_ModuleAuthoring
 type: library
-version: 0.3
+version: 0.4
 
 
 --> Working on
 -
+command stack_Remove stackPaths
+   repeat for each line stackPath in stackPaths
+      if exists (stack stackPath) then
+         delete stack stackPath
+         put stackPath & CR into removedStackPaths
+      end if
+   end repeat
+   delete char -1 of removedStackPaths
+   return removedStackPaths
+end stack_Remove
+
+command module_RenameBehavior stackPath, newBehaviorName
+   if exists (stack stackPath) is false then return "Error, behavior does exist:" && stackPath
+   
+   put the name of stack stackPath into oldScriptObject
+   scriptEditor_CloseTab oldScriptObject
+   --
+   set the script_Name of stack stackPath to newBehaviorName
+   set the name of stack stackPath to newBehaviorName
+   save stack stackPath
+   --
+   return newBehaviorName
+end module_RenameBehavior
+
 setprop module_AddBehavior vName
    put the long id of the target into tObject
    --
@@ -20,6 +44,20 @@ setprop module_AddBehavior vName
    set the behavior_Objects of tObject to moduleBehaviors
    return moduleBehaviors
 end module_AddBehavior
+
+command module_Trash moduleName   
+   ## Get moduleFolder before closing
+   put the module_Folder of stack moduleName into moduleFolder
+   put the project_Folder of stack moduleName into projectFolder
+   
+   ## Close and rremove from memory
+   module_RemoveFromMemory moduleName, projectFolder
+   
+   ## Move folder
+   revDeleteFolder moduleFolder
+   --
+   return the result
+end module_Trash
 
 
 --> Module | Metadata
@@ -56,31 +94,6 @@ command module_TrashStack stackName
    set the stack_IsKnown of projectHomeStack to false
    return stackPath
 end module_TrashStack
-
-command stack_Remove stackPaths
-   repeat for each line stackPath in stackPaths
-      if exists (stack stackPath) then
-         delete stack stackPath
-         put stackPath & CR into removedStackPaths
-      end if
-   end repeat
-   delete char -1 of removedStackPaths
-   return removedStackPaths
-end stack_Remove
-
-command module_Trash moduleName
-   ## Get moduleFolder before closing
-   put the module_Folder of stack moduleName into moduleFolder
-   put the project_Folder of stack moduleName into projectFolder
-   
-   ## Close and rremove from memory
-   module_RemoveFromMemory moduleName, projectFolder
-   
-   ## Move folder
-   revDeleteFolder moduleFolder
-   --
-   return the result
-end module_Trash
 
 command module_RemoveFromMemory moduleName, pProjectFolder
    if there is a folder pProjectFolder then
@@ -281,17 +294,6 @@ command module_MoveRenameBehavior oldBehaviorStackPath, newBehaviorName, pModule
    return newBehaviorStackPath
 end module_MoveRenameBehavior
 
-command module_RenameBehavior stackPath, newBehaviorName
-   put the name of stack stackPath into oldScriptObject
-   scriptEditor_CloseTab oldScriptObject
-   --
-   set the script_Name of stack stackPath to newBehaviorName
-   set the name of stack stackPath to newBehaviorName
-   save stack stackPath
-   --
-   return newBehaviorName
-end module_RenameBehavior
-
 function module_GetHomePath moduleName, pProjectName
    if pProjectName is empty then
       put lcw_PipesToUnderscore (moduleName) into moduleFolderName
@@ -310,104 +312,8 @@ function module_GetHomePath moduleName, pProjectName
    end if
 end module_GetHomePath
 
-on mDoubleUp_OldView displayView, shortFile
-   if char 1 of shortFile = "." then
-      delete char 1 of shortFile
-   end if
-   --
-   put view_OldFolder() & shortFile into oldViewFile
-   if there is a stack oldViewFile then
-      put the short name of stack oldViewFile into oldName
-      delete stack oldName
-      --
-      go to stack oldViewFile
-   else
-      breakpoint
-      --
-      set the itemdelimiter to slash
-      put oldViewFile into oldViewFolder
-      put empty into item -1 of oldViewFolder
-      finder_RevealFileOrFolder oldViewFolder
-   end if
-end mDoubleUp_OldView
-
-command display_OldViewFiles
-   put view_ListOldShortPaths() into oldViewShortFiles
-   --
-   display_Data oldViewShortFiles, "Old Views", "Revolution"
-   put the result into displayView
-   display_SetInteractions displayView, "View | Old", "mDoubleUp_OldView"
-   return displayView
-end display_OldViewFiles
-
-function view_ListOldShortPaths
-   put view_OldFolder() into oldViewFolder
-   put files (oldViewFolder) into oldViewShortFiles
-   sort lines of oldViewShortFiles
-   return oldViewShortFiles
-end view_ListOldShortPaths
-
-function view_ListOldPaths
-   put view_OldFolder() into oldViewFolder
-   put file_ListLong (oldViewFolder) into oldViewFiles
-   return oldViewFiles
-end view_ListOldPaths
-
-function view_OldFolder
-   put the documents folder into oldViewFolder
-   put "/My Revolution Enterprise/Plugins/opn_Plugins/opn_Components/views/" after oldViewFolder
-   return oldViewFolder
-end view_OldFolder
-
-command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
-   text_AddTrailing rootModuleFolder, slash
-   if there is not a folder rootModuleFolder then
-      answer warning "Modules folder does not exist!"
-      breakpoint
-      put rootModuleFolder
-      exit to top
-   end if
-   
-   put lcw_PipesToUnderscore (moduleStackName) into shortFolderName
-   put rootModuleFolder & shortFolderName & slash into moduleFolder
-   
-   switch
-      case exists (stack pViewStackPath)
-         -- let's move everything
-         breakpoint
-         put project_ConstructStandardFile (moduleStackName, rootModuleFolder, shortFolderName, "livecode") into moduleHomeStackPath
-         
-         folder_CreateNested moduleFolder
-         project_MoveStack pViewStackPath, moduleHomeStackPath
-         
-         project_CreateStandardFolders moduleFolder, "behaviors,controllers"
-         module_SetCardBehavior moduleStackName
-         module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
-         put the result into moduleBehaviorStackPath
-         module_MoveController moduleStackName, moduleFolder
-         put the result into moduleControllerStackPath
-         break
-      case pViewStackPath is not empty
-         put pViewStackPath
-         answer warning "Cannot locate view stack!"
-         breakpoint
-         exit to top
-         break
-      default
-         module_Create moduleFolder, moduleStackName, pScript
-         put the result into resultArray
-         put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
-         put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
-         put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
-   end switch
-   
-   edit the script of stack moduleHomeStackPath
-   edit the script of stack moduleBehaviorStackPath
-   edit the script of stack moduleControllerStackPath
-end project_CreateModule
-
 command module_Create moduleFolder, moduleStackName, pScript
-   template_StackAlreadyExists moduleStackName
+   _StackAlreadyExists moduleStackName
    --
    module_DeleteStacks moduleStackName
    --
@@ -553,10 +459,57 @@ command module_ReIndexMenus templateView
 end module_ReIndexMenus
 
 
---> Module | Create
+--> Project
 -
+command project_CreateModule moduleStackName, rootModuleFolder, pViewStackPath, pScript
+   text_AddTrailing rootModuleFolder, slash
+   if there is not a folder rootModuleFolder then
+      answer warning "Modules folder does not exist!"
+      breakpoint
+      put rootModuleFolder
+      exit to top
+   end if
+   
+   put lcw_PipesToUnderscore (moduleStackName) into shortFolderName
+   put rootModuleFolder & shortFolderName & slash into moduleFolder
+   
+   switch
+      case exists (stack pViewStackPath)
+         -- let's move everything
+         breakpoint
+         put project_ConstructStandardFile (moduleStackName, rootModuleFolder, shortFolderName, "livecode") into moduleHomeStackPath
+         
+         folder_CreateNested moduleFolder
+         project_MoveStack pViewStackPath, moduleHomeStackPath
+         
+         project_CreateStandardFolders moduleFolder, "behaviors,controllers"
+         module_SetCardBehavior moduleStackName
+         module_MoveBehavior moduleStackName, shortFolderName, moduleFolder
+         put the result into moduleBehaviorStackPath
+         module_MoveController moduleStackName, moduleFolder
+         put the result into moduleControllerStackPath
+         break
+      case pViewStackPath is not empty
+         put pViewStackPath
+         answer warning "Cannot locate view stack!"
+         breakpoint
+         exit to top
+         break
+      default
+         module_Create moduleFolder, moduleStackName, pScript
+         put the result into resultArray
+         put resultArray ["moduleControllerStackPath"] into moduleControllerStackPath
+         put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath
+         put resultArray ["moduleBehaviorStackPath"] into moduleBehaviorStackPath
+   end switch
+   
+   edit the script of stack moduleHomeStackPath
+   edit the script of stack moduleBehaviorStackPath
+   edit the script of stack moduleControllerStackPath
+end project_CreateModule
+
 command project_CreateView viewName, pViewFilePath
-   template_StackAlreadyExists viewName
+   _StackAlreadyExists viewName
    -- project_CreateStack projectName, stackName, "modules"
    
    -- create the stack and set the basics
@@ -580,20 +533,20 @@ end project_CreateView
 
 --> Private
 -
-command template_StackAlreadyExists viewName, pDontExit
-   switch
-      case there is a stack viewName
-      case viewName is among the lines of env_ListViewStackNames()
-         put "There is already a view template stack" && kwote (viewName) & "!" into someComment
-         answer warning someComment
-         show stack viewName
-         go to stack viewName
-         if pDontExit is true then
-            return true
-         else
-            exit to top
-         end if
-      default
-         return false
-   end switch
-end template_StackAlreadyExists
+private command _StackAlreadyExists viewName, pDontExit
+switch
+   case there is a stack viewName
+   case viewName is among the lines of env_ListViewStackNames()
+      put "There is already a view template stack" && kwote (viewName) & "!" into someComment
+      answer warning someComment
+      show stack viewName
+      go to stack viewName
+      if pDontExit is true then
+         return true
+      else
+         exit to top
+      end if
+   default
+      return false
+end switch
+end _StackAlreadyExists

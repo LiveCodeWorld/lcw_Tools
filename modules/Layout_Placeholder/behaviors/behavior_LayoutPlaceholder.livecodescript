@@ -21,6 +21,10 @@ local LocalArray
 
 --> Working on
 -
+-- getprop menu_Target [targetObject]
+   return the long id of me
+end menu_Target
+
 on LayoutControl pRect
    if pRect is a rect then
       set the rect of me to pRect
@@ -48,10 +52,6 @@ on mouseDown pMouseBtnNum
       pass mouseDown
    end if
 end mouseDown
-
-getprop menu_Target [targetObject]
-   return the long id of me
-end menu_Target
 
 
 --> Events | Drag

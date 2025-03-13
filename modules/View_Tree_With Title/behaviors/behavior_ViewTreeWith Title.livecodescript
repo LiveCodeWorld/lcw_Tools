@@ -23,18 +23,6 @@ end resizeControl
 
 --> Menu | Props
 -
--- getprop menu_Target [targetObject]
-   set the itemDelimiter to "|"
-   switch
-      case targetObject contains "View|Tree|"
-         return the tree_Field of me
-      case targetObject contains "View|Title|"
-         return the title_View of me
-      default
-         pass menu_Target
-   end switch
-end menu_Target
-
 getprop menu_Title
    if the long id of me is not the long id of the target then pass menu_Title
    return the menu_Title of the title_View of me

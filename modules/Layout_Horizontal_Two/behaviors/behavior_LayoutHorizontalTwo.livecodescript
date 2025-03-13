@@ -22,19 +22,167 @@ local LeftView, RightView
 
 --> Working on
 -
-private command _InitView
-   if exists (LeftView) is false then
-      _SetLeftViewLocal
+on Refresh
+   GuessViewReferences
+   --
+   preOpenControl
+   LayoutControl
+   --
+   ClearStoredViewReferences
+end Refresh
+
+on GuessViewReferences
+   put _GetFirstView() into LeftView
+   get _GetSecondView()
+   if it is not LeftView then
+      put it into RightView
+   else
+      breakpoint -- must be a bug???
+   end if
+end GuessViewReferences
+
+on StoreViewReferences pSaveStack
+   # Fix RightView
+   if exists (LeftView) then
+      set the uOPN ["LeftView"] of me to LeftView
+   else
+      breakpoint
+      set the uOPN ["LeftView"] of me to empty
    end if
    
-   if exists (RightView) is false then
-      _SetRightViewLocal
+   # Fix RightView
+   if exists (RightView) then
+      set the uOPN ["RightView"] of me to RightView
+   else
+      breakpoint
+      set the uOPN ["RightView"] of me to empty
    end if
-end _InitView
+   
+   if pSaveStack is true then
+      put the stack_Name of me into stackName
+      save stack stackName
+   end if
+end StoreViewReferences
 
+on ClearStoredViewReferences pSaveStack
+   set the uOPN ["left_Name"] of me to empty
+   set the uOPN ["right_Name"] of me to empty
+   
+   if pSaveStack is true then
+      put the stack_Name of me into stackName
+      save stack stackName
+   end if
+end ClearStoredViewReferences
+
+getprop vertical_Divider
+   if exists (control "_VerticalDivider View" of me) is false then return empty
+   return the long id of control "_VerticalDivider View" of me
+end vertical_Divider
+
+setprop left_View vObject
+   if exists (vObject) is false then return empty
+   put revRuggedID (vObject) into LeftView
+   --
+   set the uOPN ["LeftView"] of me to LeftView
+   return LeftView
+end left_View
+
+setprop right_View vObject
+   if exists (vObject) is false then return empty
+   put revRuggedID (vObject) into RightView
+   set the uOPN ["RightView"] of me to RightView
+   return RightView
+end right_View
+
+
+--> Initialisation
+-
+private function _GetFirstView
+   _SetFirstAndSecond firstChildID, secondChildID
+   --
+   if exists (control id firstChildID of me) then
+      put the long id of control id firstChildID of me into firstView
+      return revRuggedId (firstView)
+   else
+      return empty
+   end if
+end _GetFirstView
+
+private function _GetSecondView
+   _SetFirstAndSecond firstChildID, secondChildID
+   --
+   if exists (control id secondChildID of me) then
+      put the long id of control id secondChildID of me into secondView
+      return revRuggedId (secondView)
+   else
+      return empty
+   end if
+end _GetSecondView
+
+private command _SetFirstAndSecond @firstChildID, @secondChildID
+   put the childcontrolids of me into childIDs
+   put word 3 of the vertical_Divider of me into verticalDividerID
+   
+   set the wholematches to true
+   put lineOffset (verticalDividerID, childIDs) into lineNum
+   delete line lineNum of childIDs
+   
+   put line 1 of childIDs into firstChildID
+   put line 2 of childIDs into secondChildID
+end _SetFirstAndSecond
+
+
+--> Init
+-
+on preOpenControl
+   _SetLeftViewLocal
+   _SetRightViewLocal
+   --
+   pass preOpenControl
+end preOpenControl
+
+private command _SetLeftViewLocal
+   put the left_Name of me into leftName
+   if exists (control leftName of me) is false then
+      put empty into LeftView
+   else
+      put the long id of control leftName of me into LeftView
+   end if
+end _SetLeftViewLocal
+
+private command _SetRightViewLocal
+   put the right_Name of me into rightName
+   if exists (control rightName of me) is false then
+      put empty into RightView
+   else
+      put the long id of control rightName of me into RightView
+   end if
+end _SetRightViewLocal
+
+getprop left_Name
+   put the uOPN ["left_Name"] of me into leftName
+   return leftName
+end left_Name
+
+setprop left_Name leftName
+   set the uOPN ["left_Name"] of me to leftName
+end left_Name
+
+getprop right_Name
+   put the uOPN ["right_Name"] of me into rightName
+   return rightName
+end right_Name
+
+setprop right_Name rightName
+   set the uOPN ["right_Name"] of me to rightName
+end right_Name
+
+
+--> View
+-
 getprop view_Type
-   if exists (LeftView) is false then _InitView
-   if exists (RightView) is false then _InitView
+   if exists (LeftView) is false then return empty
+   if exists (RightView) is false then return empty
    
    put label_ViewToCamelTitle (the view_Name of LeftView) into firstViewName
    put label_ViewToCamelTitle (the view_Name of RightView) into secondViewName
@@ -50,7 +198,13 @@ getprop view_Type
 end view_Type
 
 setprop view_Type camelTitle
-   put label_CamelTitleToView (camelTitle) into viewName
+   switch camelTitle
+      case "placeholder"
+         put "placeholder" into viewName
+         break
+      default
+         put label_CamelTitleToView (camelTitle) into viewName
+   end switch
    --
    if viewName is empty then
       put "placeholder" into firstViewName
@@ -101,26 +255,6 @@ on resizeControl
    if the long id of the target is not the long id of me then pass resizeControl -- needed???
    LayoutControl the rect of me
 end resizeControl
-
-on preOpenControl
-   _InitView
-   --
-   pass preOpenControl
-end preOpenControl
-
-private command _SetLeftViewLocal
-   put the uOPN ["LeftView"] of me into LeftView
-   if exists (LeftView) is false then
-      put _GetFirstView() into LeftView
-   end if
-end _SetLeftViewLocal
-
-private command _SetRightViewLocal
-   put the uOPN ["RightView"] of me into RightView
-   if exists (RightView) is false then
-      put _GetSecondView() into RightView
-   end if
-end _SetRightViewLocal
 
 
 --> Layout
@@ -222,58 +356,6 @@ end right_View
 
 --> Geometry
 -
-on Refresh
-   GuessViewReferences
-   --
-   preOpenControl
-   LayoutControl
-   --
-   ClearStoredViewReferences
-end Refresh
-
-on GuessViewReferences
-   put _GetFirstView() into LeftView
-   get _GetSecondView()
-   if it is not LeftView then
-      put it into RightView
-   else
-      breakpoint -- must be a bug???
-   end if
-end GuessViewReferences
-
-on StoreViewReferences pSaveStack
-   # Fix RightView
-   if exists (LeftView) then
-      set the uOPN ["LeftView"] of me to LeftView
-   else
-      breakpoint
-      set the uOPN ["LeftView"] of me to empty
-   end if
-   
-   # Fix RightView
-   if exists (RightView) then
-      set the uOPN ["RightView"] of me to RightView
-   else
-      breakpoint
-      set the uOPN ["RightView"] of me to empty
-   end if
-   
-   if pSaveStack is true then
-      put the stack_Name of me into stackName
-      save stack stackName
-   end if
-end StoreViewReferences
-
-on ClearStoredViewReferences pSaveStack
-   set the uOPN ["LeftView"] of me to empty
-   set the uOPN ["RightView"] of me to empty
-   
-   if pSaveStack is true then
-      put the stack_Name of me into stackName
-      save stack stackName
-   end if
-end ClearStoredViewReferences
-
 on LayoutControl pRect
    if the long id of the target is not the long id of me then return empty -- this is important for nested datagrids at the moment.
    if pRect is empty then put the the rect of me into pRect
@@ -334,29 +416,6 @@ on LayoutControl pRect
    set the rect of rightView to rightViewRect
    unlock screen   
 end LayoutControl
-
-
---> Initialisation
--
-getprop vertical_Divider
-   if exists (control "_VerticalDivider View" of me) is false then return empty
-   return the long id of control "_VerticalDivider View" of me
-end vertical_Divider
-
-setprop left_View vObject
-   if exists (vObject) is false then return empty
-   put revRuggedID (vObject) into LeftView
-   --
-   set the uOPN ["LeftView"] of me to LeftView
-   return LeftView
-end left_View
-
-setprop right_View vObject
-   if exists (vObject) is false then return empty
-   put revRuggedID (vObject) into RightView
-   set the uOPN ["RightView"] of me to RightView
-   return RightView
-end right_View
 
 
 --> Views
@@ -453,10 +512,12 @@ setprop right_Visible sBooelan
    put the rect of me into pRect
    _SetViews leftView, rightView, verticalDivider
    
+   put the visible of leftView into leftVisible
+   put sBooelan AND leftVisible into ndVis
+   
    lock screen
    set the visible of rightView to sBooelan
-   put sBooelan AND the visible of verticalDivider into dividerVisible
-   set the visible of verticalDivider to dividerVisible
+   set the visible of verticalDivider to ndVis
    --
    LayoutControl pRect
    unlock screen
@@ -506,7 +567,7 @@ I think this needs tidying to work like title_Height
 */
 
 getprop right_Width
-   return the width of the right_Width of me
+   return the width of the right_View of me
 end right_Width
 
 setprop right_Width someWidth
@@ -582,37 +643,3 @@ private function layout_GetLeftViewWidth newLayoutWidth, leftView, rightView, ve
          return it
    end switch
 end layout_GetLeftViewWidth
-
-private function _GetFirstView
-   _SetFirstAndSecond firstChildID, secondChildID
-   --
-   if exists (control id firstChildID of me) then
-      put the long id of control id firstChildID of me into firstView
-      return revRuggedId (firstView)
-   else
-      return empty
-   end if
-end _GetFirstView
-
-private function _GetSecondView
-   _SetFirstAndSecond firstChildID, secondChildID
-   --
-   if exists (control id secondChildID of me) then
-      put the long id of control id secondChildID of me into secondView
-      return revRuggedId (secondView)
-   else
-      return empty
-   end if
-end _GetSecondView
-
-private command _SetFirstAndSecond @firstChildID, @secondChildID
-   put the childcontrolids of me into childIDs
-   put word 3 of the vertical_Divider of me into verticalDividerID
-   
-   set the wholematches to true
-   put lineOffset (verticalDividerID, childIDs) into lineNum
-   delete line lineNum of childIDs
-   
-   put line 1 of childIDs into firstChildID
-   put line 2 of childIDs into secondChildID
-end _SetFirstAndSecond

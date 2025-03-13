@@ -38,15 +38,44 @@ getprop menu_CheckTarget [projectName]
 end menu_CheckTarget
 
 
+--> Events
+-
+on mDoubleUp_Environment displayView, projectName
+   switch
+      case the title_Text of displayView = "Not Up-to-Date"
+      case the shiftKey is "Down" 
+         project_Start projectName
+         display_GitProjectStatus projectName
+         -- display_Project projectName
+         display_Environment
+         break
+      default
+         if env_ProjectIsActive (projectName) is false then
+            project_Start projectName
+            display_Environment true
+         end if
+         display_Project projectName
+   end switch
+end mDoubleUp_Environment
+
+
 --> Global | Environment | Line | Menu
 -
-on menu_DisplayGitStatus projectName
-   display_GitProjectStatus projectName
-end menu_DisplayGitStatus
+on insert_EnvLineMenu
+   return "Global | Environment | Tree | Line | Menu"
+end insert_EnvLineMenu
 
 private on _
 end _
 
-on submenu_Dev
+on menu_EditLineMenu
+   edit the script of me
+end menu_EditLineMenu
+
+-- on menu_DisplayGitStatus projectName
+display_GitProjectStatus projectName
+end menu_DisplayGitStatus
+
+-- on submenu_Dev
    return menu_DevTitle ("Global | Environment | Line | Menu")
 end submenu_Dev
