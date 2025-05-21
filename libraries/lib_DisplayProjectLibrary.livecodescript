@@ -44,11 +44,15 @@ command ask_CreateModuleBehavior moduleStackName, dView, pDefaultBehaviorName
       lcw_AnswerWarning someError
       return moduleStackName
    end if
+   --
+   if pDefaultBehaviorName is empty then
+      put the module_DevBehaviorName of stack moduleStackName into pDefaultBehaviorName
+   end if
+   --
    put the module_Folder of stack moduleStackName into moduleFolder
-   if pDefaultBehaviorName is empty then put "behavior_New" into pDefaultBehaviorName
    
    # New Behavior short file
-   put lcw_Ask ("What name do you want to give this new behavior?", pDefaultBehaviorName) into newBehaviorName
+   put lcw_Ask ("What name do you want to give this new behavior?", pDefaultBehaviorName, dView) into newBehaviorName
    if there is a stack newBehaviorName then
       lcw_AnswerWarning "A stack named '[[newBehaviorName]]' already exists!", dView, newBehaviorName
    end if
@@ -64,6 +68,9 @@ command ask_CreateModuleBehavior moduleStackName, dView, pDefaultBehaviorName
    # Create
    module_CreateBehavior moduleFolder, newBehaviorName
    put the result into newBehaviorStackPath
+   --
+   display_ModuleTools moduleStackName
+   --
    return newBehaviorStackPath
 end ask_CreateModuleBehavior
 

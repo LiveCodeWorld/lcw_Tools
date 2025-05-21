@@ -175,20 +175,6 @@ command display_Environment pRefreshOnly, pProjectNames
    if exists (displayView) is false then
       display_Tool pProjectNames, "Local Projects", "Environment"
       put the result into displayView
-      
-      /*
-      display_Data pProjectNames, "Local Projects", "Environment"
-      
-      put "mDoubleUp_Environment" into mDoubleClick
-      --
-      put "Global | Environment | Menu" into titleMenu
-      put "Global | Environment | Tree | Line | Menu" into lineMenu
-      
-      set the title_Menu of displayView to titleMenu
-      set the line_Menu of displayView to lineMenu
-      set the mouse_DoubleUp of displayView to mDoubleClick
-      --
-      */
       set the field_Style of displayView to "click"
       set the drop_Command of displayView to empty
    else

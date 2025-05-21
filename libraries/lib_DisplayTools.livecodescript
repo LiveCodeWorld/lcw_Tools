@@ -175,7 +175,11 @@ command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameK
    
    # Find display_View
    put _DisplayView (cloneStackName) into dView -- hacky
-   if exists (dView) is false then return "Error, could not find dView:" && cloneStackName
+   if exists (dView) is false then
+      breakpoint
+      go to stack cloneStackName
+      return "Error, could not find dView:" && cloneStackName
+   end if
    
    # Display And Show
    set the displayed_Data [pTitle] of dView to someData
@@ -392,9 +396,10 @@ end display_ViewTools
 --> Private
 -
 private function _DisplayView cloneStackName
-   put the long id of cd 1 of stack cloneStackName into firstCard
-   
-   -- hacky (change to view_Object or displayed_Object of card?)
-   put the long id of control 1 of firstCard into displayView
+   if exists (control 1 of cd 1 of stack cloneStackName) is false then
+      return empty
+   end if
+   --
+   put the long id of control 1 of cd 1 of stack cloneStackName into displayView
    return displayView
 end _DisplayView

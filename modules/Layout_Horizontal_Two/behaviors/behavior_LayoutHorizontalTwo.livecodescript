@@ -17,11 +17,103 @@ There seems to be a bug regarding resizing - the veritcal bar and the margin.
 --> Variables
 -
 local LocalArray
-local LeftView, RightView
+local LeftView, RightView, DividerView
 
 
 --> Working on
 -
+getprop layout_DividerStyle
+   return the divider_Style of the vertical_Divider of me
+end layout_DividerStyle
+
+setprop layout_DividerStyle someStyle
+   set the divider_Style of the vertical_Divider of me to someStyle
+end layout_DividerStyle
+
+getprop layout_DividerStyles
+   return "invisible,transparent,opaque,icon"
+end layout_DividerStyles
+
+
+--> Events
+-
+on preOpenControl
+   _SetLeftViewLocal
+   _SetRightViewLocal
+   _SetDividerViewLocal
+   --
+   pass preOpenControl
+end preOpenControl
+
+private command _SetDividerViewLocal
+   put the vertical_Divider of me into DividerView
+end _SetDividerViewLocal
+
+on resizeControl
+   if the long id of the target is not the long id of me then pass resizeControl -- needed???
+   LayoutControl the rect of me
+end resizeControl
+
+on LayoutControl pRect
+   if the long id of the target is not the long id of me then return empty -- this is important for nested datagrids at the moment.
+   if pRect is empty then put the the rect of me into pRect
+   
+   # Safety Checks
+   if exists (DividerView) is false then return false
+   if exists (LeftView) is false then return false
+   if exists (RightView) is false then return false
+   
+   put the inner_rect [pRect] of me into innerRect
+   --
+   switch
+      case the visible of LeftView is false
+         put innerRect into leftViewRect
+         put innerRect into rightViewRect
+         put innerRect into verticalDividerRect
+         set the visible of DividerView to false
+         break
+      case the visible of RightView is false
+         put innerRect into leftViewRect
+         put innerRect into rightViewRect
+         put innerRect into verticalDividerRect
+         set the visible of DividerView to false
+         break
+      default -- they are both visible
+         set the visible of DividerView to true
+         
+         put the horizontal_Spacing of me into viewSpacing
+         put item 3 of pRect - item 1 of pRect into newLayoutWidth
+         
+         put layout_GetLeftViewWidth (newLayoutWidth, leftView, rightView, DividerView) into leftViewWidth
+         
+         # left_View rect
+         put innerRect into leftViewRect
+         put item 1 of leftViewRect + leftViewWidth into leftViewRight
+         put leftViewRight into item 3 of leftViewRect
+         
+         # vertical_Divider Rect
+         put innerRect into verticalDividerRect
+         put leftViewRight into item 1 of verticalDividerRect
+         put leftViewRight + viewSpacing into rightViewLeft
+         put rightViewLeft into item 3 of verticalDividerRect
+         
+         # right_View rect
+         put innerRect into rightViewRect
+         put rightViewLeft into item 1 of rightViewRect
+         
+         _SetLastLeftViewWidth leftViewWidth
+         _SetLastTotalWidth newLayoutWidth
+   end switch
+   
+   # Set Rects
+   lock screen
+   set the rect of LeftView to leftViewRect
+   set the rect of DividerView to verticalDividerRect
+   set the rect of RightView to rightViewRect
+   set the rect of me to pRect
+   unlock screen   
+end LayoutControl
+
 on Refresh
    GuessViewReferences
    --
@@ -134,13 +226,6 @@ end _SetFirstAndSecond
 
 --> Init
 -
-on preOpenControl
-   _SetLeftViewLocal
-   _SetRightViewLocal
-   --
-   pass preOpenControl
-end preOpenControl
-
 private command _SetLeftViewLocal
    put the left_Name of me into leftName
    if exists (control leftName of me) is false then
@@ -249,14 +334,6 @@ private command _SetLastTotalWidth newLayoutWidth
 end _SetLastTotalWidth
 
 
---> Events
--
-on resizeControl
-   if the long id of the target is not the long id of me then pass resizeControl -- needed???
-   LayoutControl the rect of me
-end resizeControl
-
-
 --> Layout
 -
 getprop layout_ViewNames
@@ -354,70 +431,6 @@ getprop right_View
 end right_View
 
 
---> Geometry
--
-on LayoutControl pRect
-   if the long id of the target is not the long id of me then return empty -- this is important for nested datagrids at the moment.
-   if pRect is empty then put the the rect of me into pRect
-   
-   put the left_View of me into leftView
-   if exists (leftView) is false then return false
-   put the right_View of me into rightView
-   if exists (rightView) is false then return false
-   put the vertical_Divider of me into verticalDividerView
-   
-   put the inner_rect [pRect] of me into innerRect
-   --
-   switch
-      case the visible of leftView is false
-         put innerRect into leftViewRect
-         put innerRect into rightViewRect
-         put innerRect into verticalDividerRect
-         set the visible of verticalDividerView to false
-         break
-      case the visible of rightView is false
-         put innerRect into leftViewRect
-         put innerRect into rightViewRect
-         put innerRect into verticalDividerRect
-         set the visible of verticalDividerView to false
-         break
-      default -- they are both visible
-         set the visible of verticalDividerView to true
-         
-         put the horizontal_Spacing of me into viewSpacing
-         put item 3 of pRect - item 1 of pRect into newLayoutWidth
-         
-         put layout_GetLeftViewWidth (newLayoutWidth, leftView, rightView, verticalDividerView) into leftViewWidth
-         
-         -- left_View rect
-         put innerRect into leftViewRect
-         put item 1 of leftViewRect + leftViewWidth into leftViewRight
-         put leftViewRight into item 3 of leftViewRect
-         
-         -- vertical_Divider Rect
-         put innerRect into verticalDividerRect
-         put leftViewRight into item 1 of verticalDividerRect
-         put leftViewRight + viewSpacing into rightViewLeft
-         put rightViewLeft into item 3 of verticalDividerRect
-         
-         -- right_View rect
-         put innerRect into rightViewRect
-         put rightViewLeft into item 1 of rightViewRect
-         
-         _SetLastLeftViewWidth leftViewWidth
-         _SetLastTotalWidth newLayoutWidth
-   end switch
-   
-   -- Set Rects
-   lock screen
-   set the rect of leftView to leftViewRect
-   set the rect of verticalDividerView to verticalDividerRect -- to rest locals for stability hack
-   -- set the view_Rect of verticalDividerView to verticalDividerRect -- to rest locals for stability hack
-   set the rect of rightView to rightViewRect
-   unlock screen   
-end LayoutControl
-
-
 --> Views
 -
 getprop horizontal_Layout
@@ -450,18 +463,6 @@ end layout_Margins
 getprop fixed_Views
    return "left,right,formatted,proportional"
 end fixed_Views
-
-getprop layout_DividerStyle
-   return the divider_Style of the vertical_Divider of me
-end layout_DividerStyle
-
-setprop layout_DividerStyle someStyle
-   set the divider_Style of the vertical_Divider of me to someStyle
-end layout_DividerStyle
-
-getprop layout_DividerStyles
-   return "invisible,transparent,opaque,icon"
-end layout_DividerStyles
 
 
 --> Show and Hide
@@ -643,3 +644,438 @@ private function layout_GetLeftViewWidth newLayoutWidth, leftView, rightView, ve
          return it
    end switch
 end layout_GetLeftViewWidth
+
+
+--> Deps
+-
+command margin_Normalize @someMargin, @leftM, @topM, @rightM, @bottomM
+   if the number of items of someMargin < 4 then
+      put item 1 of someMargin into defaultMargin
+      put defaultMargin into leftM
+      
+      put item 2 of someMargin into actualMargin
+      if actualMargin is empty then
+         put leftM into topM
+      else
+         put actualMargin into topM
+      end if
+      
+      put item 3 of someMargin into actualMargin
+      if actualMargin is empty then
+         put leftM into rightM
+      else
+         put actualMargin into rightM
+      end if
+      
+      put item 4 of someMargin into actualMargin
+      if actualMargin is empty then
+         put topM into bottomM
+      else
+         put actualMargin into bottomM
+      end if
+   else
+      put item 1 of someMargin into leftM
+      put item 2 of someMargin into topM
+      put item 3 of someMargin into rightM
+      put item 4 of someMargin into bottomM
+   end if
+   put leftM,topM,rightM,bottomM into someMargin
+end margin_Normalize
+
+command view_NormalizeName @viewPath
+   if viewPath is empty then return false
+   view_NormalizePiped viewPath
+   
+   set the itemdelimiter to "|"
+   if item 1 of viewPath is not among the items of "View|Layout" then put "View|" before viewPath
+   return true
+end view_NormalizeName
+
+function control_ConstructCreateDoScript controlType, someName, targetOwner, pClassOrViewName
+   switch
+      case controlType is empty
+      case controlType = "placeholder"
+         put view_GetTemplateObject ("Layout|Placeholder") into templateObject
+         -- put view_GetTemplateObject ("View|Layout|Placeholder") into templateObject
+         if exists (templateObject) is false then return empty
+         put "copy" && templateObject && "to" && targetOwner into doScript
+         return doScript
+      case controlType = "view"
+         put view_GetTemplateObject (pClassOrViewName) into templateObject 
+         if exists (templateObject) is false then return empty
+         put "copy" && templateObject && "to" && targetOwner into doScript
+         return doScript
+      case controlType contains "|"
+         put controlType into viewName
+         put view_GetTemplateObject (viewName) into templateObject 
+         if exists (templateObject) is false then return empty
+         put "copy" && templateObject && "to" && targetOwner into doScript
+         return doScript
+      case controlType = "headerBar"
+         put widget_ConstructCreateDoScript (someName, "com.livecode.widget.headerBar", targetOwner) into doScript
+         return doScript
+      case controlType = "navBar"
+         put widget_ConstructCreateDoScript (someName, "com.livecode.widget.navBar", targetOwner) into doScript
+         return doScript
+      case controlType = "segmented"
+         put widget_ConstructCreateDoScript (someName, "com.livecode.widget.segmented", targetOwner) into doScript
+         return doScript
+      case controlType = "browser"
+         put widget_ConstructCreateDoScript (someName, "com.livecode.widget.browser", targetOwner) into doScript
+         return doScript
+      case controlType = "treeView"
+         put widget_ConstructCreateDoScript (someName, "com.livecode.widget.treeView", targetOwner) into doScript
+         return doScript
+      case controlType begins with "com.livecode.widget."
+         put controlType into pClassOrViewName
+         put widget_ConstructCreateDoScript (someName, pClassOrViewName, targetOwner) into doScript
+         return doScript
+      case controlType = "widget"
+         put widget_ConstructCreateDoScript (someName, pClassOrViewName, targetOwner) into doScript
+         return doScript
+      case controltype is among the items of "field,button,graphic,player,image"
+         if word 1 of targetOwner is "group" then
+            put "create invisible" && controlType && quote & someName & quote && "in" && targetOwner into doScript
+         else
+            put "create invisible" && controlType && quote & someName & quote into doScript
+         end if
+         return doScript
+         break
+      default
+         breakpoint
+         return empty
+   end switch
+end control_ConstructCreateDoScript
+
+setprop control_Type [pClassOrViewName] controlType
+   -- should not do this if they control_Type is already controlType
+   lock screen
+   -- 
+   put the long id of the target into targetObject
+   put the long id of the owner of targetObject into targetOwner
+   
+   put the short name of targetObject into oName
+   put the short id of targetObject into originalID
+   put the rect of targetObject into oRect
+   put the backgroundcolor of targetObject into bColour
+   
+   put control_ConstructCreateDoScript (controlType, oName, targetOwner, pClassOrViewName) into doScript
+   if doScript is empty then
+      breakpoint
+      put control_ConstructCreateDoScript (controlType, oName, targetOwner, pClassOrViewName) into doScript
+      return targetObject
+   else
+      do doScript
+      put it into tempCreatedObject
+      if exists (tempCreatedObject) is false then
+         breakpoint
+         return empty
+      end if
+      
+      set the rect of tempCreatedObject to oRect
+      relayer tempCreatedObject before targetObject
+      --
+      switch
+         case controlType is empty
+         case controlType = "Layout|Placeholder"
+         case controlType = "View|Layout|Placeholder"
+         case controlType = "placeholder"
+            if bColour is empty then put "random" into bColour
+            --
+            set the background_Colour of tempCreatedObject to bColour
+            set the name of tempCreatedObject to oName
+            set the urip_Type of tempCreatedObject to "view"
+            break
+         case controlType = "view"
+            set the urip_Type of tempCreatedObject to "view"
+            break
+         case controlType contains "|"
+            set the urip_Type of tempCreatedObject to "view"
+            break
+         default
+            -- it's a standard Livecode control
+            -- here we could look at "pClassOrViewName" and 
+            -- add some customisation to things list list fields
+      end switch
+      
+      try
+         delete targetObject
+      catch e
+         object_Delete targetObject
+      end try
+      
+      set the name of tempCreatedObject to oName
+      show tempCreatedObject
+      
+      put "reset_ID" && originalID into pigeon
+      send pigeon to tempCreatedObject in 20 ticks
+      
+      dispatch "LayoutControl" to targetOwner
+      put the result into createdObject
+      
+      unlock screen
+      return createdObject -- shoujd have the same id but may be a different control type
+   end if
+end control_Type
+
+getprop inner_Rect [groupRect]
+   put the long id of the target into someGroup
+   if groupRect is empty then put the rect of someGroup into groupRect
+   if word 1 of someGroup is not "group" then return groupRect -- only for groups
+   
+   put rect_GetInner (groupRect, someGroup) into innerRect
+   return innerRect
+end inner_Rect
+
+function label_CamelFromPiped pipedName
+   replace space with empty in pipedName -- hack
+   
+   set the itemdelimiter to "|"
+   repeat with itemNum = 1 to the number of items of pipedName
+      put word 1 to -1 of item itemNum of pipedName into sItem
+      get toLower (sItem)
+      put text_InitialCaps (it) into capsItem
+      put capsItem after camelCaps
+   end repeat
+   return camelCaps
+end label_CamelFromPiped
+
+function label_CamelTitleToView camelTitle, pFirstItem
+   if pFirstItem is empty then put "View" into pFirstItem
+   
+   put word_SplitCaps (camelTitle, "|") into viewName
+   --
+   set the itemdelimiter to "|"
+   if item 1 of viewPath is not among the items of "View|Layout" then
+      put pFirstItem & "|" before viewName
+   end if
+   return viewName
+end label_CamelTitleToView
+
+function label_ReverseCamelFromPiped pipedName
+   replace space with empty in pipedName -- hack
+   
+   set the itemdelimiter to "|"
+   repeat with itemNum = the number of items of pipedName down to 1
+      put word 1 to -1 of item itemNum of pipedName into sItem
+      get toLower (sItem)
+      put text_InitialCaps (it) into capsItem
+      put capsItem after camelCaps
+   end repeat
+   return camelCaps
+end label_ReverseCamelFromPiped
+
+function label_ViewToCamelTitle pipedName, pReverse
+   set the itemdelimiter to "|"
+   if item 1 of pipedName is among the items of "View|Layout" then
+      delete item 1 of pipedName
+   end if
+   
+   # Create camelCaps
+   if pReverse is false then
+      put label_CamelFromPiped (pipedName) into camelCaps
+   else
+      put label_ReverseCamelFromPiped (pipedName) into camelCaps
+   end if
+   return camelCaps
+end label_ViewToCamelTitle
+
+command margin_Normalize someMargin, @leftM, @topM, @rightM, @bottomM
+   if the number of items of someMargin < 4 then
+      put item 1 of someMargin into defaultMargin
+      put defaultMargin into leftM
+      
+      put item 2 of someMargin into actualMargin
+      if actualMargin is empty then
+         put leftM into topM
+      else
+         put actualMargin into topM
+      end if
+      
+      put item 3 of someMargin into actualMargin
+      if actualMargin is empty then
+         put leftM into rightM
+      else
+         put actualMargin into rightM
+      end if
+      
+      put item 4 of someMargin into actualMargin
+      if actualMargin is empty then
+         put topM into bottomM
+      else
+         put actualMargin into bottomM
+      end if
+   else
+      put item 1 of someMargin into leftM
+      put item 2 of someMargin into topM
+      put item 3 of someMargin into rightM
+      put item 4 of someMargin into bottomM
+   end if
+   return leftM,topM,rightM,bottomM
+end margin_Normalize
+
+command object_Delete pObjects
+   if pObjects is empty then put the long id of the target into pObjects
+   lock screen
+   repeat for each line someObject in pObjects
+      if exists(someObject) then
+         try
+            delete someObject
+         catch e
+            -- in case the script is executing in the context of the object itself
+            send "delete someObject" to someObject in 2 ticks
+         end try
+      end if
+   end repeat
+   unlock screen
+end object_Delete
+
+function rect_GetInner groupRect, someGroup, pMargin
+   if exists (someGroup) is false then return empty
+   if pMargin is empty then
+      put the margins of someGroup into pMargin
+   end if
+   rect_SubtractMargins groupRect, pMargin
+   put the result into nMargins
+   --
+   if the showborder of someGroup is true then
+      put the borderwidth of someGroup into bWidth
+      rect_SubtractMargins groupRect, bWidth
+   end if
+   
+   if the showname of someGroup is true then
+      put the effective textheight of someGroup - bWidth into someBit
+      subtract 2 from someBit
+      add someBit to item 2 of groupRect
+   end if
+   
+   put the scrollbarwidth of someGroup into scrollBarMargin
+   if the vscrollbar of someGroup is true then 
+      subtract scrollBarMargin from item 3 of groupRect
+   end if
+   if the hscrollbar of someGroup is true then
+      subtract scrollBarMargin from item 4 of groupRect
+   end if
+   --
+   return groupRect
+end rect_GetInner
+
+command rect_SubtractMargins @someRect, pMargin
+   margin_Normalize pMargin, leftM, topM, rightM, bottomM
+   put the result into nMargins
+   --
+   add leftM to item 1 of someRect
+   add topM to item 2 of someRect
+   subtract rightM from item 3 of someRect
+   subtract bottomM from item 4 of someRect
+   --
+   return nMargins
+end rect_SubtractMargins
+
+function stack_FirstControl sPath
+   if exists (control 1 of card 1 of stack sPath) then
+      return the long id of control 1 of card 1 of stack sPath
+   else
+      return empty
+   end if
+end stack_FirstControl
+
+getprop stack_Name
+   return the short name of the defaultstack
+end stack_Name
+
+function text_InitialCaps someText
+   repeat with wordNum = 1 to the number of words of someText
+      put tolower(word wordNum of someText) into someWord
+      put toupper(char 1 of someWord ) into char 1 of someWord
+      put someWord into word wordNum of someText
+   end repeat
+   return someText
+end text_InitialCaps
+
+function text_StartsWithCaps someText
+   put char 1 of sometext into testChar
+   put nativeCharToNum (testChar) into someCharNum
+   if someCharNum >= 97 and someCharNum <= 122 then
+      return false
+   else
+      return true
+   end if
+end text_StartsWithCaps
+
+setprop urip_Array [someKey] arrayOrValue
+   if someKey is empty then
+      set the customproperties ["uRIP"] of the target to arrayOrValue
+      return arrayOrValue
+   else
+      put the customproperties ["uRIP"] of the target into uRipArray
+      put arrayOrValue into uRipArray [someKey]
+      set the customproperties ["uRIP"] of the target to uRipArray
+      return uRipArray
+   end if
+end urip_Array
+
+setprop urip_Type objectType
+   set the urip_Array ["type"] of the target to objectType
+   put the result into uRipArray
+   return uRipArray
+end urip_Type
+
+function view_GetTemplateObject viewName, pRepoFolder
+   view_NormalizeName viewName
+   put stack_FirstControl (viewName) into mObject
+   return mObject
+end view_GetTemplateObject
+
+getprop view_Name
+   put the long id of the target into tObject   
+   if the uRIP ["type"] of tObject is not "view" then return empty
+   put the uRIP ["name"] of tObject into viewName
+   return viewName
+end view_Name
+
+command view_NormalizePiped @viewPath, pMakePretty
+   if viewPath is empty then return false
+   put word 1 to -1 of viewPath into viewPath
+   
+   set the itemdelimiter to "|"
+   repeat with itemNum = 1 to the number of items of viewPath
+      put word 1 to -1 of item itemNum of viewPath into someItem
+      if pMakePretty is true then
+         repeat for each word someWord in someItem
+            put toUpper (char 1 of someWord) into char 1 of someWord
+            put someWord & space after prettyItem
+         end repeat
+         put char 1 to -2 of prettyItem into someItem
+      end if
+      put someItem into item itemNum of viewPath
+   end repeat
+   return true
+end view_NormalizePiped
+
+function widget_ConstructCreateDoScript someName, widgetClass, pTargetOwner
+   if word 1 of pTargetOwner is "group" then
+      put "create invisible widget" && quote & someName & quote && "as" && quote & widgetClass & quote && "in" && pTargetOwner into doScript
+   else
+      put "create invisible widget" && quote & someName & quote && "as" && quote & widgetClass & quote into doScript
+   end if
+   return doScript
+end widget_ConstructCreateDoScript
+
+function word_SplitCaps sWord, pDelimChar
+   if pDelimChar is empty then put space into pDelimChar
+   --
+   put 1 into charNum
+   repeat the number of chars of sWord
+      put char charNum of sWord into sChar
+      if text_StartsWithCaps (sChar) is true then
+         put pDelimChar before char charNum of sWord
+         add 2 to charNum
+      else
+         add 1 to charNum
+      end if
+   end repeat
+   put the number of chars of pDelimChar into maxNum
+   delete char 1 to maxNum of sWord
+   return sWord
+end word_SplitCaps

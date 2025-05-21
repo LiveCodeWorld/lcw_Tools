@@ -49,10 +49,6 @@ on submenu_DefaultMenu
    return LocalArray ["moduleMenu"]
 end submenu_DefaultMenu
 
-on submenu_Module
-   return "Global | Module | Tree | Menu"
-end submenu_Module
-
 on submenu_ModuleAssets
    return "Global | Module | Assets | Menu"
 end submenu_ModuleAssets
@@ -135,6 +131,10 @@ getprop disabled_ModuleProperty [mTarget]
       return false
    end if
 end disabled_ModuleProperty
+
+on submenu_Module
+   return "Global | Module | Tree | Menu"
+end submenu_Module
 
 on menu_RefreshModule dView
    put display_View() into dView
