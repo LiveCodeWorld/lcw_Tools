@@ -150,6 +150,10 @@ on menu_UpdateProjectArray projectName
    -- display_ProjectArray projectName, true
 end menu_UpdateProjectArray
 
+on menu_CheckProjectStacks projectName
+   project_CheckStacks projectName
+end menu_CheckProjectStacks
+
 on menu_DisplayProjectArray projectName
    display_ProjectArray projectName, false
 end menu_DisplayProjectArray

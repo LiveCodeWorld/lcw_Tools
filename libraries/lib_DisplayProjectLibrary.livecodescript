@@ -17,6 +17,48 @@ Key handler =  "project_CreateStack"
 
 --> Working on
 -
+function project_GetStackNameArray projectName, pRepoFolder
+   -- arrays for node_Modules crash
+   
+   put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
+   put directory_NestedArray (projectFolder) into stackNameArray
+   return stackNameArray
+   
+   /*
+   repeat for each item shortFolder in "libraries,models,controllers,views,behaviors,stacks"
+      put folder_AddShort (projectFolder, shortFolder) into sFolder
+      get folder_GetStackNameArray (sFolder)
+      if it is an array then
+         put text_InitialCaps (shortFolder) into shortLabel
+         put it into stackNameArray [shortLabel]
+      end if
+   end repeat
+   
+   put project_ListModuleFolders (projectName) into moduleFolders
+   repeat for each line moduleFolder in moduleFolders
+      put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
+      if exists (stack moduleHomeStackPath) is false then next repeat
+      
+      put the short name of stack moduleHomeStackPath into stackName
+      put empty into stackNameArray ["Modules"][stackName]
+   end repeat
+   */
+   
+   -- seems to be crashing?
+   # Fix ModuleArray (nested display not working?)
+   put stackNameArray ["modules"] into moduleArray
+   delete variable stackNameArray ["modules"]
+   --
+   repeat for each key shortModuleFolder in moduleArray
+      put module_GetHomeStackPath (shortModuleFolder, projectName) into moduleHomeStackPath
+      if exists (stack moduleHomeStackPath) is false then next repeat
+      
+      put the short name of stack moduleHomeStackPath into stackName
+      put empty into stackNameArray ["Modules"][stackName] -- bug: modules as a key does not display
+   end repeat   
+   return stackNameArray
+end project_GetStackNameArray
+
 function project_DisplayMenuTitles projectName
    -- used by display local Environment 
    put project_ConstructMenuTitle (projectName) & tab & "submenu" after projectMenuTitles
@@ -231,45 +273,6 @@ function project_GetFolderArray projectName, pRepoFolder
    # Should export here
    return stackNameArray
 end project_GetFolderArray
-
-function project_GetStackNameArray projectName, pRepoFolder
-   put env_ConstructProjectFolder (projectName, pRepoFolder) into projectFolder
-   /*
-   repeat for each item shortFolder in "libraries,models,controllers,views,behaviors,stacks"
-      put folder_AddShort (projectFolder, shortFolder) into sFolder
-      get folder_GetStackNameArray (sFolder)
-      if it is an array then
-         put text_InitialCaps (shortFolder) into shortLabel
-         put it into stackNameArray [shortLabel]
-      end if
-   end repeat
-   
-   put project_ListModuleFolders (projectName) into moduleFolders
-   repeat for each line moduleFolder in moduleFolders
-      put project_PathFromFolder (moduleFolder) into moduleHomeStackPath
-      if exists (stack moduleHomeStackPath) is false then next repeat
-      
-      put the short name of stack moduleHomeStackPath into stackName
-      put empty into stackNameArray ["Modules"][stackName]
-   end repeat
-   */
-   put directory_NestedArray (projectFolder) into stackNameArray
-   
-   # Fix ModuleArray (nested display not working?)
-   put stackNameArray ["modules"] into moduleArray
-   delete variable stackNameArray ["modules"]
-   --
-   -- put project_GetFolder (projectName, "modules") into moduleFolder
-   repeat for each key shortModuleFolder in moduleArray
-      -- put project_PathFromFolder (projectFolder) into moduleHomeStackPath
-      put module_GetHomeStackPath (shortModuleFolder, projectName) into moduleHomeStackPath
-      if exists (stack moduleHomeStackPath) is false then next repeat
-      
-      put the short name of stack moduleHomeStackPath into stackName
-      put empty into stackNameArray ["Modules"][stackName] -- bug: modules as a key does not display
-   end repeat   
-   return stackNameArray
-end project_GetStackNameArray
 
 command project_TrashStack stackObject
    -- dangerous

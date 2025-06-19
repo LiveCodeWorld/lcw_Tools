@@ -165,6 +165,19 @@ on menu_DefaultBahaviorScript sView
    put the template_DefaultScript of sView
 end menu_DefaultBahaviorScript
 
-on submenu_Development
+on _____
+end _____
+
+on menu_CheckProjectStacks sView
+   put the project_Folder of sView into pFolder
+   try
+      put folder_ListStackNames (pFolder) 
+   catch e
+      lcw_Answer "Error listing stacks in this project!", sView
+      finder_Reveal pFolder
+   end try
+end menu_CheckProjectStacks
+
+on submenu_Dev
    return menu_DevTitle ("Global | View | Update | Menu")
-end submenu_Development
+end submenu_Dev

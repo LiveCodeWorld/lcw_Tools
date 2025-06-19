@@ -17,6 +17,16 @@ local LocalArray
 
 --> Menu | Props
 -
+-- getprop menu_CheckTarget [projectName]
+   put exists (stack projectName) into projectExists
+   if projectExists is false then
+      -- breakpoint
+      return true
+   else
+      return true
+   end if
+end menu_CheckTarget
+
 getprop menu_Target [tObject]
    put the selected_Line of tObject into projectName
    --
@@ -31,11 +41,6 @@ getprop menu_Target [tObject]
    put the display_View of tObject into LocalArray ["displayView"]
    return projectName
 end menu_Target
-
-getprop menu_CheckTarget [projectName]
-   put exists (stack projectName) into projectExists
-   return projectExists
-end menu_CheckTarget
 
 
 --> Events
@@ -71,11 +76,3 @@ end _
 on menu_EditLineMenu
    edit the script of me
 end menu_EditLineMenu
-
--- on menu_DisplayGitStatus projectName
-display_GitProjectStatus projectName
-end menu_DisplayGitStatus
-
--- on submenu_Dev
-   return menu_DevTitle ("Global | Environment | Line | Menu")
-end submenu_Dev

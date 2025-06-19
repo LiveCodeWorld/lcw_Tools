@@ -14,7 +14,31 @@ Their should be an easy default, with teh ability to customise.
 
 --> Working on
 -
+command module_CheckStacks moduleName, projectName
+   put module_ConstructFolder (moduleName, projectName) into mFolder
+   folder_CheckStacks mFolder, sView
+end module_CheckStacks
 
+command project_CheckStacks projectName
+   put the project_Folder of stack projectName into pFolder
+   folder_CheckStacks pFolder, sView
+end project_CheckStacks
+
+command folder_CheckStacks pFolder, sView
+   try
+      -- put folder_ListStackNames (pFolder) 
+      -- put directory_ListNestedStackFiles (pFolder)
+      put directory_ListStackPaths (pFolder) into stackPaths
+      put stackPaths
+   catch e
+      lcw_Answer "Error listing stacks in this project!", sView
+      finder_Reveal pFolder
+   end try
+end folder_CheckStacks
+
+
+--> Display
+-
 command display_MenuBarData mGroup
    if exists (the menubar_View of mGroup) is false then
       breakpoint
@@ -73,12 +97,12 @@ end mDoubleUp_GoToCard
 --> Display
 -
 command display_Project projectName, pExpandedItems
-   local foldedArray
+   local foldedArray   
    if pExpandedItems is empty then put "Modules" into pExpandedItems
-    
-   put project_GetStackNameArray (projectName) into dArray
-   --
    put display_ConstructFoldState (pExpandedItems) into foldedArray
+   put empty into foldedArray -- bug: can cause crash if key not there?
+   
+   put project_GetStackNameArray (projectName) into dArray
    display_StandardTool dArray, projectName, "Project", foldedArray
    put the result into displayView
    
