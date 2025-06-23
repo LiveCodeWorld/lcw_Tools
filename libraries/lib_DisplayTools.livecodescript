@@ -112,6 +112,10 @@ command display_Project projectName, pExpandedItems
    set the line_Menu of displayView to "Global | Project | Line | Menu"
    set the mouse_DoubleUp of displayView to "mDoubleUp_ProjectTree"
    --
+   put env_GetProjectHomePath (projectName) into homeStackPath
+   put the name of stack homeStackPath into projectHomeStack
+   set the displayed_Object of displayView to projectHomeStack
+   --
    return displayView
 end display_Project
 
