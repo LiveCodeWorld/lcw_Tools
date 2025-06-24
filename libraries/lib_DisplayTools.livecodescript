@@ -67,6 +67,11 @@ command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey
    display_StandardTool someData, pTitle, pStackLabel, pNameKey
    put the result into dView
    
+   if exists (dView) is false then
+      breakpoint
+      return empty
+   end if
+   
    # Guess menuBit from pStackLabel
    if pStackLabel is empty then
       put menu_Bit (pTitle) into pToolPath
@@ -205,6 +210,7 @@ command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameK
    put _DisplayView (cloneStackName) into dView -- hacky
    if exists (dView) is false then
       breakpoint
+      show stack cloneStackName
       go to stack cloneStackName
       return "Error, could not find dView:" && cloneStackName
    end if
