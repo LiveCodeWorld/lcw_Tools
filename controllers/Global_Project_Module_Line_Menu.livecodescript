@@ -5,7 +5,7 @@ copyright: David Bovill
 license: GPLv3
 name: Global | Project | Module | Line | Menu
 type: controller
-version: 0.1
+version: 0.2
 
 /*
 This used to rely on moduleStackName = the home stack name of the module
@@ -136,10 +136,30 @@ on menu_ModuleReadme
    display_ModuleReadme moduleStackName
 end menu_ModuleReadme
 
+getprop checked_ModuleReadme
+   put _ReadmeFile() into readMeFile
+   return there is a file readMeFile
+end checked_ModuleReadme
+
+private function _ReadmeFile
+   put LocalArray ["moduleStackName"] into moduleStackName
+   --
+   put module_ConstructReadMeFile (moduleStackName) into readMeFile
+   return readMeFile
+end _ReadmeFile
+
+on menu_RevealModuleReadme
+   put _ReadmeFile() into readMeFile
+   finder_Reveal readMeFile
+end menu_RevealModuleReadme
+
 on menu_RevealModuleFolder
    put _GetModuleFolder() into moduleFolder
    finder_Reveal moduleFolder
 end menu_RevealModuleFolder
+
+private on ____
+end ____
 
 -- on menu_ModuleHelp
 put _GetModuleStackPath() into stackPath
@@ -253,4 +273,3 @@ end menu_RemoveFromMemory
 on submenu_Dev
    return menu_DevTitle()
 end submenu_Dev
-

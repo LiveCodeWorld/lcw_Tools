@@ -1,7 +1,7 @@
 ﻿script "Global | Project | Controllers | Line | Menu"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: Global | Project | Controllers | Line | Menu
 type: controller
@@ -14,6 +14,8 @@ Full help text should be provided on the linked wiki.*/
 --> Variables
 -
 local LocalArray
+
+
 
 --> Menu | Props
 -
@@ -253,6 +255,26 @@ on menu_MoveController dView, newProjectName
    --
    ask_MoveMenu mController, gMenuTitle, newProjectName, dView
 end menu_MoveController
+
+on menu_MoveToModule dView, toModuleName
+   put _GetStackName (dView) into gMenuTitle
+   put the project_Name of stack gMenuTitle into toProjectName
+   --
+   project_MoveControllerToModule gMenutitle, toModuleName, toProjectName
+   get the result
+   if item 1 of it = "Error"  then
+      breakpoint
+   else
+      put the result into toPath
+      display_Project toProjectName
+   end if
+end menu_MoveToModule
+
+getprop moveToModule_Params [dView] 
+   put _SelectedMenuController (dView) into mController
+   put the module_Names of mController into moduleNames
+   return moduleNames
+end moveToModule_Params
 
 on menu_DeleteController dView
    put _GetStackName (dView) into mStackName

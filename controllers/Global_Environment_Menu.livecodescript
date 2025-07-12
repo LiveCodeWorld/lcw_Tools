@@ -35,6 +35,15 @@ end disabled_SaveEditedStacks
 
 --> Global | Environment | Menu
 -
+on submenu_SimpleServer
+   return "Global | Wiki | Server | Simple | Menu"
+end submenu_SimpleServer
+
+getprop disabled_SimpleServer
+   put env_ProjectIsActive ("lcw_Wiki") into isActive
+   return isActive is false
+end disabled_SimpleServer
+
 on menu_NotUpToDate dView
    display_NotUpToDate true --, dView
 end menu_NotUpToDate

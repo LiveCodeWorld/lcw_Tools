@@ -17,6 +17,10 @@ local LocalArray
 
 --> Menu | Props
 -
+getprop menu_CheckTarget [dView]
+   return exists (dView)
+end menu_CheckTarget
+
 getprop menu_Target [tObject]
    put display_MenuTarget (tObject) into moduleView
    --
@@ -27,11 +31,16 @@ getprop menu_Target [tObject]
    return moduleView
 end menu_Target
 
-getprop menu_CheckTarget [dView]
-   return exists (dView)
-end menu_CheckTarget
+private function _ReadmeFile
+   put _ModuleName() into moduleStackName
+   --
+   put module_ConstructReadMeFile (moduleStackName) into readMeFile
+   return readMeFile
+end _ReadmeFile
 
 private function _ModuleName
+   -- put the module_Name of moduleView into moduleStackName
+   
    put display_View() into dView
    put the title_Text of dView into moduleName
    -- put the view_Name of dView into moduleName
@@ -64,6 +73,21 @@ on menu_ModuleReadme moduleView
       menu_RefreshModule dView
    end if
 end menu_ModuleReadme
+
+getprop checked_ModuleReadme
+   put _ReadmeFile() into readMeFile
+   return there is a file readMeFile
+end checked_ModuleReadme
+
+on menu_RevealModuleReadme
+   put _ReadmeFile() into readMeFile
+   finder_Reveal readMeFile
+end menu_RevealModuleReadme
+
+on menu_RevealModuleFolder moduleView
+   put the module_Folder of moduleView into moduleFolder
+   finder_Reveal moduleFolder
+end menu_RevealModuleFolder
 
 private on _
 end _

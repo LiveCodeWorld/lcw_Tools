@@ -44,7 +44,7 @@ on functionKey keyNumber
          break
       case 6
          if the shiftKey is "Down" then
-            display_Wiki "thought.garden"
+            display_Wiki "myth.garden"
          else
             put platform_LivecodeDomain() into wikiDomain
             display_Wiki wikiDomain

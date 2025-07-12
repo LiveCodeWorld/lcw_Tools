@@ -28,20 +28,48 @@ getprop menu_Target [tObject]
    return modelStack
 end menu_Target
 
-private function _GetModelStack tObject
-   put the top_Line of tObject into shortFolder
-   put the selected_Line of tObject into modelStackName
-   if exists (stack modelStackName) is false then return empty
-   
-   put modelStackName into LocalArray ["modelStackName"]
-   put the name of stack modelStackName into libraryStack
-   return libraryStack
+private function _GetModelStackName dView
+   put _ConstructModelFile (dView) into modelFile
+   if exists (stack modelFile) then
+      return the short name of stack modelFile
+   else
+      return empty
+   end if
+end _GetModelStackName
+
+private function _GetModelStack dView
+   put _ConstructModelFile (dView) into modelFile
+   if exists (stack modelFile) then
+      put the name of stack modelFile into modelStack
+      return modelStack
+   else
+      return empty
+   end if 
 end _GetModelStack
 
--- getprop moveModel_Param [modelStack]
-put the project_Name of modelStack into projectName
-return projectName
-end moveModel_Param
+private function _ConstructModelFile dView
+   put _GetModelFolder (dView) into modelFolder
+   put _GetModelShortFile (dView) into shortFile
+   return modelFolder & shortFile
+end _ConstructModelFile
+
+private function _GetProjectName dView
+   put the title_Text of dView into projectName
+   return projectName
+end _GetProjectName
+
+private function _GetModelFolder dView
+   put _GetProjectName (dView) into projectName
+   put env_ProjectFolder (projectName) into projectFolder
+   put project_GetFolder (projectName, "models") into modelFolder
+   return modelFolder
+end _GetModelFolder
+
+private function _GetModelShortFile dView
+   put the top_Line of dView into shortFolder
+   put the selected_Line of dView into modelShortFile
+   return modelShortFile
+end _GetModelShortFile
 
 getprop moveModel_Params [modelStack]
    put LocalArray ["oProjectName"] into oProjectName
@@ -53,8 +81,8 @@ end moveModel_Params
 
 --> Global | Project | Model | Line | Menu
 -
-on menu_ModelHelp mStack
-   display_HelpDraft mStack
+on menu_ModelHelp modelStack
+   display_HelpDraft modelStack
 end menu_ModelHelp
 
 on menu_ScriptTools modelStack
@@ -103,3 +131,7 @@ on menu_RenameModel modelStack
    --
    ask_RenameProjectStack stackName
 end menu_RenameModel
+
+on menu_TrashModel modelStack
+   ask_TrashProjectStack modelStack
+end menu_TrashModel

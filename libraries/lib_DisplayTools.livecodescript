@@ -12,6 +12,14 @@ This stack is for displaying tools that go with views.
 Their should be an easy default, with teh ability to customise.
 */
 
+--> Deps
+-
+function stack_CleanName stackName
+   replace "'" with empty in stackName
+   replace quote with empty in stackName
+   return stackName
+end stack_CleanName
+
 --> Working on
 -
 command module_CheckStacks moduleName, projectName
@@ -61,10 +69,10 @@ command display_MenuBarData mGroup
    return dView
 end display_MenuBarData
 
-command display_Tool someData, pTitle, pStackLabel, pProjectName, pNameKey
+command display_Tool someData, pTitle, pStackLabel, pProjectName
    if pTitle is empty then put "Data" into pTitle
    --
-   display_StandardTool someData, pTitle, pStackLabel, pNameKey
+   display_StandardTool someData, pTitle, pStackLabel
    put the result into dView
    
    if exists (dView) is false then
@@ -176,13 +184,12 @@ command display_ModuleTools moduleStackName, pDisplayView
    return displayView
 end display_ModuleTools
 
-command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameKey
+command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray
    # Clone name
    -- put "Display" && label_FromModuleName(pTitle) into cloneName
-   put "Display" && pTitle into cloneName
+   put stack_CleanName ("Display" && pTitle) into cloneName
    
    # Ducktype
-   -- put pNameKey is empty into isArray
    put someData is an array into isArray
    put there is a stack cloneName into stackExisted
    
@@ -204,11 +211,12 @@ command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameK
       
       # Default stack style
       set the style of stack cloneStackName to "palette"
+      -- set the visible of stack cloneStackName to true
    end if
    
-   # Find display_View
-   put _DisplayView (cloneStackName) into dView -- hacky
-   if exists (dView) is false then
+   if exists (control 1 of cd 1 of stack cloneStackName) then
+      put the long id of control 1 of cd 1 of stack cloneStackName into dView
+   else
       breakpoint
       show stack cloneStackName
       go to stack cloneStackName
@@ -238,6 +246,7 @@ command display_StandardTool someData, pTitle, pStackLabel, pFoldedArray, pNameK
    if stackExisted then
       -- go visible to stack cloneStackName -- bug: same as go invisible
       show stack cloneStackName
+      
       go to stack cloneStackName
       if the result is not empty then
          breakpoint
@@ -425,15 +434,3 @@ command display_ViewTools viewName, pRepoFolder
    --
    return displayView
 end display_ViewTools
-
-
---> Private
--
-private function _DisplayView cloneStackName
-   if exists (control 1 of cd 1 of stack cloneStackName) is false then
-      return empty
-   end if
-   --
-   put the long id of control 1 of cd 1 of stack cloneStackName into displayView
-   return displayView
-end _DisplayView

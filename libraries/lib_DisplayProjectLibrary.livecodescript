@@ -138,18 +138,31 @@ end ask_CreateProjectBehavior
 --> Ask
 -
 command ask_TrashProjectStack stackObject
-   if exists (stackObject) is false then
-      display_DebugHistory pDisplayTitle, pAlsoArray
-      lcw_AnswerWarning "Stack does not exist!"
-   end if
+   --  was ""ask_DeleteProjectStack""
+   switch
+      case word 1 of stackObject is not "stack"
+         lcw_AnswerWarning "Not a stack" && stackObject
+         break
+      case exists (stackObject) is false
+         display_DebugHistory pDisplayTitle, pAlsoArray
+         lcw_AnswerWarning "Stack does not exist!"
+         break
+      default
+         -- good stackObject
+   end switch
+   
+   # Ask Question
+   -- put "Delete model '[[stackName]]'?" into someQuestion
+   -- put ask_Question (someQuestion, stackName, "Rename Model", stackName) into newStackName
    put merge ("Are you sure you want to delete the file, and remove the [[stackObject]] from all projects?") into someQuestion
    lcw_Answer someQuestion
-   --
-   put the project_Name of stackObject into projectName
-   --
+   
+   # Trash Stack
    project_TrashStack stackObject
    put the result into trashedStackFile
-   --
+   
+   # Display Result
+   put the project_Name of stackObject into projectName
    display_ProjectLibs projectName
 end ask_TrashProjectStack
 
@@ -273,20 +286,6 @@ function project_GetFolderArray projectName, pRepoFolder
    # Should export here
    return stackNameArray
 end project_GetFolderArray
-
-command project_TrashStack stackObject
-   -- dangerous
-   put the filename of stackObject into longStackFile
-   --
-   stop using stackObject
-   set the stack_IsKnow of stackObject to false -- do this for all projects ?
-   --
-   delete stackObject
-   revDeleteFile longStackFile -- bug: not in the dictionary
-   -- delete file longStackFile
-   --
-   return longStackFile
-end project_TrashStack
 
 function project_ConstructMenuTitle homeStackName
    set the itemdelimiter to "_"

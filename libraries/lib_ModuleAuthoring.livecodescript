@@ -256,16 +256,6 @@ command module_MoveController moduleStackName, moduleFolder
    end if
 end module_MoveController
 
-function module_ConstructControllerPath moduleName, moduleFolder, pShortFile
-   breakpoint
-   if pShortFile is empty then
-      put moduleName & ".livecodescript" into pShortFile
-   end if
-   put folder_AddShort (moduleFolder, "controllers") into moduleControllerFolder
-   put pShortFile & pShortFile into moduleControllerPath
-   return moduleControllerPath
-end module_ConstructControllerPath
-
 
 --> Module | Move
 -
