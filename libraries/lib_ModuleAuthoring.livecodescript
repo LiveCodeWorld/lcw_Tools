@@ -143,7 +143,6 @@ command module_CreateWithObject moduleName, pProjectName, pObject, pDisplayView
    -- not implemented "pObject" yet
    -- defaults to creating a module in the "lcw_Forms" project
    if pProjectName is empty then put "lcw_Forms" into pProjectName
-   put module_ConstructFolder (moduleName, pProjectName) into moduleFolder
    
    put view_GetTemplateObject (moduleName) into moduleTemplate
    if exists (moduleTemplate) then
@@ -169,7 +168,11 @@ command module_CreateWithObject moduleName, pProjectName, pObject, pDisplayView
       copy pObject
    end if
    
-   ## Create Fresh Module
+   # Create Module Folder
+   put module_ConstructFolder (moduleName, pProjectName) into moduleFolder
+   folder_CreateNested moduleFolder
+   
+   # Create Module
    module_Create moduleFolder, moduleName
    put the result into resultArray
    put resultArray ["moduleHomeStackPath"] into moduleHomeStackPath

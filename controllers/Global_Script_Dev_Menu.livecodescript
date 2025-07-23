@@ -25,6 +25,10 @@ end menu_Target
 
 --> Global | Script | Dev | Menu
 -
+on menu_AboutScriptDevMenu dView
+   launch_MenuHelp "Global | Script | Dev | Menu"
+end menu_AboutScriptDevMenu
+
 on submenu_StackHistory
    return "Global | Git | Stack | History | Menu"
 end submenu_StackHistory
